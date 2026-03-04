@@ -71,13 +71,13 @@
         // =========================================================================
         const HOLY_ART_IMAGE = "";
         const CUSTOM_BEAD_IMAGE = ""; 
-        const MIRACULOUS_MEDAL_IMAGE = "Slike/Miraculous_medal.jpg";
+        const MIRACULOUS_MEDAL_IMAGE = "Slike/Miraculous_medal.png";
         
         // KODA ZA VODENJE MOLITVE
         const SECRET_CODE = "amen";
 
         const MYSTERY_IMAGES = {
-            veseli: ["", "", "", "", ""],
+            veseli: ["Slike/Sin.jpg", "", "", "", ""],
             svetli: ["", "", "", "", ""],
             zalostni: ["", "", "", "", ""],
             castitljivi: ["", "", "", "", ""]
@@ -491,6 +491,8 @@
             }, [decadeIndex, phase]);
 
             const handleNextStep = useCallback(() => {
+                if (phase === 'finished') return;
+
                 let newLang = lang;
                 if (isRoulettePrayer) newLang = pickRandomLang(lang);
 
@@ -515,7 +517,10 @@
                     }
                 } else if (phase === 'outro') {
                     if (step < 7) newStep++;
-                    else setView('finished'); // Lokalno okno zaključka
+                    else {
+                        newPhase = 'finished';
+                        newStep = 0;
+                    }
                 }
 
                 setLang(newLang);
@@ -547,6 +552,9 @@
                 } else if (phase === 'outro') {
                     if (step > 0) newStep--;
                     else { newPhase = 'decades'; newStep = 12; }
+                } else if (phase === 'finished') {
+                    newPhase = 'outro';
+                    newStep = 7;
                 }
 
                 setPhase(newPhase);
@@ -836,7 +844,7 @@
                 const currentMysteryText = MYSTERIES[safeMysteryType][safeLang]?.[decadeIndex] || "";
                 const isInsertLanguage = safeLang === 'sl' || safeLang === 'de';
 
-                if (view === 'finished') {
+                if (phase === 'finished') {
                     return (
                         <div className="text-center py-12 px-6 animate-slide-up flex flex-col justify-center h-full">
                             <div className="w-24 h-24 bg-[#121c33] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl border-[4px] border-[#d4af37] text-[#d4af37]">
