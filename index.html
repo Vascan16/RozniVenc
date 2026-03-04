@@ -274,10 +274,19 @@
             }
         };
 
+        // POPRAVEK: Trigerji morajo biti izbrani samo iz znotraj korakov za desetke
         const getNewTriggers = () => {
             const triggers = new Set();
+            // Imamo 5 desetk, vsaka ima 13 korakov (0-12). Skupaj 65 korakov.
+            // Očetnaš je 0, Slava 11, Fatima 12. Zdrave Marije so 1-10.
+            // Najbolje je, da se prikaže med Zdravimi Marijami, torej ne npr. na 0, 11 ali 12.
+            
             while(triggers.size < 3) {
-                triggers.add(Math.floor(Math.random() * 63) + 1); 
+                const randomDecade = Math.floor(Math.random() * 5); // 0 do 4
+                const randomZdravaMarija = Math.floor(Math.random() * 10) + 1; // 1 do 10
+                
+                const absoluteStep = (randomDecade * 13) + randomZdravaMarija;
+                triggers.add(absoluteStep); 
             }
             return Array.from(triggers);
         };
@@ -338,7 +347,6 @@
             const touchStartX = useRef(null);
             const touchStartY = useRef(null);
             
-            // NOVO: Referenca za zaznavanje prvega nalaganja baze
             const isFirstLoad = useRef(true);
 
             const triggerVibration = useCallback((duration = 15) => {
@@ -426,11 +434,15 @@
                 } catch (e) {
                     console.error("Napaka", e);
                 }
-            }, [db, user, appId, isCanvasEnv, isLeader]);
+            }, [db, user, appId, isCanvasEnv, isLeader, isOfflineMode]);
 
             // Poslušanje baze
             useEffect(() => {
                 if (!user || !db || !appId) return;
+                
+                // Če smo v offline načinu, popolnoma prekinemo poslušanje baze.
+                if (isOfflineMode) return;
+
                 const { doc, onSnapshot } = window.Firebase;
                 
                 isFirstLoad.current = true; 
@@ -442,17 +454,14 @@
                 const roomRef = doc(db, ...path);
                 
                 const unsubscribe = onSnapshot(roomRef, (snapshot) => {
-                    // IGNORIRAJ VSE IZ BAZE, ČE SI V SAMOSTOJNEM NAČINU
-                    if (isOfflineRef.current) return;
-
                     if (snapshot.exists()) {
                         const data = snapshot.data();
                         
-                        // Ob prvem nalaganju VEDNO prevzamemo stanje iz baze (pomembno za ohranitev progresa po izhodu iz appa).
-                        // V nadaljevanju pa ignoriramo posodobitve, ki smo jih sprožili sami (odmeve), da UI ne preskakuje.
+                        // Ob prvem nalaganju ALI ob povratku iz offline načina VEDNO prevzamemo stanje.
                         if (isFirstLoad.current) {
                             isFirstLoad.current = false;
                         } else if (data.updatedBy === user.uid) {
+                            // Ignoriramo le, če smo mi sami poslali ta update (da ne skače UI)
                             return; 
                         }
 
@@ -470,8 +479,10 @@
                     }
                 }, (error) => console.error("Sync error", error));
 
+                // Cleanup: ko se komponenta uniči ali ko se isOfflineMode spremeni v true,
+                // se unsubscribe sproži in prekine povezavo.
                 return () => unsubscribe();
-            }, [user, db, appId, isCanvasEnv]);
+            }, [user, db, appId, isCanvasEnv, isOfflineMode]);
 
             const pickRandomLang = useCallback((currentLang) => {
                 const langs = ['sl', 'de', 'en', 'it', 'la'];
