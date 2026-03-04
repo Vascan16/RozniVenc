@@ -323,6 +323,9 @@
             // Reference za zaznavanje drsenja
             const touchStartX = useRef(null);
             const touchStartY = useRef(null);
+            
+            // NOVO: Referenca za zaznavanje prvega nalaganja baze
+            const isFirstLoad = useRef(true);
 
             const triggerVibration = useCallback((duration = 15) => {
                 if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
@@ -416,6 +419,8 @@
                 if (!user || !db || !appId) return;
                 const { doc, onSnapshot } = window.Firebase;
                 
+                isFirstLoad.current = true; // Ob vsaki novi povezavi resetiramo, da vedno vsrkamo začetno stanje
+                
                 let path = isCanvasEnv 
                     ? ['artifacts', appId, 'public', 'data', 'sessions', 'shared_room'] 
                     : ['sessions', 'shared_room'];
@@ -425,7 +430,14 @@
                 const unsubscribe = onSnapshot(roomRef, (snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.data();
-                        if (data.updatedBy === user.uid) return;
+                        
+                        // Ob prvem nalaganju VEDNO prevzamemo stanje iz baze (pomembno za ohranitev progresa po izhodu iz appa).
+                        // V nadaljevanju pa ignoriramo posodobitve, ki smo jih sprožili sami (odmeve), da UI ne preskakuje.
+                        if (isFirstLoad.current) {
+                            isFirstLoad.current = false;
+                        } else if (data.updatedBy === user.uid) {
+                            return; 
+                        }
 
                         if (data.phase !== undefined) setPhase(data.phase);
                         if (data.step !== undefined) setStep(data.step);
