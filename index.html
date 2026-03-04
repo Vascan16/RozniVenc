@@ -9,6 +9,21 @@
     <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com/3.4.4"></script>
+    
+    <!-- Dodan Firebase (Module imports) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase izpostavimo globalno, da ga lahko doseže React (Babel)
+        window.Firebase = {
+            initializeApp, getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged,
+            getFirestore, doc, setDoc, onSnapshot
+        };
+        window.dispatchEvent(new Event('firebase-loaded'));
+    </script>
+
     <style>
         /* Dodana klasična serifna pisava (Playfair Display) za naslove in tradicionalni občutek */
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Inter:wght@400;500;600;700&display=swap');
@@ -43,8 +58,6 @@
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
             50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
         }
-        /* Katoliške barve (Custom Tailwind config using arbitrary values, no extra CSS needed) */
-        /* Zlata: #d4af37, Marijina modra: #121c33, Rdeča (kardinalska): #8b1a1a, Pergament: #fdfbf7 */
     </style>
 </head>
 <body class="text-[#3e2723] selection:bg-[#d4af37] selection:text-white">
@@ -54,22 +67,12 @@
         const { useState, useEffect, useCallback, useRef } = React;
 
         // =========================================================================
-        // NASTAVITVE SLIK (Tukaj lahko spremeniš slike)
+        // NASTAVITVE SLIK
         // =========================================================================
-        
-        // Slika svete umetnosti na začetnem zaslonu. Pusti prazno ("") za čudovit privzet videz!
         const HOLY_ART_IMAGE = "";
-        
-        // Slika za gumb (jagodo) naprej. Če pustiš prazno (""), bo uporabljen privzet tradicionalen gumb.
-        // Primer uporabe: const CUSTOM_BEAD_IMAGE = "https://nekastran.si/slika_jagode.jpg";
         const CUSTOM_BEAD_IMAGE = ""; 
-
-        // Slika za čudodelno svetinjo v pojavnem oknu. Če pustiš prazno (""), bo prikazan zlati medaljon.
-        // Primer uporabe: const MIRACULOUS_MEDAL_IMAGE = "https://nekastran.si/svetinja.jpg";
         const MIRACULOUS_MEDAL_IMAGE = "";
 
-        // Slike za posamezne skrivnosti (prikažejo se, ko uporabnik klikne ikono "oka" med desetko)
-        // Če pustiš prazno, se bo prikazalo čudovito temno modro ozadje.
         const MYSTERY_IMAGES = {
             veseli: ["", "", "", "", ""],
             svetli: ["", "", "", "", ""],
@@ -78,8 +81,8 @@
         };
 
         // =========================================================================
-
-        // --- DATA BAZA PRECES ET MYSTERIA ---
+        // BAZA MOLITEV IN SKRIVNOSTI
+        // =========================================================================
         const PRAYERS = {
             sl: {
                 credoTitle: "Apostolska veroizpoved",
@@ -248,7 +251,8 @@
                 dices: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
                 arrowLeft: "M15 19l-7-7 7-7",
                 arrowRight: "M9 5l7 7-7 7",
-                eye: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 15a3 3 0 100-6 3 3 0 000 6z"
+                eye: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 15a3 3 0 100-6 3 3 0 000 6z",
+                wifi: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" // Icon placeholder če rabimo, nismo pa uporabili
             };
             return (
                 <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -267,68 +271,301 @@
             }
         };
 
+        // Pomožna funkcija za novo rundo naključnih triggerjev
+        const getNewTriggers = () => {
+            const triggers = new Set();
+            while(triggers.size < 3) {
+                triggers.add(Math.floor(Math.random() * 63) + 1); 
+            }
+            return Array.from(triggers);
+        };
+
         function App() {
+            // Lokalni State
             const [lang, setLang] = useState('sl');
             const [isRoulettePrayer, setIsRoulettePrayer] = useState(false);
             const [isRouletteDecade, setIsRouletteDecade] = useState(false);
             const [mysteryType, setMysteryType] = useState(getMysteryForToday());
             
-            // Faze in pogledi za popolno strukturo rožnega venca
             const [view, setView] = useState('menu'); // 'menu', 'prayer', 'finished'
             const [phase, setPhase] = useState('intro'); // 'intro', 'decades', 'outro'
             const [decadeIndex, setDecadeIndex] = useState(0); 
             const [step, setStep] = useState(0); 
 
-            // Stanje za sliko trenutne skrivnosti (celozaslonski način)
-            const [showMysteryImage, setShowMysteryImage] = useState(false);
-
-            // Stanje za čudodelno svetinjo
+            const [showMysteryImage, setShowMysteryImage] = useState(false); // ostane lokalno
             const [showMiraculous, setShowMiraculous] = useState(false);
             const [miraculousTriggers, setMiraculousTriggers] = useState([]);
+
+            // Firebase stane
+            const [fbReady, setFbReady] = useState(!!window.Firebase);
+            const [user, setUser] = useState(null);
+            const [db, setDb] = useState(null);
+            const [isCanvasEnv, setIsCanvasEnv] = useState(false);
+            const [appId, setAppId] = useState("");
 
             // Reference za zaznavanje drsenja s prstom (Swipe)
             const touchStartX = useRef(null);
             const touchStartY = useRef(null);
 
-            // NOVO: Funkcija za taktilni odziv (Vibracija)
+            // Taktilni odziv (Vibracija)
             const triggerVibration = useCallback((duration = 15) => {
                 if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
-                    try {
-                        window.navigator.vibrate(duration);
-                    } catch (e) {
-                        // Nekateri brskalniki ignorirajo, to je normalno
-                    }
+                    try { window.navigator.vibrate(duration); } catch (e) {}
                 }
             }, []);
 
-            // Funkcija, ki ob zagonu izbere 3 naključne trenutke med desetkami
-            const generateTriggers = useCallback(() => {
-                const triggers = new Set();
-                while(triggers.size < 3) {
-                    triggers.add(Math.floor(Math.random() * 63) + 1); 
-                }
-                setMiraculousTriggers(Array.from(triggers));
-            }, []);
-
+            // 1. Čakanje na Firebase skripto
             useEffect(() => {
-                generateTriggers();
-            }, [generateTriggers]);
+                if (fbReady) return;
+                const handler = () => setFbReady(true);
+                window.addEventListener('firebase-loaded', handler);
+                return () => window.removeEventListener('firebase-loaded', handler);
+            }, [fbReady]);
 
-            // Preverjanje, če moramo pokazati pop-up
+            // 2. Inicializacija Firebase
+            useEffect(() => {
+                if (!fbReady) return;
+                const { initializeApp, getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, getFirestore } = window.Firebase;
+
+                let config;
+                let envCanvas = false;
+                let id = "";
+
+                // Dvojno okolje - preverimo, ali smo v preview okolju ali na zunanji strani
+                if (typeof __firebase_config !== 'undefined') {
+                    config = JSON.parse(__firebase_config);
+                    id = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                    envCanvas = true;
+                } else {
+                    config = {
+                        apiKey: "AIzaSyCXe9vmaD4TWIXoJIGvvO2wk_MwMDt6Gns",
+                        authDomain: "roznivenc.firebaseapp.com",
+                        projectId: "roznivenc",
+                        storageBucket: "roznivenc.firebasestorage.app",
+                        messagingSenderId: "334196797512",
+                        appId: "1:334196797512:web:a79d9f1e2d74d44ca8287d",
+                        measurementId: "G-HQRNK6YB8E"
+                    };
+                    id = "roznivenc-app";
+                }
+
+                const app = initializeApp(config);
+                const auth = getAuth(app);
+                const firestoreDb = getFirestore(app);
+
+                setIsCanvasEnv(envCanvas);
+                setAppId(id);
+                setDb(firestoreDb);
+
+                const initAuth = async () => {
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (err) {
+                        console.error("Auth error", err);
+                    }
+                };
+                initAuth();
+
+                const unsubscribe = onAuthStateChanged(auth, setUser);
+                return () => unsubscribe();
+            }, [fbReady]);
+
+            // 3. Pošiljanje podatkov v Firebase
+            const pushUpdate = useCallback(async (updates) => {
+                if (!db || !user || !appId) return;
+                const { doc, setDoc } = window.Firebase;
+                
+                let path = isCanvasEnv 
+                    ? ['artifacts', appId, 'public', 'data', 'sessions', 'shared_room'] 
+                    : ['sessions', 'shared_room'];
+                    
+                const roomRef = doc(db, ...path);
+                
+                try {
+                    await setDoc(roomRef, {
+                        ...updates,
+                        updatedAt: Date.now(),
+                        updatedBy: user.uid
+                    }, { merge: true });
+                } catch (e) {
+                    console.error("Napaka pri posodabljanju", e);
+                }
+            }, [db, user, appId, isCanvasEnv]);
+
+            // 4. Poslušanje sprememb iz baze
+            useEffect(() => {
+                if (!user || !db || !appId) return;
+                const { doc, onSnapshot } = window.Firebase;
+                
+                let path = isCanvasEnv 
+                    ? ['artifacts', appId, 'public', 'data', 'sessions', 'shared_room'] 
+                    : ['sessions', 'shared_room'];
+                    
+                const roomRef = doc(db, ...path);
+                
+                const unsubscribe = onSnapshot(roomRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.data();
+                        // Ignoriramo spremembe, ki smo jih ravnokar poslali MI sami, 
+                        // da nam lokalno stanje ne preskakuje
+                        if (data.updatedBy === user.uid) return;
+
+                        if (data.view !== undefined) setView(data.view);
+                        if (data.phase !== undefined) setPhase(data.phase);
+                        if (data.step !== undefined) setStep(data.step);
+                        if (data.decadeIndex !== undefined) setDecadeIndex(data.decadeIndex);
+                        if (data.lang !== undefined) setLang(data.lang);
+                        if (data.mysteryType !== undefined) setMysteryType(data.mysteryType);
+                        if (data.isRoulettePrayer !== undefined) setIsRoulettePrayer(data.isRoulettePrayer);
+                        if (data.isRouletteDecade !== undefined) setIsRouletteDecade(data.isRouletteDecade);
+                        if (data.showMiraculous !== undefined) setShowMiraculous(data.showMiraculous);
+                        if (data.miraculousTriggers !== undefined) setMiraculousTriggers(data.miraculousTriggers);
+                    }
+                }, (error) => console.error("Napaka pri sinhronizaciji", error));
+
+                return () => unsubscribe();
+            }, [user, db, appId, isCanvasEnv]);
+
+            // Ostala logika
+            const pickRandomLang = useCallback((currentLang) => {
+                const langs = ['sl', 'de', 'en', 'it', 'la'];
+                const available = langs.filter(l => l !== currentLang);
+                return available[Math.floor(Math.random() * available.length)];
+            }, []);
+
+            // Ob zagonu ustvari prve triggerje, če jih še nismo
+            useEffect(() => {
+                if (miraculousTriggers.length === 0) {
+                    setMiraculousTriggers(getNewTriggers());
+                }
+            }, []);
+
+            // Preverjanje za pop-up znotraj desetk
             useEffect(() => {
                 if (phase === 'decades' && !showMiraculous) {
                     const absoluteStep = decadeIndex * 13 + step;
                     if (miraculousTriggers.includes(absoluteStep)) {
+                        const newTriggers = miraculousTriggers.filter(t => t !== absoluteStep);
                         setShowMiraculous(true);
-                        setMiraculousTriggers(prev => prev.filter(t => t !== absoluteStep)); // Odstranimo, da se ne ponovi
+                        setMiraculousTriggers(newTriggers);
+                        
+                        pushUpdate({
+                            showMiraculous: true,
+                            miraculousTriggers: newTriggers
+                        });
                     }
                 }
-            }, [phase, decadeIndex, step, miraculousTriggers, showMiraculous]);
+            }, [phase, decadeIndex, step, miraculousTriggers, showMiraculous, pushUpdate]);
 
-            // Samodejno zapiranje slike skrivnosti, ko se spremeni desetka
+            // Samodejno zapiranje slike ob spremembi desetke (lokalno)
             useEffect(() => {
                 setShowMysteryImage(false);
             }, [decadeIndex, phase]);
+
+            const handleNextStep = useCallback(() => {
+                let newLang = lang;
+                if (isRoulettePrayer) newLang = pickRandomLang(lang);
+
+                let newPhase = phase;
+                let newStep = step;
+                let newDecadeIndex = decadeIndex;
+                let newView = view;
+
+                if (phase === 'intro') {
+                    if (step < 5) {
+                        newStep++;
+                    } else {
+                        newPhase = 'decades';
+                        newStep = 0;
+                    }
+                } else if (phase === 'decades') {
+                    if (step < 12) {
+                        newStep++;
+                    } else {
+                        if (decadeIndex < 4) {
+                            if (isRouletteDecade && !isRoulettePrayer) newLang = pickRandomLang(lang);
+                            newDecadeIndex++;
+                            newStep = 0;
+                        } else {
+                            newPhase = 'outro';
+                            newStep = 0;
+                        }
+                    }
+                } else if (phase === 'outro') {
+                    if (step < 7) {
+                        newStep++;
+                    } else {
+                        newView = 'finished';
+                    }
+                }
+
+                // Najprej takoj posodobi lokalni UI
+                setLang(newLang);
+                setPhase(newPhase);
+                setStep(newStep);
+                setDecadeIndex(newDecadeIndex);
+                setView(newView);
+
+                // Nato pošlji ženi
+                pushUpdate({
+                    lang: newLang,
+                    phase: newPhase,
+                    step: newStep,
+                    decadeIndex: newDecadeIndex,
+                    view: newView
+                });
+            }, [phase, step, decadeIndex, view, lang, isRoulettePrayer, isRouletteDecade, pickRandomLang, pushUpdate]);
+
+            const handlePrevStep = useCallback(() => {
+                let newPhase = phase;
+                let newStep = step;
+                let newDecadeIndex = decadeIndex;
+                let newView = view;
+
+                if (phase === 'intro') {
+                    if (step > 0) {
+                        newStep--;
+                    } else {
+                        newView = 'menu';
+                    }
+                } else if (phase === 'decades') {
+                    if (step > 0) {
+                        newStep--;
+                    } else {
+                        if (decadeIndex > 0) {
+                            newDecadeIndex--;
+                            newStep = 12;
+                        } else {
+                            newPhase = 'intro';
+                            newStep = 5;
+                        }
+                    }
+                } else if (phase === 'outro') {
+                    if (step > 0) {
+                        newStep--;
+                    } else {
+                        newPhase = 'decades';
+                        newStep = 12;
+                    }
+                }
+
+                setPhase(newPhase);
+                setStep(newStep);
+                setDecadeIndex(newDecadeIndex);
+                setView(newView);
+
+                pushUpdate({
+                    phase: newPhase,
+                    step: newStep,
+                    decadeIndex: newDecadeIndex,
+                    view: newView
+                });
+            }, [phase, step, decadeIndex, view, pushUpdate]);
+
 
             useEffect(() => {
                 const handleKeyDown = (e) => {
@@ -346,81 +583,9 @@
                 };
                 window.addEventListener('keydown', handleKeyDown);
                 return () => window.removeEventListener('keydown', handleKeyDown);
-            }, [view, phase, step, decadeIndex, lang, isRoulettePrayer, isRouletteDecade, showMiraculous, triggerVibration]);
+            }, [view, showMiraculous, handleNextStep, handlePrevStep, triggerVibration]);
 
-            const currentMysteryText = MYSTERIES[mysteryType][lang][decadeIndex];
-            const isInsertLanguage = lang === 'sl' || lang === 'de';
-
-            const changeLanguageRandomly = useCallback(() => {
-                setLang(currentLang => {
-                    const langs = ['sl', 'de', 'en', 'it', 'la'];
-                    const availableLangs = langs.filter(l => l !== currentLang);
-                    return availableLangs[Math.floor(Math.random() * availableLangs.length)];
-                });
-            }, []);
-
-            const handleNextStep = useCallback(() => {
-                if (isRoulettePrayer) changeLanguageRandomly();
-
-                if (phase === 'intro') {
-                    if (step < 5) {
-                        setStep(s => s + 1);
-                    } else {
-                        setPhase('decades');
-                        setStep(0);
-                    }
-                } else if (phase === 'decades') {
-                    if (step < 12) {
-                        setStep(s => s + 1);
-                    } else {
-                        if (decadeIndex < 4) {
-                            if (isRouletteDecade && !isRoulettePrayer) changeLanguageRandomly();
-                            setDecadeIndex(prev => prev + 1);
-                            setStep(0);
-                        } else {
-                            setPhase('outro'); 
-                            setStep(0); 
-                        }
-                    }
-                } else if (phase === 'outro') {
-                    if (step < 7) {
-                        setStep(s => s + 1);
-                    } else {
-                        setView('finished');
-                    }
-                }
-            }, [phase, step, decadeIndex, isRoulettePrayer, isRouletteDecade, changeLanguageRandomly]);
-
-            const handlePrevStep = useCallback(() => {
-                if (phase === 'intro') {
-                    if (step > 0) {
-                        setStep(s => s - 1);
-                    } else {
-                        setView('menu'); 
-                    }
-                } else if (phase === 'decades') {
-                    if (step > 0) {
-                        setStep(s => s - 1);
-                    } else {
-                        if (decadeIndex > 0) {
-                            setDecadeIndex(d => d - 1);
-                            setStep(12);
-                        } else {
-                            setPhase('intro');
-                            setStep(5);
-                        }
-                    }
-                } else if (phase === 'outro') {
-                    if (step > 0) {
-                        setStep(s => s - 1);
-                    } else {
-                        setPhase('decades');
-                        setStep(12);
-                    }
-                }
-            }, [phase, step, decadeIndex]);
-
-            // NOVO: Handlers za Swipe / Drsenje s prstom
+            // Handlers za Swipe / Drsenje s prstom
             const onTouchStart = (e) => {
                 touchStartX.current = e.touches[0].clientX;
                 touchStartY.current = e.touches[0].clientY;
@@ -428,158 +593,230 @@
 
             const onTouchEndHandler = (e) => {
                 if (touchStartX.current === null || touchStartY.current === null) return;
-                if (showMiraculous) return; // Zablokiraj drsenje, če je odprt modal s svetinjo
+                if (showMiraculous) return;
 
                 const touchEndX = e.changedTouches[0].clientX;
                 const touchEndY = e.changedTouches[0].clientY;
-
                 const deltaX = touchStartX.current - touchEndX;
                 const deltaY = touchStartY.current - touchEndY;
 
-                // Preverimo, če gre za pretežno horizontalno drsenje in je dovolj dolgo (več kot 50px)
                 if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
                     if (deltaX > 0) {
-                        // Potez v levo -> Naslednja molitev
                         triggerVibration(15);
                         handleNextStep();
                     } else {
-                        // Potez v desno -> Prejšnja molitev
                         triggerVibration(10);
                         handlePrevStep();
                     }
                 }
                 
-                // Ponastavi reference za naslednji dotik
                 touchStartX.current = null;
                 touchStartY.current = null;
             };
 
             // Prikaz glavnega menija
             const renderMainMenu = () => (
-                <div className="flex flex-col items-center py-6 px-4 space-y-6 animate-slide-up w-full max-w-sm mx-auto">
+                <div className="flex flex-col items-center py-8 px-4 space-y-8 animate-slide-up w-full max-w-md mx-auto relative z-10 mt-6">
                     
-                    {/* SVETA UMETNOST (Slika na vrhu) */}
-                    <div className="relative w-48 h-48 md:w-56 md:h-56 mx-auto shadow-[0_15px_30px_rgba(0,0,0,0.25)] rounded-full border-[6px] border-[#d4af37] overflow-hidden bg-[#121c33] flex items-center justify-center">
-                        {HOLY_ART_IMAGE ? (
-                            <img src={HOLY_ART_IMAGE} alt="Holy Art" className="w-full h-full object-cover" />
-                        ) : (
-                            <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-[#1a294c] to-[#0a0f1c]">
-                                <span className="text-6xl md:text-7xl text-[#d4af37] drop-shadow-md font-serif-holy mb-2">✟</span>
-                                <span className="text-[10px] md:text-[11px] text-[#d4af37] font-bold tracking-[0.3em] uppercase opacity-90">Ave Maria</span>
+                    {/* Živ spletni indikator */}
+                    <div className="absolute top-0 right-2 flex items-center gap-1.5 opacity-80 z-20 bg-white/50 px-3 py-1 rounded-full shadow-sm">
+                       {user ? (
+                           <>
+                               <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_#22c55e] animate-pulse"></span>
+                               <span className="text-[9px] text-[#22c55e] font-black tracking-widest uppercase">POVEZANO</span>
+                           </>
+                       ) : (
+                           <>
+                               <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                               <span className="text-[9px] text-[#8b1a1a] font-black tracking-widest uppercase">BREZ POVEZAVE</span>
+                           </>
+                       )}
+                    </div>
+
+                    <div className="relative w-48 h-48 md:w-56 md:h-56 mx-auto flex items-center justify-center mt-2">
+                        <div className="absolute -inset-4 bg-[#d4af37]/20 rounded-full blur-xl pulse-soft"></div>
+                        <div className="relative w-full h-full shadow-[0_20px_40px_rgba(0,0,0,0.4)] rounded-full border-[4px] border-[#d4af37] overflow-hidden bg-[#121c33] flex items-center justify-center z-10">
+                            {HOLY_ART_IMAGE ? (
+                                <img src={HOLY_ART_IMAGE} alt="Holy Art" className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" />
+                            ) : (
+                                <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-[#1a294c] via-[#121c33] to-[#0a0f1c]">
+                                    <span className="text-6xl md:text-7xl text-[#d4af37] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] font-serif-holy mb-2 transition-transform duration-700 hover:scale-110">✟</span>
+                                    <span className="text-[10px] md:text-[11px] text-[#d4af37] font-bold tracking-[0.4em] uppercase opacity-90">Ave Maria</span>
+                                </div>
+                            )}
+                            <div className="absolute inset-0 rounded-full shadow-[inset_0_0_30px_rgba(0,0,0,0.8)] pointer-events-none"></div>
+                        </div>
+                    </div>
+
+                    <div className="text-center w-full">
+                        <div className="flex items-center justify-center space-x-4 mb-3 opacity-80">
+                            <span className="w-12 h-[1px] bg-gradient-to-r from-transparent to-[#d4af37]"></span>
+                            <span className="text-[#d4af37] text-lg">✟</span>
+                            <span className="w-12 h-[1px] bg-gradient-to-l from-transparent to-[#d4af37]"></span>
+                        </div>
+                        <h2 className="text-3xl md:text-4xl font-serif-holy font-black text-[#121c33] tracking-wide mb-2 drop-shadow-sm">Nastavitve</h2>
+                        <p className="text-[#8b1a1a] font-bold text-[10px] tracking-[0.2em] uppercase italic opacity-90">Pripravi se na zbrano molitev</p>
+                    </div>
+
+                    <div className="w-full bg-gradient-to-b from-[#fdfbf7] to-[#f6f3eb] p-6 md:p-8 rounded-2xl shadow-[0_15px_35px_-5px_rgba(0,0,0,0.15)] border border-[#d4af37]/40 relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-10 h-10 border-t-2 border-l-2 border-[#d4af37]/40 rounded-tl-xl m-2 pointer-events-none"></div>
+                        <div className="absolute top-0 right-0 w-10 h-10 border-t-2 border-r-2 border-[#d4af37]/40 rounded-tr-xl m-2 pointer-events-none"></div>
+                        <div className="absolute bottom-0 left-0 w-10 h-10 border-b-2 border-l-2 border-[#d4af37]/40 rounded-bl-xl m-2 pointer-events-none"></div>
+                        <div className="absolute bottom-0 right-0 w-10 h-10 border-b-2 border-r-2 border-[#d4af37]/40 rounded-br-xl m-2 pointer-events-none"></div>
+
+                        <div className="space-y-5 relative z-10">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-[#8b1a1a] uppercase tracking-widest ml-1 opacity-90 flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]"></span> Jezik
+                                </label>
+                                <div className="relative group">
+                                    <select 
+                                        className="w-full bg-white border-2 border-[#e8dfc8] text-[#2c1810] p-4 rounded-xl font-bold outline-none appearance-none group-hover:border-[#d4af37]/60 focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/20 transition-all cursor-pointer shadow-sm"
+                                        value={lang}
+                                        onChange={(e) => {
+                                            setLang(e.target.value);
+                                            pushUpdate({ lang: e.target.value });
+                                        }}
+                                    >
+                                        <option value="sl">🇸🇮 SLOVENŠČINA</option>
+                                        <option value="de">🇩🇪 DEUTSCH</option>
+                                        <option value="en">🇬🇧 ENGLISH</option>
+                                        <option value="it">🇮🇹 ITALIANO</option>
+                                        <option value="la">🇻🇦 LATINA</option>
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#d4af37] transition-transform group-hover:-translate-y-[40%]">
+                                        <Icon name="arrowRight" className="w-5 h-5 rotate-90" />
+                                    </div>
+                                </div>
                             </div>
-                        )}
-                        <div className="absolute inset-0 rounded-full shadow-[inset_0_0_20px_rgba(0,0,0,0.6)] pointer-events-none"></div>
-                    </div>
 
-                    <div className="text-center">
-                        <h2 className="text-3xl font-serif-holy font-bold text-[#121c33] tracking-wide mb-1">Nastavitve</h2>
-                        <p className="text-[#8b1a1a] font-medium text-sm italic">Pripravi se na zbrano molitev</p>
-                    </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-[#8b1a1a] uppercase tracking-widest ml-1 opacity-90 flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]"></span> Skrivnosti
+                                </label>
+                                <div className="relative group">
+                                    <select 
+                                        className="w-full bg-white border-2 border-[#e8dfc8] text-[#2c1810] p-4 rounded-xl font-bold outline-none appearance-none group-hover:border-[#d4af37]/60 focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/20 transition-all cursor-pointer shadow-sm"
+                                        value={mysteryType}
+                                        onChange={(e) => {
+                                            setMysteryType(e.target.value);
+                                            pushUpdate({ mysteryType: e.target.value });
+                                        }}
+                                    >
+                                        {Object.entries(MYSTERY_NAMES).map(([key, name]) => (
+                                            <option key={key} value={key}>{name.toUpperCase()}</option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#d4af37] transition-transform group-hover:-translate-y-[40%]">
+                                        <Icon name="arrowRight" className="w-5 h-5 rotate-90" />
+                                    </div>
+                                </div>
+                            </div>
 
-                    {/* Nastavitve (Meni kartica) */}
-                    <div className="w-full space-y-4 bg-[#fcfaf5] p-6 rounded-2xl shadow-lg border border-[#e8dfc8] relative">
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-[#8b1a1a] uppercase tracking-widest ml-1 opacity-90">Jezik</label>
-                            <div className="relative">
-                                <select 
-                                    className="w-full bg-[#f6f3eb] border border-[#d2c5aa] text-[#2c1810] p-3.5 rounded-xl font-bold outline-none appearance-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 transition-all cursor-pointer shadow-sm"
-                                    value={lang}
-                                    onChange={(e) => setLang(e.target.value)}
+                            <div className="pt-4 space-y-3">
+                                <button
+                                    onClick={() => {
+                                        triggerVibration(10);
+                                        const newVal = !isRoulettePrayer;
+                                        setIsRoulettePrayer(newVal);
+                                        const newDecadeVal = newVal ? false : isRouletteDecade;
+                                        if (newVal) setIsRouletteDecade(false); 
+                                        pushUpdate({ isRoulettePrayer: newVal, isRouletteDecade: newDecadeVal });
+                                    }}
+                                    className={`w-full flex items-center justify-between p-4 rounded-xl font-black text-[10px] md:text-xs transition-all duration-300 border-2 ${
+                                        isRoulettePrayer 
+                                        ? 'bg-[#d4af37] border-[#d4af37] text-white shadow-[0_4px_15px_rgba(212,175,55,0.4)]' 
+                                        : 'bg-white border-[#e8dfc8] text-[#6d5a42] hover:border-[#d4af37]/50'
+                                    }`}
                                 >
-                                    <option value="sl">🇸🇮 SLOVENŠČINA</option>
-                                    <option value="de">🇩🇪 DEUTSCH</option>
-                                    <option value="en">🇬🇧 ENGLISH</option>
-                                    <option value="it">🇮🇹 ITALIANO</option>
-                                    <option value="la">🇻🇦 LATINA</option>
-                                </select>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#8b1a1a]">
-                                    <Icon name="arrowRight" className="w-4 h-4 rotate-90" />
-                                </div>
-                            </div>
-                        </div>
+                                    <div className="flex items-center gap-3">
+                                        <Icon name="dices" className={isRoulettePrayer ? "text-white" : "text-[#d4af37]"} />
+                                        <span className="tracking-wide">RULETA: VSAKA MOLITEV</span>
+                                    </div>
+                                    <div className={`w-12 h-7 rounded-full relative transition-colors duration-300 shadow-inner ${isRoulettePrayer ? 'bg-[#121c33]' : 'bg-[#e5dec8]'}`}>
+                                        <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all duration-300 shadow-md ${isRoulettePrayer ? 'left-6' : 'left-1'}`} />
+                                    </div>
+                                </button>
 
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-[#8b1a1a] uppercase tracking-widest ml-1 opacity-90">Skrivnosti (Za danes)</label>
-                            <div className="relative">
-                                <select 
-                                    className="w-full bg-[#f6f3eb] border border-[#d2c5aa] text-[#2c1810] p-3.5 rounded-xl font-bold outline-none appearance-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 transition-all cursor-pointer shadow-sm"
-                                    value={mysteryType}
-                                    onChange={(e) => setMysteryType(e.target.value)}
+                                <button
+                                    onClick={() => {
+                                        triggerVibration(10);
+                                        const newVal = !isRouletteDecade;
+                                        setIsRouletteDecade(newVal);
+                                        const newPrayerVal = newVal ? false : isRoulettePrayer;
+                                        if (newVal) setIsRoulettePrayer(false); 
+                                        pushUpdate({ isRouletteDecade: newVal, isRoulettePrayer: newPrayerVal });
+                                    }}
+                                    className={`w-full flex items-center justify-between p-4 rounded-xl font-black text-[10px] md:text-xs transition-all duration-300 border-2 ${
+                                        isRouletteDecade 
+                                        ? 'bg-[#d4af37] border-[#d4af37] text-white shadow-[0_4px_15px_rgba(212,175,55,0.4)]' 
+                                        : 'bg-white border-[#e8dfc8] text-[#6d5a42] hover:border-[#d4af37]/50'
+                                    }`}
                                 >
-                                    {Object.entries(MYSTERY_NAMES).map(([key, name]) => (
-                                        <option key={key} value={key}>{name.toUpperCase()}</option>
-                                    ))}
-                                </select>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#8b1a1a]">
-                                    <Icon name="arrowRight" className="w-4 h-4 rotate-90" />
-                                </div>
+                                    <div className="flex items-center gap-3">
+                                        <Icon name="dices" className={isRouletteDecade ? "text-white" : "text-[#d4af37]"} />
+                                        <span className="tracking-wide">RULETA: VSAKA DESETKA</span>
+                                    </div>
+                                    <div className={`w-12 h-7 rounded-full relative transition-colors duration-300 shadow-inner ${isRouletteDecade ? 'bg-[#121c33]' : 'bg-[#e5dec8]'}`}>
+                                        <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all duration-300 shadow-md ${isRouletteDecade ? 'left-6' : 'left-1'}`} />
+                                    </div>
+                                </button>
                             </div>
-                        </div>
-
-                        <div className="pt-2 space-y-2">
-                            <button
-                                onClick={() => {
-                                    triggerVibration(10);
-                                    setIsRoulettePrayer(!isRoulettePrayer);
-                                    if (!isRoulettePrayer) setIsRouletteDecade(false); 
-                                }}
-                                className={`w-full flex items-center justify-between p-3.5 rounded-xl font-black text-[10px] md:text-xs transition-all duration-300 border ${
-                                    isRoulettePrayer 
-                                    ? 'bg-[#d4af37] border-[#b8952a] text-white shadow-md' 
-                                    : 'bg-transparent border-[#d2c5aa] text-[#6d5a42] hover:bg-[#f6f3eb]'
-                                }`}
-                            >
-                                <div className="flex items-center gap-2 md:gap-3">
-                                    <Icon name="dices" className={isRoulettePrayer ? "text-white" : "text-[#8b1a1a]"} />
-                                    RULETA: VSAKA MOLITEV
-                                </div>
-                                <div className={`w-10 h-6 rounded-full relative transition-colors duration-300 shadow-inner ${isRoulettePrayer ? 'bg-[#121c33]' : 'bg-[#d2c5aa]'}`}>
-                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm ${isRoulettePrayer ? 'left-5' : 'left-1'}`} />
-                                </div>
-                            </button>
-
-                            <button
-                                onClick={() => {
-                                    triggerVibration(10);
-                                    setIsRouletteDecade(!isRouletteDecade);
-                                    if (!isRouletteDecade) setIsRoulettePrayer(false); 
-                                }}
-                                className={`w-full flex items-center justify-between p-3.5 rounded-xl font-black text-[10px] md:text-xs transition-all duration-300 border ${
-                                    isRouletteDecade 
-                                    ? 'bg-[#d4af37] border-[#b8952a] text-white shadow-md' 
-                                    : 'bg-transparent border-[#d2c5aa] text-[#6d5a42] hover:bg-[#f6f3eb]'
-                                }`}
-                            >
-                                <div className="flex items-center gap-2 md:gap-3">
-                                    <Icon name="dices" className={isRouletteDecade ? "text-white" : "text-[#8b1a1a]"} />
-                                    RULETA: VSAKA DESETKA
-                                </div>
-                                <div className={`w-10 h-6 rounded-full relative transition-colors duration-300 shadow-inner ${isRouletteDecade ? 'bg-[#121c33]' : 'bg-[#d2c5aa]'}`}>
-                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm ${isRouletteDecade ? 'left-5' : 'left-1'}`} />
-                                </div>
-                            </button>
                         </div>
                     </div>
 
-                    <div className="w-full flex flex-col gap-3 mt-2">
+                    <div className="w-full flex flex-col gap-4 mt-6">
                         <button 
                             onClick={() => {
                                 triggerVibration(20);
-                                if (phase === 'intro' && step === 0 && (isRoulettePrayer || isRouletteDecade)) {
-                                    changeLanguageRandomly();
+                                let l = lang;
+                                let triggers = miraculousTriggers;
+
+                                if (phase === 'intro' && step === 0) {
+                                    if (isRoulettePrayer || isRouletteDecade) {
+                                        l = pickRandomLang(lang);
+                                        setLang(l);
+                                    }
+                                    triggers = getNewTriggers();
+                                    setMiraculousTriggers(triggers);
                                 }
                                 setView('prayer');
+
+                                pushUpdate({ 
+                                    view: 'prayer', 
+                                    lang: l,
+                                    miraculousTriggers: triggers 
+                                });
                             }}
-                            className="group bg-gradient-to-b from-[#8b1a1a] to-[#5c0e0e] hover:from-[#a01e1e] hover:to-[#731212] text-[#f4e0aa] w-full py-4 rounded-xl font-serif-holy font-bold text-xl shadow-lg transition-all active:scale-95 flex items-center justify-center border-b-4 border-[#3e0808]"
+                            className="group relative bg-gradient-to-b from-[#8b1a1a] to-[#5c0e0e] hover:from-[#a01e1e] hover:to-[#731212] text-[#f4e0aa] w-full py-5 rounded-xl font-serif-holy font-bold text-xl shadow-[0_8px_20px_rgba(139,26,26,0.3)] transition-all active:scale-95 flex items-center justify-center border border-[#3e0808] overflow-hidden pulse-soft"
                         >
-                            <div className="mr-3 transform group-hover:scale-110 transition-transform"><Icon name="play" /></div>
-                            {(phase !== 'intro' || step > 0 || decadeIndex > 0) ? "NADALJUJ MOLITEV" : "ZAČNI MOLITEV"}
+                            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-[200%] transition-transform duration-1000 ease-in-out"></div>
+                            
+                            <div className="mr-3 transform group-hover:scale-110 transition-transform duration-300 relative z-10"><Icon name="play" /></div>
+                            <span className="tracking-widest relative z-10">{(phase !== 'intro' || step > 0 || decadeIndex > 0) ? "NADALJUJ MOLITEV" : "ZAČNI MOLITEV"}</span>
                         </button>
                         
                         {(phase !== 'intro' || step > 0 || decadeIndex > 0) && (
                             <button 
-                                onClick={() => { triggerVibration(10); setPhase('intro'); setStep(0); setDecadeIndex(0); generateTriggers(); setView('prayer'); }}
-                                className="group bg-transparent hover:bg-[#e8dfc8] text-[#3e2723] w-full py-3 rounded-xl font-bold text-xs shadow-sm transition-all active:scale-95 flex items-center justify-center border border-[#d2c5aa]"
+                                onClick={() => { 
+                                    triggerVibration(10); 
+                                    const trigs = getNewTriggers();
+                                    setPhase('intro'); 
+                                    setStep(0); 
+                                    setDecadeIndex(0); 
+                                    setMiraculousTriggers(trigs); 
+                                    setView('prayer'); 
+                                    
+                                    pushUpdate({
+                                        phase: 'intro',
+                                        step: 0,
+                                        decadeIndex: 0,
+                                        miraculousTriggers: trigs,
+                                        view: 'prayer',
+                                        showMiraculous: false
+                                    });
+                                }}
+                                className="group bg-transparent hover:bg-[#e8dfc8] text-[#8b1a1a] w-full py-4 rounded-xl font-bold text-xs shadow-sm transition-all active:scale-95 flex items-center justify-center border-2 border-[#d2c5aa]"
                             >
                                 <div className="mr-2 transform group-hover:-rotate-180 transition-transform duration-500"><Icon name="refresh" className="w-4 h-4" /></div>
                                 ZAČNI OD ZAČETKA
@@ -602,7 +839,24 @@
                             <h2 className="text-4xl font-serif-holy font-bold text-[#8b1a1a] mb-3 uppercase tracking-tight">Bog bodi zahvaljen!</h2>
                             <p className="text-[#3e2723] mb-10 text-lg font-medium italic">Sveti rožni venec je zaključen.</p>
                             <button 
-                                onClick={() => { triggerVibration(10); setPhase('intro'); setStep(0); setDecadeIndex(0); generateTriggers(); setView('menu'); }}
+                                onClick={() => { 
+                                    triggerVibration(10); 
+                                    const trigs = getNewTriggers();
+                                    setPhase('intro'); 
+                                    setStep(0); 
+                                    setDecadeIndex(0); 
+                                    setMiraculousTriggers(trigs); 
+                                    setView('menu'); 
+
+                                    pushUpdate({
+                                        phase: 'intro',
+                                        step: 0,
+                                        decadeIndex: 0,
+                                        miraculousTriggers: trigs,
+                                        view: 'menu',
+                                        showMiraculous: false
+                                    });
+                                }}
                                 className="group bg-gradient-to-b from-[#121c33] to-[#0a0f1c] hover:from-[#1a294c] hover:to-[#121c33] text-[#d4af37] w-full max-w-xs py-4 rounded-xl font-serif-holy font-bold text-lg shadow-lg transition flex items-center justify-center mx-auto border-b-4 border-[#000]"
                             >
                                 <div className="mr-3 transform group-hover:rotate-180 transition-transform duration-500"><Icon name="refresh" /></div>
@@ -616,7 +870,6 @@
                 let content = null;
                 let subtitle = "";
 
-                // Nastavitev podnaslova glede na fazo in jezik
                 if (phase === 'intro') {
                     if (lang === 'sl') subtitle = "UVOD";
                     else if (lang === 'de') subtitle = "EINLEITUNG";
@@ -639,7 +892,6 @@
                     }
                 }
 
-                // Določanje vsebine glede na fazo in korak
                 if (phase === 'intro') {
                     if (step === 0) {
                         title = p.credoTitle;
@@ -709,7 +961,6 @@
                     }
                 }
 
-                // Generiranje kroglic za zgornji trak glede na fazo
                 let beadArray = [];
                 if (phase === 'intro') beadArray = Array.from({ length: 6 });
                 else if (phase === 'decades') beadArray = Array.from({ length: 13 });
@@ -718,20 +969,20 @@
                 return (
                     <div className="flex flex-col h-full animate-fade-in w-full">
                         
-                        {/* KOMPAKTEN ZGORNJI DEL: Domov + Napredek v eni vrstici */}
                         <div className="w-full flex justify-between items-center mb-3 mt-1">
-                            {/* Gumb Meni / Domov */}
                             <button 
-                                onClick={() => { triggerVibration(10); setView('menu'); }}
+                                onClick={() => { 
+                                    triggerVibration(10); 
+                                    setView('menu'); 
+                                    pushUpdate({ view: 'menu' }); 
+                                }}
                                 className="w-10 h-10 bg-[#fcfaf5] rounded-full shadow-sm flex items-center justify-center text-[#8b1a1a] hover:text-[#121c33] transform transition-all active:scale-90 border border-[#d2c5aa] flex-shrink-0 relative z-[60]"
                                 aria-label="Nazaj na meni"
                             >
                                 <Icon name="book" className="w-5 h-5" />
                             </button>
 
-                            {/* Tradicionalen napredek */}
                             <div className="flex flex-col items-center gap-1.5 relative z-[60]">
-                                {/* Desetke */}
                                 <div className="flex gap-1.5">
                                     {[0, 1, 2, 3, 4].map(i => {
                                         let stateClass = 'w-3 bg-[#d2c5aa]/60';
@@ -744,7 +995,6 @@
                                     })}
                                 </div>
                                 
-                                {/* Jagode */}
                                 <div className="flex gap-1 items-center">
                                     {beadArray.map((_, i) => {
                                         let isLarge = false;
@@ -767,7 +1017,6 @@
                                 </div>
                             </div>
 
-                            {/* Gumb za preklop slike ali neviden placeholder */}
                             <div className="w-10 h-10 flex-shrink-0 flex justify-end relative z-[60]">
                                 {phase === 'decades' && (
                                     <button 
@@ -781,7 +1030,6 @@
                             </div>
                         </div>
                         
-                        {/* KARTICA Z MOLITVIJO (ali slika, če je vklopljena) */}
                         {!showMysteryImage ? (
                             <div className="bg-[#fdfbf7] rounded-xl p-5 md:p-8 pt-6 md:pt-8 pb-36 md:pb-40 shadow-xl border border-[#d4af37]/40 relative overflow-y-auto flex-grow flex flex-col justify-start z-10">
                                 <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-[#d4af37]/20 rounded-tl-xl m-2 pointer-events-none"></div>
@@ -808,13 +1056,11 @@
                                     <div className="absolute inset-0 bg-gradient-to-br from-[#121c33] to-[#0a0f1c]"></div>
                                 )}
                                 
-                                {/* Rahla senca zgoraj in spodaj, da so gumbi vedno jasno vidni ne glede na sliko */}
                                 <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-black/40 to-transparent pointer-events-none"></div>
                                 <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"></div>
                             </div>
                         )}
 
-                        {/* FLOATING NAVIGACIJSKI GUMBI */}
                         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-lg px-4 md:px-6 flex justify-between items-end pointer-events-none z-50">
                             <button 
                                 onClick={() => { triggerVibration(10); handlePrevStep(); }}
@@ -886,7 +1132,11 @@
                                 </p>
                                 
                                 <button 
-                                    onClick={() => { triggerVibration(10); setShowMiraculous(false); }}
+                                    onClick={() => { 
+                                        triggerVibration(10); 
+                                        setShowMiraculous(false); 
+                                        pushUpdate({ showMiraculous: false });
+                                    }}
                                     className="bg-gradient-to-b from-[#8b1a1a] to-[#5c0e0e] text-[#f4e0aa] w-full py-4 rounded-xl font-serif-holy font-bold text-lg shadow-lg hover:from-[#a01e1e] hover:to-[#731212] transition-colors border-b-4 border-[#3e0808] active:translate-y-1 active:border-b-0"
                                 >
                                     AMEN
