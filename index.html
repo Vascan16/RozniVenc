@@ -19,8 +19,9 @@
             background-color: #f6f3eb; /* Pergamentno ozadje */
             background-image: radial-gradient(#e5dec8 1px, transparent 1px);
             background-size: 32px 32px;
+            /* Prepreči osveževanje strani ob drsenju navzdol na mobilnih napravah */
+            overscroll-behavior-y: none; 
         }
-
         .font-serif-holy {
             font-family: 'Playfair Display', serif;
         }
@@ -42,7 +43,6 @@
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
             50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
         }
-
         /* Katoliške barve (Custom Tailwind config using arbitrary values, no extra CSS needed) */
         /* Zlata: #d4af37, Marijina modra: #121c33, Rdeča (kardinalska): #8b1a1a, Pergament: #fdfbf7 */
     </style>
@@ -51,7 +51,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useCallback } = React;
+        const { useState, useEffect, useCallback, useRef } = React;
 
         // =========================================================================
         // NASTAVITVE SLIK (Tukaj lahko spremeniš slike)
@@ -64,11 +64,33 @@
         // Primer uporabe: const CUSTOM_BEAD_IMAGE = "https://nekastran.si/slika_jagode.jpg";
         const CUSTOM_BEAD_IMAGE = ""; 
 
+        // Slika za čudodelno svetinjo v pojavnem oknu. Če pustiš prazno (""), bo prikazan zlati medaljon.
+        // Primer uporabe: const MIRACULOUS_MEDAL_IMAGE = "https://nekastran.si/svetinja.jpg";
+        const MIRACULOUS_MEDAL_IMAGE = "";
+
+        // Slike za posamezne skrivnosti (prikažejo se, ko uporabnik klikne ikono "oka" med desetko)
+        // Če pustiš prazno, se bo prikazalo čudovito temno modro ozadje.
+        const MYSTERY_IMAGES = {
+            veseli: ["", "", "", "", ""],
+            svetli: ["", "", "", "", ""],
+            zalostni: ["", "", "", "", ""],
+            castitljivi: ["", "", "", "", ""]
+        };
+
         // =========================================================================
 
         // --- DATA BAZA PRECES ET MYSTERIA ---
         const PRAYERS = {
             sl: {
+                credoTitle: "Apostolska veroizpoved",
+                credo: "Verujem v Boga, Očeta vsemogočnega, stvarnika nebes in zemlje. In v Jezusa Kristusa, Sina njegovega edinega, gospoda našega, ki je bil spočet od Svetega Duha, rojen iz Marije Device, trpel pod Poncijem Pilatom, križan bil, umrl in bil v grob položen, šel pred pekel, tretji dan od mrtvih vstal, šel v nebesa, sedi na desnici Boga Očeta vsemogočnega, odtod bo prišel sodit žive in mrtve. Verujem v Svetega Duha, sveto katoliško Cerkev, občestvo svetnikov, odpuščanje grehov, vstajenje mesa in večno življenje. Amen.",
+                benedictTitle: "Molitev sv. Benedikta",
+                benedict: "Sveti križ bodi mi luč, zmaj pa naj mi ne bo vodnik. Stran poberi se, satan, nikdar mi ne svetuj praznih reči, slabo je, kar mi ponujaš, sam pij svoj strup.",
+                salveTitle: "Pozdravljena, Kraljica",
+                salve: "Pozdravljena, Kraljica, mati usmiljenja, življenje, sladkost in upanje naše, pozdravljena. K tebi vpijemo izgnani Evini otroci, k tebi zdihujemo, žalujoči in jokajoči v tej solzni dolini. Obrni torej, naša priprošnjica, svoje milostljive oči v nas in pokaži nam po tem izgnanstvu Jezusa, blagoslovljeni sad svojega telesa. O milostljiva, o ljubezniva, o sladka Devica Marija!",
+                michaelTitle: "Molitev sv. nadangela Mihaela",
+                michael: "Sveti nadangel Mihael, brani nas v boju, bodi nam v pomoč zoper zlobnost in zalezovanje hudobnega duha. Ukroti naj ga Bog, ponižno prosimo. In ti, vodnik nebeške vojske, satana in druge hudobne duhove, ki hodijo po svetu v pogubo duš, z božjo močjo v pekel pahni. Amen.",
+                intentionsTitle: "Za osebne namene",
                 ocenasTitle: "Oče naš",
                 ocenas: "Oče naš, ki si v nebesih, posvečeno bodi tvoje ime, pridi k nam tvoje kraljestvo, zgodi se tvoja volja kakor v nebesih tako na zemlji. Daj nam danes naš vsakdanji kruh in odpusti nam naše dolge, kakor tudi mi odpuščamo svojim dolžnikom, in ne vpelji nas v skušnjavo, temveč reši nas hudega. Amen.",
                 zdravaTitle: "Zdrava Marija",
@@ -78,8 +100,19 @@
                 slava: "Slava Očetu in Sinu in Svetemu Duhu, kakor je bilo v začetku, tako zdaj in vselej in vekomaj. Amen.",
                 fatimaTitle: "Fatimska molitev",
                 fatima: "O moj Jezus, odpusti nam naše grehe, obvaruj nas peklenskega ognja in privedi v nebesa vse duše, posebno še tiste, ki so najbolj potrebne tvojega usmiljenja.",
+                miraculousTitle: "Čudodelna svetinja",
+                miraculous: "O Marija, brez madeža spočeta, prosi za nas, ki se k tebi zatekamo!",
             },
             de: {
+                credoTitle: "Apostolisches Glaubensbekenntnis",
+                credo: "Ich glaube an Gott, den Vater, den Allmächtigen, den Schöpfer des Himmels und der Erde, und an Jesus Christus, seinen eingeborenen Sohn, unsern Herrn, empfangen durch den Heiligen Geist, geboren von der Jungfrau Maria, gelitten unter Pontius Pilatus, gekreuzigt, gestorben und begraben, hinabgestiegen in das Reich des Todes, am dritten Tage auferstanden von den Toten, aufgefahren in den Himmel; er sitzt zur Rechten Gottes, des allmächtigen Vaters; von dort wird er kommen, zu richten die Lebenden und die Toten. Ich glaube an den Heiligen Geist, die heilige katholische Kirche, Gemeinschaft der Heiligen, Vergebung der Sünden, Auferstehung der Toten und das ewige Leben. Amen.",
+                benedictTitle: "Gebet des hl. Benedikt",
+                benedict: "Das heilige Kreuz sei mein Licht, nicht der Drache sei mir Führer. Weiche zurück, Satan, niemals verführe mich zu Nichtigem. Böse ist, was du darreichst, trinke dein Gift selbst.",
+                salveTitle: "Salve Regina",
+                salve: "Sei gegrüßt, o Königin, Mutter der Barmherzigkeit, unser Leben, unsre Wonne und unsre Hoffnung, sei gegrüßt! Zu dir rufen wir verbannte Kinder Evas, zu dir seufzen wir trauernd und weinend in diesem Tal der Tränen. Wohlan denn, unsre Fürsprecherin, wende deine barmherzigen Augen uns zu und zeige uns nach diesem Elend Jesus, die gebenedeite Frucht deines Leibes. O gütige, o milde, o süße Jungfrau Maria.",
+                michaelTitle: "Gebet zum hl. Erzengel Michael",
+                michael: "Heiliger Erzengel Michael, verteidige uns im Kampfe; gegen die Bosheit und die Nachstellungen des Teufels sei unser Schutz. 'Gott gebiete ihm', so bitten wir flehentlich; du aber, Fürst der himmlischen Heerscharen, stoße den Satan und die anderen bösen Geister, die in der Welt umhergehen, um die Seelen zu verderben, durch die Kraft Gottes in die Hölle. Amen.",
+                intentionsTitle: "Für persönliche Anliegen",
                 ocenasTitle: "Vater unser",
                 ocenas: "Vater unser im Himmel, geheiligt werde dein Name. Dein Reich komme. Dein Wille geschehe, wie im Himmel so auf Erden. Unser tägliches Brot gib uns heute. Und vergib uns unsere Schuld, wie auch wir vergeben unsern Schuldigern. Und führe uns nicht in Versuchung, sondern erlöse uns von dem Bösen. Amen.",
                 zdravaTitle: "Gegrüßet seist du, Maria",
@@ -89,8 +122,19 @@
                 slava: "Ehre sei dem Vater und dem Sohn und dem Heiligen Geist, wie im Anfang, so auch jetzt und alle Zeit und in Ewigkeit. Amen.",
                 fatimaTitle: "O mein Jesus",
                 fatima: "O mein Jesus, verzeih uns unsere Sünden, bewahre uns vor dem Feuer der Hölle, führe alle Seelen in den Himmel, besonders jene, die deiner Barmherzigkeit am meisten bedürfen.",
+                miraculousTitle: "Wundertätige Medaille",
+                miraculous: "O Maria, ohne Sünde empfangen, bitte für uns, die wir unsere Zuflucht zu dir nehmen!",
             },
             en: {
+                credoTitle: "Apostles' Creed",
+                credo: "I believe in God, the Father almighty, Creator of heaven and earth, and in Jesus Christ, his only Son, our Lord, who was conceived by the Holy Spirit, born of the Virgin Mary, suffered under Pontius Pilate, was crucified, died and was buried; he descended into hell; on the third day he rose again from the dead; he ascended into heaven, and is seated at the right hand of God the Father almighty; from there he will come to judge the living and the dead. I believe in the Holy Spirit, the holy catholic Church, the communion of saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen.",
+                benedictTitle: "Prayer of St. Benedict",
+                benedict: "May the holy cross be my light! May the dragon never be my guide! Begone Satan! Never tempt me with your vanities! What you offer me is evil. Drink the poison yourself!",
+                salveTitle: "Hail, Holy Queen",
+                salve: "Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve: to thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious Advocate, thine eyes of mercy toward us, and after this our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary! Amen.",
+                michaelTitle: "Prayer to St. Michael",
+                michael: "St. Michael the Archangel, defend us in battle, be our protection against the wickedness and snares of the devil. May God rebuke him we humbly pray; and do thou, O Prince of the Heavenly host, by the power of God, cast into hell Satan and all the evil spirits who prowl about the world seeking the ruin of souls. Amen.",
+                intentionsTitle: "For personal intentions",
                 ocenasTitle: "Our Father",
                 ocenas: "Our Father, who art in heaven, hallowed be thy name; thy kingdom come; thy will be done on earth as it is in heaven. Give us this day our daily bread; and forgive us our trespasses as we forgive those who trespass against us; and lead us not into temptation, but deliver us from evil. Amen.",
                 zdravaTitle: "Hail Mary",
@@ -100,8 +144,19 @@
                 slava: "Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen.",
                 fatimaTitle: "O my Jesus",
                 fatima: "O my Jesus, forgive us our sins, save us from the fires of hell, lead all souls to Heaven, especially those most in need of Thy mercy.",
+                miraculousTitle: "Miraculous Medal",
+                miraculous: "O Mary, conceived without sin, pray for us who have recourse to thee!",
             },
             it: {
+                credoTitle: "Credo Apostolico",
+                credo: "Io credo in Dio, Padre onnipotente, Creatore del cielo e della terra e in Gesù Cristo, Suo unico Figlio, nostro Signore, il quale fu concepito di Spirito Santo, nacque da Maria Vergine, patì sotto Ponzio Pilato, fu crocifisso, morì e fu sepolto; discese agli inferi; il terzo giorno risuscitò da morte; salì al cielo, siede alla destra di Dio Padre onnipotente: di là verrà a giudicare i vivi e i morti. Credo nello Spirito Santo, la santa Chiesa cattolica, la comunione dei santi, la remissione dei peccati, la risurrezione della carne, la vita eterna. Amen.",
+                benedictTitle: "Preghiera di San Benedetto",
+                benedict: "La Santa Croce sia la mia luce, non sia il demonio il mio condottiero. Fatti indietro, Satana! Non mi attirare alle vanità; sono mali le tue bevande, bevi tu stesso il tuo veleno.",
+                salveTitle: "Salve Regina",
+                salve: "Salve, Regina, madre di misericordia, vita, dolcezza e speranza nostra, salve. A te riccorriamo, esuli figli di Eva; a te sospiriamo gementi e piangenti in questa valle di lacrime. Orsù dunque, avvocata nostra, rivolgi a noi gli occhi tuoi misericordiosi. E mostraci, dopo questo esilio, Gesù, il frutto benedetto del tuo seno. O clemente, o pia, o dolce Vergine Maria.",
+                michaelTitle: "Preghiera a San Michele Arcangelo",
+                michael: "San Michele Arcangelo, difendici nella battaglia; sii nostro aiuto contro la malvagità e le insidie del diavolo. Che Dio eserciti il suo dominio su di lui, preghiamo supplichevoli; e tu, o Principe della milizia celeste, con il potere divino, ricaccia nell'inferno Satana e gli altri spiriti maligni i quali errano nel mondo per perdere le anime. Amen.",
+                intentionsTitle: "Per le intenzioni personali",
                 ocenasTitle: "Padre nostro",
                 ocenas: "Padre nostro, che sei nei cieli, sia santificato il tuo nome, venga il tuo regno, sia fatta la tua volontà, come in cielo così in terra. Dacci oggi il nostro pane quotidiano, e rimetti a noi i nostri debiti come anche noi li rimettiamo ai nostri debitori, e non abbandonarci alla tentazione, ma liberaci dal male. Amen.",
                 zdravaTitle: "Ave Maria",
@@ -111,8 +166,19 @@
                 slava: "Gloria al Padre e al Figlio e allo Spirito Santo. Come era nel principio, ora e sempre, nei secoli dei secoli. Amen.",
                 fatimaTitle: "O Gesù mio",
                 fatima: "O Gesù mio, perdona le nostre colpe, preservaci dal fuoco dell'inferno, porta in cielo tutte le anime, specialmente le più bisognose della tua misericordia.",
+                miraculousTitle: "Medaglia Miracolosa",
+                miraculous: "O Maria, concepita senza peccato, prega per noi che a te ricorriamo!",
             },
             la: {
+                credoTitle: "Symbolum Apostolorum",
+                credo: "Credo in Deum, Patrem omnipotentem, Creatorem caeli et terrae, et in Iesum Christum, Filium Eius unicum, Dominum nostrum, qui conceptus est de Spiritu Sancto, natus ex Maria Virgine, passus sub Pontio Pilato, crucifixus, mortuus, et sepultus, descendit ad inferos, tertia die resurrexit a mortuis, ascendit ad caelos, sedet ad dexteram Dei Patris omnipotentis, inde venturus est iudicare vivos et mortuos. Credo in Spiritum Sanctum, sanctam Ecclesiam catholicam, sanctorum communionem, remissionem peccatorum, carnis resurrectionem, vitam aeternam. Amen.",
+                benedictTitle: "Oratio Sancti Benedicti",
+                benedict: "Crux sacra sit mihi lux! Non draco sit mihi dux! Vade retro Satana! Nunquam suade mihi vana! Sunt mala quae libas. Ipse venena bibas!",
+                salveTitle: "Salve Regina",
+                salve: "Salve, Regina, mater misericordiae, vita, dulcedo, et spes nostra, salve. Ad te clamamus, exsules filii Evae, ad te suspiramus, gementes et flentes in hac lacrimarum valle. Eia, ergo, advocata nostra, illos tuos misericordes oculos ad nos converte; et Iesum, benedictum fructum ventris tui, nobis post hoc exsilium ostende. O clemens, O pia, O dulcis Virgo Maria.",
+                michaelTitle: "Oratio ad Sanctum Michaelem",
+                michael: "Sancte Michael Archangele, defende nos in proelio, contra nequitiam et insidias diaboli esto praesidium. Imperet illi Deus, supplices deprecamur: tuque, Princeps militiae caelestis, Satanam aliosque spiritus malignos, qui ad perditionem animarum pervagantur in mundo, divina virtute, in infernum detrude. Amen.",
+                intentionsTitle: "Pro intentionibus personalibus",
                 ocenasTitle: "Pater noster",
                 ocenas: "Pater noster, qui es in caelis, sanctificetur nomen tuum. Adveniat regnum tuum. Fiat voluntas tua, sicut in caelo et in terra. Panem nostrum quotidianum da nobis hodie, et dimitte nobis debita nostra sicut et nos dimittimus debitoribus nostris. Et ne nos inducas in tentationem, sed libera nos a malo. Amen.",
                 zdravaTitle: "Ave Maria",
@@ -122,34 +188,36 @@
                 slava: "Gloria Patri, et Filio, et Spiritui Sancto. Sicut erat in principio, et nunc, et semper, et in saecula saeculorum. Amen.",
                 fatimaTitle: "Domine Iesu",
                 fatima: "Domine Iesu, dimitte nobis debita nostra, salva nos ab igne inferiori, perduc in caelum omnes animas, praesertim eas, quae misericordiae tuae maxime indigent.",
+                miraculousTitle: "Numisma Mirabile",
+                miraculous: "O Maria, sine labe concepta, ora pro nobis qui ad te confugimus!",
             }
         };
 
         const MYSTERIES = {
             veseli: {
-                sl: [", ki si ga Devica od Svetega Duha spočela", ", ki si ga Devica k Elizabeti nosila", ", ki si ga Devica rodila", ", ki si ga Devica v templju darovala", ", ki si ga Devica v templju našla"],
-                de: [", den du, o Jungfrau, vom Heiligen Geist empfangen hast", ", den du, o Jungfrau, zu Elisabeth getragen hast", ", den du, o Jungfrau, geboren hast", ", den du, o Jungfrau, im Tempel aufgeopfert hast", ", den du, o Jungfrau, im Tempel wiedergefunden hast"],
+                sl: ["ki si ga Devica od Svetega Duha spočela", "ki si ga Devica k Elizabeti nosila", "ki si ga Devica rodila", "ki si ga Devica v templju darovala", "ki si ga Devica v templju našla"],
+                de: ["den du, o Jungfrau, vom Heiligen Geist empfangen hast", "den du, o Jungfrau, zu Elisabeth getragen hast", "den du, o Jungfrau, geboren hast", "den du, o Jungfrau, im Tempel aufgeopfert hast", "den du, o Jungfrau, im Tempel wiedergefunden hast"],
                 en: ["The Annunciation", "The Visitation", "The Nativity", "The Presentation", "The Finding of Jesus in the Temple"],
                 it: ["L'Annunciazione", "La Visitazione", "La Nascita di Gesù", "La Presentazione al Tempio", "Il Ritrovamento nel Tempio"],
                 la: ["Annuntiatio", "Visitatio", "Nativitas", "Praesentatio in Templo", "Inventio in Templo"]
             },
             svetli: {
-                sl: [", ki je bil krščen v reki Jordan", ", ki je v Kani Galilejski naredil prvi čudež", ", ki je oznanjal božje kraljestvo", ", ki je na gori Tabor pokazal svoje veličastvo", ", ki je postavil sveto rešnjo telo"],
-                de: [", der von Johannes getauft worden ist", ", der sich bei der Hochzeit in Kana offenbart hat", ", der uns das Reich Gottes verkündet hat", ", der auf dem Berg verklärt worden ist", ", der uns die Eucharistie geschenkt hat"],
+                sl: ["ki je bil krščen v reki Jordan", "ki je v Kani Galilejski naredil prvi čudež", "ki je oznanjal božje kraljestvo", "ki je na gori Tabor pokazal svoje veličastvo", "ki je postavil sveto rešnjo telo"],
+                de: ["der von Johannes getauft worden ist", "der sich bei der Hochzeit in Kana offenbart hat", "der uns das Reich Gottes verkündet hat", "der auf dem Berg verklärt worden ist", "der uns die Eucharistie geschenkt hat"],
                 en: ["The Baptism in the Jordan", "The Wedding Feast at Cana", "The Proclamation of the Kingdom", "The Transfiguration", "The Institution of the Eucharist"],
                 it: ["Il Battesimo nel Giordano", "Le Nozze di Cana", "L'Annuncio del Regno di Dio", "La Trasfigurazione", "L'Istituzione dell'Eucaristia"],
                 la: ["Baptismus in Iordane", "Nuptiae in Cana", "Proclamatio Regni Dei", "Transfiguratio", "Institutio Eucharistiae"]
             },
             zalostni: {
-                sl: [", ki je za nas krvavi pot potil", ", ki je bil za nas bičan", ", ki je bil za nas s trnjem kronan", ", ki je za nas težki križ nesel", ", ki je bil za nas križan"],
-                de: [", der für uns Blut geschwitzt hat", ", der für uns gegeißelt worden ist", ", der für uns mit Dornen gekrönt worden ist", ", der für uns das schwere Kreuz getragen hat", ", der für uns gekreuzigt worden ist"],
+                sl: ["ki je za nas krvavi pot potil", "ki je bil za nas bičan", "ki je bil za nas s trnjem kronan", "ki je za nas težki križ nesel", "ki je bil za nas križan"],
+                de: ["der für uns Blut geschwitzt hat", "der für uns gegeißelt worden ist", "der für uns mit Dornen gekrönt worden ist", "der für uns das schwere Kreuz getragen hat", "der für uns gekreuzigt worden ist"],
                 en: ["The Agony in the Garden", "The Scourging at the Pillar", "The Crowning with Thorns", "The Carrying of the Cross", "The Crucifixion"],
                 it: ["L'Agonia nell'Orto", "La Flagellazione", "L'Incoronazione di Spine", "La Salita al Calvario", "La Crocifissione e Morte"],
                 la: ["Agonia in Horto", "Flagellatio", "Coronatio Spinis", "Baiulatio Crucis", "Crucifixio et Mors"]
             },
             castitljivi: {
-                sl: [", ki je od mrtvih vstal", ", ki je v nebesa šel", ", ki je Svetega Duha poslal", ", ki je tebe, Devica, v nebesa vzel", ", ki je tebe, Devica, v nebesih kronal"],
-                de: [", der von den Toten auferstanden ist", ", der in den Himmel aufgefahren ist", ", der uns den Heiligen Geist gesandt hat", ", der dich, o Jungfrau, in den Himmel aufgenommen hat", ", der dich, o Jungfrau, im Himmel gekrönt hat"],
+                sl: ["ki je od mrtvih vstal", "ki je v nebesa šel", "ki je Svetega Duha poslal", "ki je tebe, Devica, v nebesa vzel", "ki je tebe, Devica, v nebesih kronal"],
+                de: ["der von den Toten auferstanden ist", "der in den Himmel aufgefahren ist", "der uns den Heiligen Geist gesandt hat", "der dich, o Jungfrau, in den Himmel aufgenommen hat", "der dich, o Jungfrau, im Himmel gekrönt hat"],
                 en: ["The Resurrection", "The Ascension", "The Descent of the Holy Spirit", "The Assumption of Mary", "The Coronation of the Virgin"],
                 it: ["La Risurrezione", "L'Ascensione", "La Discesa dello Spirito Santo", "L'Assunzione di Maria", "L'Incoronazione di Maria"],
                 la: ["Resurrectio", "Ascensio", "Descensus Spiritus Sancti", "Assumptio", "Coronatio in Caelo"]
@@ -163,6 +231,13 @@
             castitljivi: "Častitljivi del"
         };
 
+        const INTRO_INSERTS = {
+            veseli: ["ki nam poživi vero", "ki nam utrdi upanje", "ki nam vžgi ljubezen"],
+            svetli: ["ki nam daj duha pokorščine", "ki nam daj srečo uboštva", "ki nam podeli milost čistosti"],
+            zalostni: ["ki nam utrdi spomin", "ki nam razsvetli pamet", "ki nam omeči voljo"],
+            castitljivi: ["ki nam vodi naše misli", "ki nam vodi naše besede", "ki nam vodi naša dejanja"]
+        };
+
         // --- IMAGINES ET ICONES ---
         const Icon = ({ name, className = "" }) => {
             const paths = {
@@ -172,7 +247,8 @@
                 book: "M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20M4 19.5V3a1 1 0 011-1h15a1 1 0 011 1v19a1 1 0 01-1 1H6.5a2.5 2.5 0 01-2.5-2.5z",
                 dices: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
                 arrowLeft: "M15 19l-7-7 7-7",
-                arrowRight: "M9 5l7 7-7 7"
+                arrowRight: "M9 5l7 7-7 7",
+                eye: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 15a3 3 0 100-6 3 3 0 000 6z"
             };
             return (
                 <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -196,25 +272,81 @@
             const [isRoulettePrayer, setIsRoulettePrayer] = useState(false);
             const [isRouletteDecade, setIsRouletteDecade] = useState(false);
             const [mysteryType, setMysteryType] = useState(getMysteryForToday());
+            
+            // Faze in pogledi za popolno strukturo rožnega venca
+            const [view, setView] = useState('menu'); // 'menu', 'prayer', 'finished'
+            const [phase, setPhase] = useState('intro'); // 'intro', 'decades', 'outro'
             const [decadeIndex, setDecadeIndex] = useState(0); 
-            const [step, setStep] = useState(-1); 
-            const [savedStep, setSavedStep] = useState(0); 
+            const [step, setStep] = useState(0); 
+
+            // Stanje za sliko trenutne skrivnosti (celozaslonski način)
+            const [showMysteryImage, setShowMysteryImage] = useState(false);
+
+            // Stanje za čudodelno svetinjo
+            const [showMiraculous, setShowMiraculous] = useState(false);
+            const [miraculousTriggers, setMiraculousTriggers] = useState([]);
+
+            // Reference za zaznavanje drsenja s prstom (Swipe)
+            const touchStartX = useRef(null);
+            const touchStartY = useRef(null);
+
+            // NOVO: Funkcija za taktilni odziv (Vibracija)
+            const triggerVibration = useCallback((duration = 15) => {
+                if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+                    try {
+                        window.navigator.vibrate(duration);
+                    } catch (e) {
+                        // Nekateri brskalniki ignorirajo, to je normalno
+                    }
+                }
+            }, []);
+
+            // Funkcija, ki ob zagonu izbere 3 naključne trenutke med desetkami
+            const generateTriggers = useCallback(() => {
+                const triggers = new Set();
+                while(triggers.size < 3) {
+                    triggers.add(Math.floor(Math.random() * 63) + 1); 
+                }
+                setMiraculousTriggers(Array.from(triggers));
+            }, []);
+
+            useEffect(() => {
+                generateTriggers();
+            }, [generateTriggers]);
+
+            // Preverjanje, če moramo pokazati pop-up
+            useEffect(() => {
+                if (phase === 'decades' && !showMiraculous) {
+                    const absoluteStep = decadeIndex * 13 + step;
+                    if (miraculousTriggers.includes(absoluteStep)) {
+                        setShowMiraculous(true);
+                        setMiraculousTriggers(prev => prev.filter(t => t !== absoluteStep)); // Odstranimo, da se ne ponovi
+                    }
+                }
+            }, [phase, decadeIndex, step, miraculousTriggers, showMiraculous]);
+
+            // Samodejno zapiranje slike skrivnosti, ko se spremeni desetka
+            useEffect(() => {
+                setShowMysteryImage(false);
+            }, [decadeIndex, phase]);
 
             useEffect(() => {
                 const handleKeyDown = (e) => {
-                    if (step >= 0 && step < 13) {
+                    if (view === 'prayer' && !showMiraculous) {
                         if (e.key === 'ArrowRight' || e.key === ' ') {
                             e.preventDefault();
+                            triggerVibration(15);
                             handleNextStep();
                         } else if (e.key === 'ArrowLeft') {
                             e.preventDefault();
+                            triggerVibration(10);
                             handlePrevStep();
                         }
                     }
                 };
                 window.addEventListener('keydown', handleKeyDown);
                 return () => window.removeEventListener('keydown', handleKeyDown);
-            }, [step, decadeIndex, lang, isRoulettePrayer, isRouletteDecade]);
+            }, [view, phase, step, decadeIndex, lang, isRoulettePrayer, isRouletteDecade, showMiraculous, triggerVibration]);
 
             const currentMysteryText = MYSTERIES[mysteryType][lang][decadeIndex];
             const isInsertLanguage = lang === 'sl' || lang === 'de';
@@ -228,36 +360,99 @@
             }, []);
 
             const handleNextStep = useCallback(() => {
-                if (isRoulettePrayer) {
-                    changeLanguageRandomly();
-                }
+                if (isRoulettePrayer) changeLanguageRandomly();
 
-                if (step < 12) {
-                    setStep(prev => prev + 1);
-                } else if (step === 12) {
-                    if (decadeIndex < 4) {
-                        if (isRouletteDecade && !isRoulettePrayer) {
-                            changeLanguageRandomly();
-                        }
-                        setDecadeIndex(prev => prev + 1);
-                        setStep(0);
+                if (phase === 'intro') {
+                    if (step < 5) {
+                        setStep(s => s + 1);
                     } else {
-                        setStep(13); 
+                        setPhase('decades');
+                        setStep(0);
+                    }
+                } else if (phase === 'decades') {
+                    if (step < 12) {
+                        setStep(s => s + 1);
+                    } else {
+                        if (decadeIndex < 4) {
+                            if (isRouletteDecade && !isRoulettePrayer) changeLanguageRandomly();
+                            setDecadeIndex(prev => prev + 1);
+                            setStep(0);
+                        } else {
+                            setPhase('outro'); 
+                            setStep(0); 
+                        }
+                    }
+                } else if (phase === 'outro') {
+                    if (step < 7) {
+                        setStep(s => s + 1);
+                    } else {
+                        setView('finished');
                     }
                 }
-            }, [step, decadeIndex, isRoulettePrayer, isRouletteDecade, changeLanguageRandomly]);
+            }, [phase, step, decadeIndex, isRoulettePrayer, isRouletteDecade, changeLanguageRandomly]);
 
             const handlePrevStep = useCallback(() => {
-                if (step > 0) {
-                    setStep(prev => prev - 1);
-                } else if (step === 0 && decadeIndex > 0) {
-                    setDecadeIndex(prev => prev - 1);
-                    setStep(12);
-                } else if (step === 0 && decadeIndex === 0) {
-                    setSavedStep(0);
-                    setStep(-1);
+                if (phase === 'intro') {
+                    if (step > 0) {
+                        setStep(s => s - 1);
+                    } else {
+                        setView('menu'); 
+                    }
+                } else if (phase === 'decades') {
+                    if (step > 0) {
+                        setStep(s => s - 1);
+                    } else {
+                        if (decadeIndex > 0) {
+                            setDecadeIndex(d => d - 1);
+                            setStep(12);
+                        } else {
+                            setPhase('intro');
+                            setStep(5);
+                        }
+                    }
+                } else if (phase === 'outro') {
+                    if (step > 0) {
+                        setStep(s => s - 1);
+                    } else {
+                        setPhase('decades');
+                        setStep(12);
+                    }
                 }
-            }, [step, decadeIndex]);
+            }, [phase, step, decadeIndex]);
+
+            // NOVO: Handlers za Swipe / Drsenje s prstom
+            const onTouchStart = (e) => {
+                touchStartX.current = e.touches[0].clientX;
+                touchStartY.current = e.touches[0].clientY;
+            };
+
+            const onTouchEndHandler = (e) => {
+                if (touchStartX.current === null || touchStartY.current === null) return;
+                if (showMiraculous) return; // Zablokiraj drsenje, če je odprt modal s svetinjo
+
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+
+                const deltaX = touchStartX.current - touchEndX;
+                const deltaY = touchStartY.current - touchEndY;
+
+                // Preverimo, če gre za pretežno horizontalno drsenje in je dovolj dolgo (več kot 50px)
+                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                    if (deltaX > 0) {
+                        // Potez v levo -> Naslednja molitev
+                        triggerVibration(15);
+                        handleNextStep();
+                    } else {
+                        // Potez v desno -> Prejšnja molitev
+                        triggerVibration(10);
+                        handlePrevStep();
+                    }
+                }
+                
+                // Ponastavi reference za naslednji dotik
+                touchStartX.current = null;
+                touchStartY.current = null;
+            };
 
             // Prikaz glavnega menija
             const renderMainMenu = () => (
@@ -324,8 +519,9 @@
                         <div className="pt-2 space-y-2">
                             <button
                                 onClick={() => {
+                                    triggerVibration(10);
                                     setIsRoulettePrayer(!isRoulettePrayer);
-                                    if (!isRoulettePrayer) setIsRouletteDecade(false); // Prepreči aktivacijo obeh
+                                    if (!isRoulettePrayer) setIsRouletteDecade(false); 
                                 }}
                                 className={`w-full flex items-center justify-between p-3.5 rounded-xl font-black text-[10px] md:text-xs transition-all duration-300 border ${
                                     isRoulettePrayer 
@@ -344,8 +540,9 @@
 
                             <button
                                 onClick={() => {
+                                    triggerVibration(10);
                                     setIsRouletteDecade(!isRouletteDecade);
-                                    if (!isRouletteDecade) setIsRoulettePrayer(false); // Prepreči aktivacijo obeh
+                                    if (!isRouletteDecade) setIsRoulettePrayer(false); 
                                 }}
                                 className={`w-full flex items-center justify-between p-3.5 rounded-xl font-black text-[10px] md:text-xs transition-all duration-300 border ${
                                     isRouletteDecade 
@@ -367,20 +564,21 @@
                     <div className="w-full flex flex-col gap-3 mt-2">
                         <button 
                             onClick={() => {
-                                if (savedStep === 0 && decadeIndex === 0 && step === -1 && (isRoulettePrayer || isRouletteDecade)) {
-                                    changeLanguageRandomly(); // Spremeni jezik takoj na začetku, če je ruleta vklopljena
+                                triggerVibration(20);
+                                if (phase === 'intro' && step === 0 && (isRoulettePrayer || isRouletteDecade)) {
+                                    changeLanguageRandomly();
                                 }
-                                setStep(savedStep);
+                                setView('prayer');
                             }}
                             className="group bg-gradient-to-b from-[#8b1a1a] to-[#5c0e0e] hover:from-[#a01e1e] hover:to-[#731212] text-[#f4e0aa] w-full py-4 rounded-xl font-serif-holy font-bold text-xl shadow-lg transition-all active:scale-95 flex items-center justify-center border-b-4 border-[#3e0808]"
                         >
                             <div className="mr-3 transform group-hover:scale-110 transition-transform"><Icon name="play" /></div>
-                            {(decadeIndex > 0 || savedStep > 0) ? "NADALJUJ MOLITEV" : "ZAČNI MOLITEV"}
+                            {(phase !== 'intro' || step > 0 || decadeIndex > 0) ? "NADALJUJ MOLITEV" : "ZAČNI MOLITEV"}
                         </button>
                         
-                        {(decadeIndex > 0 || savedStep > 0) && (
+                        {(phase !== 'intro' || step > 0 || decadeIndex > 0) && (
                             <button 
-                                onClick={() => { setDecadeIndex(0); setSavedStep(0); setStep(0); }}
+                                onClick={() => { triggerVibration(10); setPhase('intro'); setStep(0); setDecadeIndex(0); generateTriggers(); setView('prayer'); }}
                                 className="group bg-transparent hover:bg-[#e8dfc8] text-[#3e2723] w-full py-3 rounded-xl font-bold text-xs shadow-sm transition-all active:scale-95 flex items-center justify-center border border-[#d2c5aa]"
                             >
                                 <div className="mr-2 transform group-hover:-rotate-180 transition-transform duration-500"><Icon name="refresh" className="w-4 h-4" /></div>
@@ -395,16 +593,16 @@
             const renderPrayerContent = () => {
                 const p = PRAYERS[lang];
 
-                if (step === 13) {
+                if (view === 'finished') {
                     return (
                         <div className="text-center py-12 px-6 animate-slide-up flex flex-col justify-center h-full">
                             <div className="w-24 h-24 bg-[#121c33] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl border-[4px] border-[#d4af37] text-[#d4af37]">
                                 <Icon name="check" className="w-12 h-12" />
                             </div>
                             <h2 className="text-4xl font-serif-holy font-bold text-[#8b1a1a] mb-3 uppercase tracking-tight">Bog bodi zahvaljen!</h2>
-                            <p className="text-[#3e2723] mb-10 text-lg font-medium italic">Vseh pet desetk je zaključenih.</p>
+                            <p className="text-[#3e2723] mb-10 text-lg font-medium italic">Sveti rožni venec je zaključen.</p>
                             <button 
-                                onClick={() => { setStep(-1); setSavedStep(0); setDecadeIndex(0); }}
+                                onClick={() => { triggerVibration(10); setPhase('intro'); setStep(0); setDecadeIndex(0); generateTriggers(); setView('menu'); }}
                                 className="group bg-gradient-to-b from-[#121c33] to-[#0a0f1c] hover:from-[#1a294c] hover:to-[#121c33] text-[#d4af37] w-full max-w-xs py-4 rounded-xl font-serif-holy font-bold text-lg shadow-lg transition flex items-center justify-center mx-auto border-b-4 border-[#000]"
                             >
                                 <div className="mr-3 transform group-hover:rotate-180 transition-transform duration-500"><Icon name="refresh" /></div>
@@ -418,35 +616,104 @@
                 let content = null;
                 let subtitle = "";
 
-                // Oblikovanje podnaslova
-                if (isInsertLanguage) {
-                    subtitle = `${decadeIndex + 1}. SKRIVNOST`;
-                } else {
-                    subtitle = `${decadeIndex + 1}. MYSTERY: ${currentMysteryText}`;
-                    if (lang === 'it') subtitle = `${decadeIndex + 1}° MISTERO: ${currentMysteryText}`;
-                    if (lang === 'la') subtitle = `MYSTERIUM ${decadeIndex + 1}: ${currentMysteryText}`;
+                // Nastavitev podnaslova glede na fazo in jezik
+                if (phase === 'intro') {
+                    if (lang === 'sl') subtitle = "UVOD";
+                    else if (lang === 'de') subtitle = "EINLEITUNG";
+                    else if (lang === 'it') subtitle = "INTRODUZIONE";
+                    else if (lang === 'la') subtitle = "INTRODUCTIO";
+                    else subtitle = "INTRODUCTION";
+                } else if (phase === 'outro') {
+                    if (lang === 'sl') subtitle = "ZAKLJUČEK";
+                    else if (lang === 'de') subtitle = "ABSCHLUSS";
+                    else if (lang === 'it') subtitle = "CONCLUSIONE";
+                    else if (lang === 'la') subtitle = "CONCLUSIO";
+                    else subtitle = "CONCLUSION";
+                } else if (phase === 'decades') {
+                    if (isInsertLanguage) {
+                        subtitle = lang === 'de' ? `${decadeIndex + 1}. GEHEIMNIS` : `${decadeIndex + 1}. SKRIVNOST`;
+                    } else {
+                        subtitle = `${decadeIndex + 1}. MYSTERY: ${currentMysteryText}`;
+                        if (lang === 'it') subtitle = `${decadeIndex + 1}° MISTERO: ${currentMysteryText}`;
+                        if (lang === 'la') subtitle = `MYSTERIUM ${decadeIndex + 1}: ${currentMysteryText}`;
+                    }
                 }
 
-                // Določanje vsebine
-                if (step === 0) {
-                    title = p.ocenasTitle;
-                    content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.ocenas}</p>;
-                } else if (step >= 1 && step <= 10) {
-                    title = `${p.zdravaTitle} (${step}/10)`;
-                    content = (
-                        <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">
-                            {p.zdrava1}
-                            {isInsertLanguage && <span className="text-[#8b1a1a] bg-[#fcfaf5] px-1 rounded mx-1 underline decoration-[#d4af37] decoration-2 underline-offset-4 font-bold">{currentMysteryText}</span>}
-                            {p.zdrava2}
-                        </p>
-                    );
-                } else if (step === 11) {
-                    title = p.slavaTitle;
-                    content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.slava}</p>;
-                } else if (step === 12) {
-                    title = p.fatimaTitle;
-                    content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.fatima}</p>;
+                // Določanje vsebine glede na fazo in korak
+                if (phase === 'intro') {
+                    if (step === 0) {
+                        title = p.credoTitle;
+                        content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.credo}</p>;
+                    } else if (step === 1) {
+                        title = p.ocenasTitle;
+                        content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.ocenas}</p>;
+                    } else if (step >= 2 && step <= 4) {
+                        title = p.zdravaTitle;
+                        content = (
+                            <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">
+                                {p.zdrava1}{lang === 'sl' ? ", " : ""}{lang === 'sl' && <span className="text-[#8b1a1a] bg-[#fcfaf5] px-1 rounded underline decoration-[#d4af37] decoration-2 underline-offset-4 font-bold">{INTRO_INSERTS[mysteryType][step - 2]}</span>}{p.zdrava2}
+                            </p>
+                        );
+                    } else if (step === 5) {
+                        title = p.slavaTitle;
+                        content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.slava}</p>;
+                    }
+                } else if (phase === 'decades') {
+                    const tClass = showMysteryImage 
+                        ? "text-lg md:text-xl leading-relaxed font-serif-holy font-medium text-[#fcfaf5] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" 
+                        : "text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]";
+                    const hlClass = showMysteryImage 
+                        ? "text-[#d4af37] px-1 rounded font-bold underline decoration-[#d4af37] decoration-2 underline-offset-4 bg-black/40 backdrop-blur-sm shadow-sm" 
+                        : "text-[#8b1a1a] bg-[#fcfaf5] px-1 rounded underline decoration-[#d4af37] decoration-2 underline-offset-4 font-bold";
+
+                    if (step === 0) {
+                        title = p.ocenasTitle;
+                        content = <p className={tClass}>{p.ocenas}</p>;
+                    } else if (step >= 1 && step <= 10) {
+                        title = p.zdravaTitle;
+                        content = (
+                            <p className={tClass}>
+                                {p.zdrava1}{isInsertLanguage ? ", " : ""}{isInsertLanguage && <span className={hlClass}>{currentMysteryText}</span>}{p.zdrava2}
+                            </p>
+                        );
+                    } else if (step === 11) {
+                        title = p.slavaTitle;
+                        content = <p className={tClass}>{p.slava}</p>;
+                    } else if (step === 12) {
+                        title = p.fatimaTitle;
+                        content = <p className={tClass}>{p.fatima}</p>;
+                    }
+                } else if (phase === 'outro') {
+                    if (step === 0) {
+                        title = p.benedictTitle;
+                        content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.benedict}</p>;
+                    } else if (step === 1) {
+                        title = p.ocenasTitle;
+                        content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.ocenas}</p>;
+                    } else if (step >= 2 && step <= 4) {
+                        title = p.zdravaTitle;
+                        content = (
+                            <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">
+                                {p.zdrava1}{p.zdrava2}
+                            </p>
+                        );
+                    } else if (step === 5) {
+                        title = p.slavaTitle;
+                        content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.slava}</p>;
+                    } else if (step === 6) {
+                        title = p.salveTitle;
+                        content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.salve}</p>;
+                    } else if (step === 7) {
+                        title = p.michaelTitle;
+                        content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.michael}</p>;
+                    }
                 }
+
+                // Generiranje kroglic za zgornji trak glede na fazo
+                let beadArray = [];
+                if (phase === 'intro') beadArray = Array.from({ length: 6 });
+                else if (phase === 'decades') beadArray = Array.from({ length: 13 });
+                else if (phase === 'outro') beadArray = Array.from({ length: 8 });
 
                 return (
                     <div className="flex flex-col h-full animate-fade-in w-full">
@@ -455,32 +722,39 @@
                         <div className="w-full flex justify-between items-center mb-3 mt-1">
                             {/* Gumb Meni / Domov */}
                             <button 
-                                onClick={() => { setSavedStep(step); setStep(-1); }}
-                                className="w-10 h-10 bg-[#fcfaf5] rounded-full shadow-sm flex items-center justify-center text-[#8b1a1a] hover:text-[#121c33] transform transition-all active:scale-90 border border-[#d2c5aa] flex-shrink-0"
+                                onClick={() => { triggerVibration(10); setView('menu'); }}
+                                className="w-10 h-10 bg-[#fcfaf5] rounded-full shadow-sm flex items-center justify-center text-[#8b1a1a] hover:text-[#121c33] transform transition-all active:scale-90 border border-[#d2c5aa] flex-shrink-0 relative z-[60]"
                                 aria-label="Nazaj na meni"
                             >
                                 <Icon name="book" className="w-5 h-5" />
                             </button>
 
                             {/* Tradicionalen napredek */}
-                            <div className="flex flex-col items-center gap-1.5">
+                            <div className="flex flex-col items-center gap-1.5 relative z-[60]">
                                 {/* Desetke */}
                                 <div className="flex gap-1.5">
-                                    {[0, 1, 2, 3, 4].map(i => (
-                                        <div key={`d-${i}`} className={`h-1.5 rounded-sm transition-all duration-500 ${
-                                            i === decadeIndex ? 'w-6 bg-[#8b1a1a] shadow-sm' : 
-                                            i < decadeIndex ? 'w-3 bg-[#d4af37]' : 'w-3 bg-[#d2c5aa]/60'
-                                        }`} />
-                                    ))}
+                                    {[0, 1, 2, 3, 4].map(i => {
+                                        let stateClass = 'w-3 bg-[#d2c5aa]/60';
+                                        if (phase === 'outro' || (phase === 'decades' && i < decadeIndex)) {
+                                            stateClass = 'w-3 bg-[#d4af37]';
+                                        } else if (phase === 'decades' && i === decadeIndex) {
+                                            stateClass = 'w-6 bg-[#8b1a1a] shadow-sm';
+                                        }
+                                        return <div key={`d-${i}`} className={`h-1.5 rounded-sm transition-all duration-500 ${stateClass}`} />;
+                                    })}
                                 </div>
                                 
                                 {/* Jagode */}
                                 <div className="flex gap-1 items-center">
-                                    {Array.from({ length: 13 }).map((_, i) => {
-                                        const isLarge = i === 0 || i === 11 || i === 12;
+                                    {beadArray.map((_, i) => {
+                                        let isLarge = false;
+                                        if (phase === 'intro') isLarge = (i === 0 || i === 1 || i === 5);
+                                        else if (phase === 'decades') isLarge = (i === 0 || i === 11 || i === 12);
+                                        else if (phase === 'outro') isLarge = (i === 0 || i === 1 || i === 5 || i === 6 || i === 7);
+
                                         return (
                                             <div 
-                                                key={`b-${i}`} 
+                                                key={`b-${i}`}
                                                 className={`rounded-full transition-all duration-300 ${
                                                     isLarge ? 'w-1.5 h-1.5' : 'w-1 h-1'
                                                 } ${
@@ -493,44 +767,65 @@
                                 </div>
                             </div>
 
-                            {/* Neviden placeholder */}
-                            <div className="w-10 h-10 flex-shrink-0"></div>
+                            {/* Gumb za preklop slike ali neviden placeholder */}
+                            <div className="w-10 h-10 flex-shrink-0 flex justify-end relative z-[60]">
+                                {phase === 'decades' && (
+                                    <button 
+                                        onClick={() => { triggerVibration(10); setShowMysteryImage(!showMysteryImage); }}
+                                        className={`w-10 h-10 rounded-full shadow-sm flex items-center justify-center transform transition-all active:scale-90 border ${showMysteryImage ? 'bg-[#121c33] text-[#d4af37] border-[#121c33]' : 'bg-[#fcfaf5] text-[#8b1a1a] hover:text-[#121c33] border-[#d2c5aa]'}`}
+                                        aria-label="Prikaži sliko"
+                                    >
+                                        <Icon name="eye" className="w-5 h-5" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                         
-                        {/* KARTICA Z MOLITVIJO */}
-                        <div className="bg-[#fdfbf7] rounded-xl p-5 md:p-8 pt-6 md:pt-8 pb-28 md:pb-32 shadow-xl border border-[#d4af37]/40 relative overflow-y-auto flex-grow flex flex-col justify-start">
-                            {/* Ornamentalen kot ali vzorec (subtilno) */}
-                            <div className="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-[#d4af37]/20 rounded-tr-xl m-2 pointer-events-none"></div>
-                            <div className="absolute bottom-0 left-0 w-16 h-16 border-b-4 border-l-4 border-[#d4af37]/20 rounded-bl-xl m-2 pointer-events-none"></div>
+                        {/* KARTICA Z MOLITVIJO (ali slika, če je vklopljena) */}
+                        {!showMysteryImage ? (
+                            <div className="bg-[#fdfbf7] rounded-xl p-5 md:p-8 pt-6 md:pt-8 pb-36 md:pb-40 shadow-xl border border-[#d4af37]/40 relative overflow-y-auto flex-grow flex flex-col justify-start z-10">
+                                <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-[#d4af37]/20 rounded-tl-xl m-2 pointer-events-none"></div>
+                                <div className="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-[#d4af37]/20 rounded-tr-xl m-2 pointer-events-none"></div>
 
-                            <div className="text-center mb-4 flex flex-col items-center relative z-10">
-                                <span className="px-3 py-1 bg-[#121c33] text-[#d4af37] rounded-sm text-[9px] font-bold mb-3 uppercase tracking-[0.2em] shadow-sm">
-                                    {subtitle}
-                                </span>
-                                <h2 className="text-2xl md:text-3xl font-serif-holy font-bold text-[#8b1a1a] uppercase tracking-tight drop-shadow-sm">{title}</h2>
-                            </div>
-                            
-                            <div className="block text-center relative z-10 mt-1">
-                                <div className="animate-fade-in" key={`${decadeIndex}-${step}-${lang}`}>
-                                    {content}
+                                <div className="text-center mb-4 flex flex-col items-center relative z-10">
+                                    <span className="px-3 py-1 bg-[#121c33] text-[#d4af37] rounded-sm text-[9px] font-bold mb-3 uppercase tracking-[0.2em] shadow-sm">
+                                        {subtitle}
+                                    </span>
+                                    <h2 className="text-xl md:text-2xl font-serif-holy font-bold text-[#8b1a1a] uppercase tracking-tight drop-shadow-sm">{title}</h2>
+                                </div>
+                                
+                                <div className="block text-center relative z-10 mt-1">
+                                    <div className="animate-fade-in" key={`${phase}-${decadeIndex}-${step}-${lang}`}>
+                                        {content}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="rounded-xl shadow-2xl relative overflow-hidden flex-grow flex flex-col justify-center items-center border border-[#d4af37]/50 animate-fade-in bg-black z-10">
+                                {MYSTERY_IMAGES[mysteryType][decadeIndex] ? (
+                                    <img src={MYSTERY_IMAGES[mysteryType][decadeIndex]} className="absolute inset-0 w-full h-full object-cover animate-fade-in" />
+                                ) : (
+                                    <div className="absolute inset-0 bg-gradient-to-br from-[#121c33] to-[#0a0f1c]"></div>
+                                )}
+                                
+                                {/* Rahla senca zgoraj in spodaj, da so gumbi vedno jasno vidni ne glede na sliko */}
+                                <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-black/40 to-transparent pointer-events-none"></div>
+                                <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"></div>
+                            </div>
+                        )}
 
-                        {/* FLOATING NAVIGACIJSKI GUMBI (Zalepljeni spodaj) */}
+                        {/* FLOATING NAVIGACIJSKI GUMBI */}
                         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-lg px-4 md:px-6 flex justify-between items-end pointer-events-none z-50">
-                            {/* Gumb Nazaj (Spodaj levo) */}
                             <button 
-                                onClick={handlePrevStep}
+                                onClick={() => { triggerVibration(10); handlePrevStep(); }}
                                 className="w-12 h-12 bg-[#fcfaf5] rounded-full shadow-lg flex items-center justify-center text-[#6d5a42] hover:text-[#8b1a1a] transform transition-all active:scale-90 border border-[#d2c5aa] pointer-events-auto mb-2 md:mb-4"
                                 aria-label="Nazaj"
                             >
                                 <Icon name="arrowLeft" className="w-6 h-6" />
                             </button>
 
-                            {/* GLAVNI GUMB NAPREJ / Jagoda (Spodaj desno) */}
                             <button 
-                                onClick={handleNextStep}
+                                onClick={() => { triggerVibration(15); handleNextStep(); }}
                                 className="w-20 h-20 md:w-24 md:h-24 rounded-full shadow-[0_10px_25px_rgba(0,0,0,0.3)] flex items-center justify-center text-[#d4af37] transform transition-all active:scale-95 border-[4px] border-[#d4af37] group pointer-events-auto relative overflow-hidden bg-gradient-to-br from-[#8b1a1a] to-[#4a0e0e]"
                             >
                                 {CUSTOM_BEAD_IMAGE ? (
@@ -538,7 +833,6 @@
                                 ) : (
                                     <span className="text-4xl md:text-5xl drop-shadow-md group-hover:scale-110 group-active:scale-90 transition-transform duration-300 font-serif-holy relative z-10">✟</span>
                                 )}
-                                {/* Overlay za gumb s sliko, da malo potemni ob hoverju (opcijsko) */}
                                 {CUSTOM_BEAD_IMAGE && <div className="absolute inset-0 bg-black/10 group-active:bg-black/30 transition-colors pointer-events-none rounded-full"></div>}
                             </button>
                         </div>
@@ -547,9 +841,12 @@
             };
 
             return (
-                <div className={`min-h-screen flex flex-col items-center ${step === -1 ? 'pb-12' : 'pb-4'}`}>
-                    {/* GLAVA / HEADER - Vidna samo v meniju */}
-                    {step === -1 && (
+                <div 
+                    className={`min-h-screen flex flex-col items-center ${view === 'menu' ? 'pb-12' : 'pb-4'}`}
+                    onTouchStart={view === 'prayer' ? onTouchStart : undefined}
+                    onTouchEnd={view === 'prayer' ? onTouchEndHandler : undefined}
+                >
+                    {view === 'menu' && (
                         <div className="w-full bg-[#121c33] text-[#d4af37] p-4 flex items-center justify-center border-b-[4px] border-[#d4af37] sticky top-0 z-50 shadow-lg">
                             <span className="text-xl md:text-2xl font-serif-holy font-bold flex items-center tracking-widest uppercase">
                                 <span className="text-2xl mr-2 text-[#f6f3eb]">✟</span> ROŽNI VENEC
@@ -557,18 +854,44 @@
                         </div>
                     )}
 
-                    <div className={`w-full max-w-lg flex flex-col px-4 md:px-6 ${step === -1 ? 'mt-4 md:mt-6' : 'mt-2 h-[95vh]'}`}>
-                        
-                        {/* GLAVNA VSEBINA */}
-                        {step === -1 ? renderMainMenu() : renderPrayerContent()}
-
+                    <div className={`w-full max-w-lg flex flex-col px-4 md:px-6 ${view === 'menu' ? 'mt-4 md:mt-6' : 'mt-2 h-[95vh]'}`}>
+                        {view === 'menu' ? renderMainMenu() : renderPrayerContent()}
                     </div>
 
-                    {/* NOGA / FOOTER - Vidna samo v meniju */}
-                    {step === -1 && (
+                    {view === 'menu' && (
                         <div className="mt-auto pt-8 px-8 text-[#8b1a1a] text-[10px] font-bold text-center uppercase tracking-[0.3em] opacity-70 leading-loose">
                             Ave Maria ✟ Gratia Plena<br/>
                             Dominus Tecum
+                        </div>
+                    )}
+
+                    {/* MODAL ZA ČUDODELNO SVETINJO */}
+                    {showMiraculous && (
+                        <div className="fixed inset-0 bg-[#121c33]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+                            <div className="bg-[#fdfbf7] p-8 rounded-2xl max-w-sm w-full shadow-2xl border-2 border-[#d4af37] text-center relative overflow-hidden transform transition-all animate-slide-up">
+                                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#d4af37] via-[#f4e0aa] to-[#d4af37]"></div>
+                                
+                                <div className="w-20 h-28 mx-auto mb-6 bg-gradient-to-br from-[#121c33] to-[#0a0f1c] rounded-[40%] border-[3px] border-[#d4af37] flex items-center justify-center shadow-lg relative overflow-hidden">
+                                    {MIRACULOUS_MEDAL_IMAGE ? (
+                                        <img src={MIRACULOUS_MEDAL_IMAGE} alt="Čudodelna svetinja" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-4xl filter drop-shadow-md">🏅</span>
+                                    )}
+                                    <div className="absolute inset-0 shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] rounded-[40%] pointer-events-none"></div>
+                                </div>
+                                
+                                <h3 className="text-xl font-serif-holy font-bold text-[#8b1a1a] mb-4 uppercase tracking-wider">{PRAYERS[lang].miraculousTitle}</h3>
+                                <p className="text-lg md:text-xl font-serif-holy font-bold text-[#2c1810] mb-8 italic px-2">
+                                    "{PRAYERS[lang].miraculous}"
+                                </p>
+                                
+                                <button 
+                                    onClick={() => { triggerVibration(10); setShowMiraculous(false); }}
+                                    className="bg-gradient-to-b from-[#8b1a1a] to-[#5c0e0e] text-[#f4e0aa] w-full py-4 rounded-xl font-serif-holy font-bold text-lg shadow-lg hover:from-[#a01e1e] hover:to-[#731212] transition-colors border-b-4 border-[#3e0808] active:translate-y-1 active:border-b-0"
+                                >
+                                    AMEN
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
