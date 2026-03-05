@@ -73,9 +73,6 @@
         const CUSTOM_BEAD_IMAGE = "Slike/Miraculous_medal.jpg"; 
         const MIRACULOUS_MEDAL_IMAGE = "Slike/Miraculous_medal.jpg";
         
-        // KODA ZA VODENJE MOLITVE
-        const SECRET_CODE = "amen";
-
         const MYSTERY_IMAGES = {
             veseli: ["Slike/sin.png", "Slike/sin.png", "Slike/sin.png", "Slike/sin.png", "Slike/sin.png"],
             svetli: ["Slike/sin.png", "Slike/sin.png", "Slike/sin.png", "Slike/sin.png", "Slike/sin.png"],
@@ -255,7 +252,9 @@
                 arrowLeft: "M15 19l-7-7 7-7",
                 arrowRight: "M9 5l7 7-7 7",
                 eye: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 15a3 3 0 100-6 3 3 0 000 6z",
-                wifi: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" 
+                wifi: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
+                user: "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2 M12 11a4 4 0 100-8 4 4 0 000 8z",
+                users: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8z M23 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75"
             };
             return (
                 <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -287,14 +286,72 @@
             const [view, setView] = useState('menu'); // Strogo lokalno!
             const [showMysteryImage, setShowMysteryImage] = useState(false); 
             
-            // Koda za vodenje iz local storage
+            // Zasebni / Skupni način
+            const [isPrivateMode, setIsPrivateMode] = useState(() => {
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    return localStorage.getItem('rosary_private_mode') === 'true';
+                }
+                return false;
+            });
+            
+            const isPrivateModeRef = useRef(isPrivateMode);
+            useEffect(() => {
+                isPrivateModeRef.current = isPrivateMode;
+            }, [isPrivateMode]);
+
+            // SOBE in Geslo Sobe iz baze
+            const [roomName, setRoomName] = useState(() => {
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    return localStorage.getItem('rosary_room_name') || 'JavnaSoba';
+                }
+                return 'JavnaSoba';
+            });
+
+            useEffect(() => {
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    localStorage.setItem('rosary_room_name', roomName);
+                }
+            }, [roomName]);
+
+            const [dbAdminCode, setDbAdminCode] = useState(null);
+
+            const lastSharedState = useRef(null);
+
+            const applyState = useCallback((data) => {
+                if (!data) return;
+                if (data.phase !== undefined) setPhase(data.phase);
+                if (data.step !== undefined) setStep(data.step);
+                if (data.decadeIndex !== undefined) setDecadeIndex(data.decadeIndex);
+                if (data.lang && PRAYERS[data.lang]) setLang(data.lang);
+                if (data.mysteryType && MYSTERIES[data.mysteryType]) setMysteryType(data.mysteryType);
+                if (Array.isArray(data.miraculousTriggers)) setMiraculousTriggers(data.miraculousTriggers);
+                if (data.isRoulettePrayer !== undefined) setIsRoulettePrayer(data.isRoulettePrayer);
+                if (data.isRouletteDecade !== undefined) setIsRouletteDecade(data.isRouletteDecade);
+                if (data.showMiraculous !== undefined) setShowMiraculous(data.showMiraculous);
+            }, []);
+
+            const resetToStart = useCallback(() => {
+                setPhase('intro');
+                setStep(0);
+                setDecadeIndex(0);
+                setMiraculousTriggers(getNewTriggers());
+                setShowMiraculous(false);
+            }, []);
+
+            // Koda uporabnika za vodenje (iz local storage)
             const [leaderCode, setLeaderCode] = useState(() => {
                 if (typeof window !== 'undefined' && window.localStorage) {
                     return localStorage.getItem('rosary_leader_code') || '';
                 }
                 return '';
             });
-            const isLeader = leaderCode.trim().toLowerCase() === SECRET_CODE;
+            
+            // Določi, če je trenutni uporabnik voditelj v sobi
+            // Pravilo: Če ima soba geslo, se mora ujemati. Če soba nima gesla, postane voditelj kdorkoli prvi vnese geslo.
+            const isLeader = leaderCode.trim() !== '' && (!dbAdminCode || leaderCode.trim() === dbAdminCode);
+            
+            // Dovoljenje za nadzor UI - Voditelj skupine ALI uporaba v zasebnem načinu
+            const canControl = isPrivateMode || isLeader;
 
             useEffect(() => {
                 if (typeof window !== 'undefined' && window.localStorage) {
@@ -324,8 +381,35 @@
             const touchStartX = useRef(null);
             const touchStartY = useRef(null);
             
-            // NOVO: Referenca za zaznavanje prvega nalaganja baze
+            // Referenca za zaznavanje prvega nalaganja baze
             const isFirstLoad = useRef(true);
+
+            // Shranjevanje zasebnega napredka
+            useEffect(() => {
+                if (isPrivateMode && typeof window !== 'undefined' && window.localStorage) {
+                    localStorage.setItem('rosary_private_state', JSON.stringify({
+                        phase, step, decadeIndex, lang, mysteryType, 
+                        miraculousTriggers, isRoulettePrayer, isRouletteDecade, showMiraculous
+                    }));
+                }
+            }, [phase, step, decadeIndex, lang, mysteryType, miraculousTriggers, isRoulettePrayer, isRouletteDecade, showMiraculous, isPrivateMode]);
+
+            // Nalaganje zasebnega napredka ob zagonu (če smo v zasebnem načinu)
+            useEffect(() => {
+                if (isPrivateMode) {
+                    const saved = typeof window !== 'undefined' && window.localStorage ? localStorage.getItem('rosary_private_state') : null;
+                    if (saved) {
+                        try {
+                            applyState(JSON.parse(saved));
+                        } catch (e) {
+                            resetToStart();
+                        }
+                    } else {
+                        resetToStart();
+                    }
+                }
+                // eslint-disable-next-line react-hooks/exhaustive-deps
+            }, []);
 
             const triggerVibration = useCallback((duration = 15) => {
                 if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
@@ -391,39 +475,46 @@
                 return () => unsubscribe();
             }, [fbReady]);
 
-            // Pošiljanje podatkov (Samo če si Voditelj!)
+            // Pošiljanje podatkov (Samo če si Voditelj in v Skupnem načinu!)
             const pushUpdate = useCallback(async (updates) => {
+                if (isPrivateMode) return; // ZASEBNI NAČIN - blokada pošiljanja!
                 if (!isLeader) return; 
                 if (!db || !user || !appId) return;
                 const { doc, setDoc } = window.Firebase;
                 
+                const activeRoomName = (roomName.trim() || 'JavnaSoba').replace(/[^a-zA-Z0-9_-]/g, '_');
+                
                 let path = isCanvasEnv 
-                    ? ['artifacts', appId, 'public', 'data', 'sessions', 'shared_room'] 
-                    : ['sessions', 'shared_room'];
+                    ? ['artifacts', appId, 'public', 'data', 'sessions', activeRoomName] 
+                    : ['sessions', activeRoomName];
                     
                 const roomRef = doc(db, ...path);
                 
                 try {
                     await setDoc(roomRef, {
                         ...updates,
+                        ...(dbAdminCode ? {} : { adminCode: leaderCode.trim() }), // Samodejno zakleni sobo ob prvi molitvi
                         updatedAt: Date.now(),
                         updatedBy: user.uid
                     }, { merge: true });
                 } catch (e) {
                     console.error("Napaka", e);
                 }
-            }, [db, user, appId, isCanvasEnv, isLeader]);
+            }, [db, user, appId, isCanvasEnv, isLeader, isPrivateMode, roomName, dbAdminCode, leaderCode]);
 
             // Poslušanje baze
             useEffect(() => {
                 if (!user || !db || !appId) return;
+                
                 const { doc, onSnapshot } = window.Firebase;
                 
-                isFirstLoad.current = true; // Ob vsaki novi povezavi resetiramo, da vedno vsrkamo začetno stanje
+                isFirstLoad.current = true; // Ob vsaki novi povezavi resetiramo
+                
+                const activeRoomName = (roomName.trim() || 'JavnaSoba').replace(/[^a-zA-Z0-9_-]/g, '_');
                 
                 let path = isCanvasEnv 
-                    ? ['artifacts', appId, 'public', 'data', 'sessions', 'shared_room'] 
-                    : ['sessions', 'shared_room'];
+                    ? ['artifacts', appId, 'public', 'data', 'sessions', activeRoomName] 
+                    : ['sessions', activeRoomName];
                     
                 const roomRef = doc(db, ...path);
                 
@@ -431,30 +522,32 @@
                     if (snapshot.exists()) {
                         const data = snapshot.data();
                         
-                        // Ob prvem nalaganju VEDNO prevzamemo stanje iz baze (pomembno za ohranitev progresa po izhodu iz appa).
-                        // V nadaljevanju pa ignoriramo posodobitve, ki smo jih sprožili sami (odmeve), da UI ne preskakuje.
+                        setDbAdminCode(data.adminCode || null); // Shrani admin geslo trenutne sobe
+                        lastSharedState.current = data; // Tih zapis zadnjega skupnega stanja
+                        
+                        if (isPrivateModeRef.current) return; // Zasebni način ignorira posodobitve UI
+                        
+                        // Ob prvem nalaganju VEDNO prevzamemo stanje iz baze
+                        // V nadaljevanju pa ignoriramo posodobitve, ki smo jih sprožili sami
                         if (isFirstLoad.current) {
                             isFirstLoad.current = false;
                         } else if (data.updatedBy === user.uid) {
                             return; 
                         }
 
-                        if (data.phase !== undefined) setPhase(data.phase);
-                        if (data.step !== undefined) setStep(data.step);
-                        if (data.decadeIndex !== undefined) setDecadeIndex(data.decadeIndex);
-                        
-                        if (data.lang && PRAYERS[data.lang]) setLang(data.lang);
-                        if (data.mysteryType && MYSTERIES[data.mysteryType]) setMysteryType(data.mysteryType);
-                        if (Array.isArray(data.miraculousTriggers)) setMiraculousTriggers(data.miraculousTriggers);
-                        
-                        if (data.isRoulettePrayer !== undefined) setIsRoulettePrayer(data.isRoulettePrayer);
-                        if (data.isRouletteDecade !== undefined) setIsRouletteDecade(data.isRouletteDecade);
-                        if (data.showMiraculous !== undefined) setShowMiraculous(data.showMiraculous);
+                        applyState(data);
+                    } else {
+                        // Soba ne obstaja
+                        setDbAdminCode(null);
+                        lastSharedState.current = null;
+                        if (!isPrivateModeRef.current) {
+                            resetToStart();
+                        }
                     }
                 }, (error) => console.error("Sync error", error));
 
                 return () => unsubscribe();
-            }, [user, db, appId, isCanvasEnv]);
+            }, [user, db, appId, isCanvasEnv, roomName, applyState, resetToStart]);
 
             const pickRandomLang = useCallback((currentLang) => {
                 const langs = ['sl', 'de', 'en', 'it', 'la'];
@@ -571,7 +664,7 @@
 
             useEffect(() => {
                 const handleKeyDown = (e) => {
-                    if (!isLeader) return;
+                    if (!canControl) return;
                     if (view === 'prayer' && !showMiraculous) {
                         if (e.key === 'ArrowRight' || e.key === ' ') {
                             e.preventDefault();
@@ -586,7 +679,7 @@
                 };
                 window.addEventListener('keydown', handleKeyDown);
                 return () => window.removeEventListener('keydown', handleKeyDown);
-            }, [view, showMiraculous, isLeader, handleNextStep, handlePrevStep, triggerVibration]);
+            }, [view, showMiraculous, canControl, handleNextStep, handlePrevStep, triggerVibration]);
 
             const onTouchStart = (e) => {
                 touchStartX.current = e.touches[0].clientX;
@@ -594,7 +687,7 @@
             };
 
             const onTouchEndHandler = (e) => {
-                if (!isLeader) return;
+                if (!canControl) return;
                 if (touchStartX.current === null || touchStartY.current === null) return;
                 if (showMiraculous) return;
 
@@ -623,19 +716,59 @@
             const renderMainMenu = () => (
                 <div className="flex flex-col items-center pt-2 pb-6 px-4 space-y-6 animate-slide-up w-full max-w-md mx-auto relative z-10 mt-2">
                     
-                    <div className="absolute top-0 right-2 flex items-center gap-1.5 opacity-80 z-20 bg-white/50 px-3 py-1 rounded-full shadow-sm">
-                       {user ? (
-                           <>
-                               <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_#22c55e] animate-pulse"></span>
-                               <span className="text-[9px] text-[#22c55e] font-black tracking-widest uppercase">POVEZANO</span>
-                           </>
-                       ) : (
-                           <>
-                               <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                               <span className="text-[9px] text-[#8b1a1a] font-black tracking-widest uppercase">BREZ POVEZAVE</span>
-                           </>
-                       )}
+                    {/* ZASEBNI / SKUPNI NAČIN PREKLOPNIK */}
+                    <div className="absolute top-0 left-2 z-20">
+                        <button 
+                            onClick={() => {
+                                triggerVibration(10);
+                                const newMode = !isPrivateMode;
+                                setIsPrivateMode(newMode);
+                                if (typeof window !== 'undefined' && window.localStorage) {
+                                    localStorage.setItem('rosary_private_mode', newMode);
+                                }
+                                
+                                // TAKOJŠNJI PREKLOP STANJA, DA PREPREČIMO UHAJANJE SPOMINA
+                                if (newMode) {
+                                    const saved = typeof window !== 'undefined' && window.localStorage ? localStorage.getItem('rosary_private_state') : null;
+                                    if (saved) {
+                                        try { applyState(JSON.parse(saved)); } catch(e) { resetToStart(); }
+                                    } else {
+                                        resetToStart();
+                                    }
+                                } else {
+                                    if (lastSharedState.current) {
+                                        applyState(lastSharedState.current);
+                                    } else {
+                                        resetToStart();
+                                    }
+                                }
+                            }}
+                            className={`flex items-center gap-1.5 px-3 py-1 rounded-full shadow-sm text-[9px] font-black tracking-widest uppercase transition-colors border ${
+                                isPrivateMode 
+                                ? 'bg-[#121c33] text-[#d4af37] border-[#d4af37]' 
+                                : 'bg-white/60 text-[#6d5a42] border-[#d2c5aa] hover:bg-white/90'
+                            }`}
+                        >
+                            <Icon name={isPrivateMode ? "user" : "users"} className="w-3.5 h-3.5" />
+                            {isPrivateMode ? 'ZASEBNO' : 'SKUPNO'}
+                        </button>
                     </div>
+
+                    {!isPrivateMode && (
+                        <div className="absolute top-0 right-2 flex items-center gap-1.5 opacity-80 z-20 bg-white/50 px-3 py-1 rounded-full shadow-sm">
+                           {user ? (
+                               <>
+                                   <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_#22c55e] animate-pulse"></span>
+                                   <span className="text-[9px] text-[#22c55e] font-black tracking-widest uppercase">POVEZANO</span>
+                               </>
+                           ) : (
+                               <>
+                                   <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                                   <span className="text-[9px] text-[#8b1a1a] font-black tracking-widest uppercase">BREZ POVEZAVE</span>
+                               </>
+                           )}
+                        </div>
+                    )}
 
                     <div className="relative w-36 h-36 md:w-44 md:h-44 mx-auto flex items-center justify-center mt-2">
                         <div className="absolute -inset-4 bg-[#d4af37]/20 rounded-full blur-xl pulse-soft"></div>
@@ -669,13 +802,29 @@
                         <div className="absolute bottom-0 right-0 w-10 h-10 border-b-2 border-r-2 border-[#d4af37]/40 rounded-br-xl m-2 pointer-events-none"></div>
 
                         <div className="space-y-4 relative z-10">
+                            
+                            {/* SOBA NASTAVITEV */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-[#8b1a1a] uppercase tracking-widest ml-1 opacity-90 flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]"></span> Soba
+                                </label>
+                                <input 
+                                    type="text" 
+                                    placeholder="Ime sobe (npr. DruzinaNovak)"
+                                    value={roomName}
+                                    onChange={(e) => setRoomName(e.target.value)}
+                                    disabled={isPrivateMode}
+                                    className="w-full bg-white border-2 border-[#e8dfc8] text-[#2c1810] p-3.5 rounded-xl font-bold outline-none focus:border-[#d4af37] transition-all shadow-sm disabled:opacity-60"
+                                />
+                            </div>
+
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-black text-[#8b1a1a] uppercase tracking-widest ml-1 opacity-90 flex items-center gap-2">
                                     <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]"></span> Jezik
                                 </label>
                                 <div className="relative group">
                                     <select 
-                                        disabled={!isLeader}
+                                        disabled={!canControl}
                                         className="w-full bg-white border-2 border-[#e8dfc8] text-[#2c1810] p-3.5 rounded-xl font-bold outline-none appearance-none disabled:opacity-60 focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/20 transition-all cursor-pointer shadow-sm"
                                         value={safeLang}
                                         onChange={(e) => {
@@ -701,7 +850,7 @@
                                 </label>
                                 <div className="relative group">
                                     <select 
-                                        disabled={!isLeader}
+                                        disabled={!canControl}
                                         className="w-full bg-white border-2 border-[#e8dfc8] text-[#2c1810] p-3.5 rounded-xl font-bold outline-none appearance-none disabled:opacity-60 focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/20 transition-all cursor-pointer shadow-sm"
                                         value={safeMysteryType}
                                         onChange={(e) => {
@@ -725,14 +874,26 @@
                                 </label>
                                 <input 
                                     type="password" 
-                                    placeholder="Koda za naprej..."
+                                    placeholder={isPrivateMode ? "Ni potrebno v zasebnem načinu" : "Ustvari ali vnesi geslo sobe..."}
                                     value={leaderCode}
                                     onChange={(e) => setLeaderCode(e.target.value)}
-                                    className="w-full bg-white border-2 border-[#e8dfc8] text-[#2c1810] p-3.5 rounded-xl font-bold outline-none focus:border-[#d4af37] transition-all shadow-sm"
+                                    disabled={isPrivateMode}
+                                    className="w-full bg-white border-2 border-[#e8dfc8] text-[#2c1810] p-3.5 rounded-xl font-bold outline-none focus:border-[#d4af37] transition-all shadow-sm disabled:opacity-60"
                                 />
+                                <div className="text-[9px] font-bold uppercase tracking-widest mt-1 ml-1 transition-colors">
+                                    {isPrivateMode ? (
+                                        <span className="text-[#6d5a42]">Lokalni nadzor (Geslo ni pomembno)</span>
+                                    ) : isLeader ? (
+                                        <span className="text-green-600">✅ Geslo sprejeto (Voditelj)</span>
+                                    ) : dbAdminCode ? (
+                                        <span className="text-[#8b1a1a]">🔒 Soba je zaklenjena (Sledilec)</span>
+                                    ) : (
+                                        <span className="text-[#d4af37]">✨ Soba je prosta (Prevzemi z geslom)</span>
+                                    )}
+                                </div>
                             </div>
 
-                            {isLeader && (
+                            {canControl && (
                                 <div className="pt-2 space-y-2">
                                     <button
                                         onClick={() => {
@@ -791,8 +952,8 @@
                             onClick={() => {
                                 triggerVibration(20);
                                 setView('prayer');
-                                // Samo vodja ob prvem kliku postavi začetne podatke
-                                if (isLeader && phase === 'intro' && step === 0) {
+                                // Samo kontrolor ob prvem kliku postavi začetne podatke
+                                if (canControl && phase === 'intro' && step === 0) {
                                     let l = safeLang;
                                     if (isRoulettePrayer || isRouletteDecade) {
                                         l = pickRandomLang(safeLang);
@@ -807,10 +968,14 @@
                         >
                             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-[200%] transition-transform duration-1000 ease-in-out"></div>
                             <div className="mr-3 transform group-hover:scale-110 transition-transform duration-300 relative z-10"><Icon name="play" /></div>
-                            <span className="tracking-widest relative z-10">{(phase !== 'intro' || step > 0 || decadeIndex > 0) ? "NADALJUJ MOLITEV" : "ZAČNI MOLITEV"}</span>
+                            <span className="tracking-widest relative z-10">
+                                {canControl 
+                                    ? ((phase !== 'intro' || step > 0 || decadeIndex > 0) ? "NADALJUJ MOLITEV" : "ZAČNI MOLITEV")
+                                    : "PRIDRUŽI SE MOLITVI"}
+                            </span>
                         </button>
                         
-                        {isLeader && (phase !== 'intro' || step > 0 || decadeIndex > 0) && (
+                        {canControl && (phase !== 'intro' || step > 0 || decadeIndex > 0) && (
                             <button 
                                 onClick={() => { 
                                     triggerVibration(10); 
@@ -856,7 +1021,7 @@
                                 onClick={() => { 
                                     triggerVibration(10); 
                                     setView('menu'); 
-                                    if(isLeader){
+                                    if(canControl){
                                         const trigs = getNewTriggers();
                                         setPhase('intro'); 
                                         setStep(0); 
@@ -1068,7 +1233,7 @@
                             </div>
                         )}
 
-                        {isLeader ? (
+                        {canControl ? (
                             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-lg px-4 md:px-6 flex justify-between items-end pointer-events-none z-50">
                                 <button 
                                     onClick={() => { triggerVibration(10); handlePrevStep(); }}
@@ -1094,7 +1259,7 @@
                             <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-lg px-4 flex justify-center pointer-events-none z-50">
                                 <div className="bg-[#121c33]/90 backdrop-blur-md text-[#d4af37] px-6 py-3 rounded-full shadow-lg border border-[#d4af37]/30 text-[10px] md:text-xs font-bold uppercase tracking-widest flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-[#d4af37] shadow-[0_0_5px_#d4af37]"></span>
-                                    Molimo skupaj...
+                                    {isPrivateMode ? "ZASEBNI NAČIN" : "Molitev vodi administrator..."}
                                 </div>
                             </div>
                         )}
@@ -1147,7 +1312,7 @@
                                     "{PRAYERS[safeLang].miraculous}"
                                 </p>
                                 
-                                {isLeader ? (
+                                {canControl ? (
                                     <button 
                                         onClick={() => { 
                                             triggerVibration(10); 
