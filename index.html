@@ -14,12 +14,12 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase izpostavimo globalno, da ga lahko doseže React (Babel)
         window.Firebase = {
             initializeApp, getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged,
-            getFirestore, doc, setDoc, onSnapshot
+            getFirestore, doc, setDoc, onSnapshot, collection
         };
         window.dispatchEvent(new Event('firebase-loaded'));
     </script>
@@ -47,16 +47,25 @@
         .pulse-soft { animation: pulseSoft 2.5s infinite; }
         
         @keyframes fadeIn { 
-            from { opacity: 0; } 
-            to { opacity: 1; } 
+            from { opacity: 0; transform: translateY(5px); } 
+            to { opacity: 1; transform: translateY(0); } 
         }
         @keyframes slideUp { 
-            from { opacity: 0; transform: translateY(15px); } 
+            from { opacity: 0; transform: translateY(20px); } 
             to { opacity: 1; transform: translateY(0); } 
         }
         @keyframes pulseSoft {
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
             50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
+        }
+
+        /* Skrivanje standardnih scrollbarjev za lepši UI pri seznamih */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
@@ -152,7 +161,7 @@
             },
             it: {
                 credoTitle: "Credo Apostolico",
-                credo: "Io credo in Dio, Padre onnipotente, Creatore del cielo e della terra e in Gesù Cristo, Suo unico Figlio, nostro Signore, il quale fu concepito di Spirito Santo, nacque da Maria Vergine, patì sotto Ponzio Pilato, fu crocifisso, morì e fu sepolto; discese agli inferi; il terzo giorno risuscitò da morte; salì al cielo, siede alla destra di Dio Padre onnipotente: di là verrà a giudicare i vivi e i morti. Credo nello Spirito Santo, la santa Chiesa cattolica, la comunione dei santi, la remissione dei peccati, la risurrezione della carne, la vita eterna. Amen.",
+                credo: "Io credo in Dio, Padre onnipotente, Creatore del cielo e della terra e in Gesù Cristo, Suo unico Figlio, nostro Signore, il quale fu concepito di Spirito Santo, nacque da Maria Vergine, patì sotto Ponzio Pilato, fu crocifisso, morì e fu sepolto; discese agli inferi; il third giorno risuscitò da morte; salì al cielo, siede alla destra di Dio Padre onnipotente: di là verrà a giudicare i vivi e i morti. Credo nello Spirito Santo, la santa Chiesa cattolica, la comunione dei santi, la remissione dei peccati, la risurrezione della carne, la vita eterna. Amen.",
                 benedictTitle: "Preghiera di San Benedetto",
                 benedict: "La Santa Croce sia la mia luce, non sia il demonio il mio condottiero. Fatti indietro, Satana! Non mi attirare alle vanità; sono mali le tue bevande, bevi tu stesso il tuo veleno.",
                 salveTitle: "Salve Regina",
@@ -254,7 +263,12 @@
                 eye: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 15a3 3 0 100-6 3 3 0 000 6z",
                 wifi: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
                 user: "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2 M12 11a4 4 0 100-8 4 4 0 000 8z",
-                users: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8z M23 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75"
+                users: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8z M23 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75",
+                lock: "M19 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2z M7 11V7a5 5 0 0110 0v4",
+                unlock: "M19 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2z M7 11V7a5 5 0 019.9-1",
+                globe: "M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-8.8-9.5h4.156c.214-3.666 1.157-6.9 2.644-9.355C6.467 4.542 3.69 7.42 3.2 12.5zm15.6 0h-4.156c-.214-3.666-1.157-6.9-2.644-9.355C17.533 4.542 20.31 7.42 20.8 12.5zm-6.2 0H10.2c.224 4.02 1.258 7.514 2.8 9.94.408-.636.78-1.34 1.116-2.095.827-1.848 1.484-4.246 1.684-7.845z",
+                home: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z M9 22V12h6v10",
+                star: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
             };
             return (
                 <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -376,6 +390,9 @@
             const [db, setDb] = useState(null);
             const [isCanvasEnv, setIsCanvasEnv] = useState(false);
             const [appId, setAppId] = useState("");
+            
+            // NOVO: Aktivne sobe
+            const [activeRooms, setActiveRooms] = useState([]);
 
             // Reference za zaznavanje drsenja
             const touchStartX = useRef(null);
@@ -502,6 +519,23 @@
                 }
             }, [db, user, appId, isCanvasEnv, isLeader, isPrivateMode, roomName, dbAdminCode, leaderCode]);
 
+            // NOVO: Funkcija za ročni odklep sobe (Opcija A)
+            const resetRoomCode = useCallback(async () => {
+                if (!isLeader || isPrivateMode) return;
+                if (!db || !user || !appId) return;
+                const { doc, setDoc } = window.Firebase;
+                const activeRoomName = (roomName.trim() || 'JavnaSoba').replace(/[^a-zA-Z0-9_-]/g, '_');
+                let path = isCanvasEnv 
+                    ? ['artifacts', appId, 'public', 'data', 'sessions', activeRoomName] 
+                    : ['sessions', activeRoomName];
+                const roomRef = doc(db, ...path);
+                try {
+                    await setDoc(roomRef, { adminCode: null, updatedAt: Date.now() }, { merge: true });
+                    setLeaderCode(""); // lokalno počisti geslo
+                } catch(e) { console.error(e); }
+            }, [db, user, appId, isCanvasEnv, isLeader, isPrivateMode, roomName]);
+
+
             // Poslušanje baze
             useEffect(() => {
                 if (!user || !db || !appId) return;
@@ -548,6 +582,38 @@
 
                 return () => unsubscribe();
             }, [user, db, appId, isCanvasEnv, roomName, applyState, resetToStart]);
+
+            // NOVO: Poslušanje vseh aktivnih sob (za prikaz "utripa" aplikacije)
+            useEffect(() => {
+                if (!user || !db || !appId) return;
+                const { collection, onSnapshot } = window.Firebase;
+                
+                let path = isCanvasEnv 
+                    ? ['artifacts', appId, 'public', 'data', 'sessions'] 
+                    : ['sessions'];
+                    
+                const colRef = collection(db, ...path);
+                
+                const unsubscribe = onSnapshot(colRef, (snapshot) => {
+                    const rooms = [];
+                    const now = Date.now();
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        // Prikaži sobe, ki so bile aktivne v zadnjih 24 urah (86400000 ms)
+                        if (data.updatedAt && (now - data.updatedAt < 86400000)) {
+                            rooms.push({
+                                id: doc.id,
+                                updatedAt: data.updatedAt
+                            });
+                        }
+                    });
+                    // Razvrsti od najbolj nedavno aktivne naprej
+                    rooms.sort((a, b) => b.updatedAt - a.updatedAt);
+                    setActiveRooms(rooms);
+                }, (error) => console.error("Sync error collections", error));
+    
+                return () => unsubscribe();
+            }, [user, db, appId, isCanvasEnv]);
 
             const pickRandomLang = useCallback((currentLang) => {
                 const langs = ['sl', 'de', 'en', 'it', 'la'];
@@ -709,245 +775,253 @@
                 touchStartX.current = null;
                 touchStartY.current = null;
             };
+
+            // Pomožna funkcija za preklop načina
+            const toggleMode = (newMode) => {
+                if (newMode === isPrivateMode) return;
+                triggerVibration(10);
+                setIsPrivateMode(newMode);
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    localStorage.setItem('rosary_private_mode', newMode);
+                }
+                
+                if (newMode) { // V ZASEBNO
+                    const saved = typeof window !== 'undefined' && window.localStorage ? localStorage.getItem('rosary_private_state') : null;
+                    if (saved) {
+                        try { applyState(JSON.parse(saved)); } catch(e) { resetToStart(); }
+                    } else {
+                        resetToStart();
+                    }
+                } else { // V SKUPNO
+                    if (lastSharedState.current) {
+                        applyState(lastSharedState.current);
+                    } else {
+                        resetToStart();
+                    }
+                }
+            };
             
             const safeLang = PRAYERS[lang] ? lang : 'sl';
             const safeMysteryType = MYSTERIES[mysteryType] ? mysteryType : getMysteryForToday();
 
             const renderMainMenu = () => (
-                <div className="flex flex-col items-center pt-2 pb-6 px-4 space-y-6 animate-slide-up w-full max-w-md mx-auto relative z-10 mt-2">
+                <div className="flex flex-col items-center pt-2 pb-6 px-4 space-y-5 animate-slide-up w-full max-w-md mx-auto relative z-10 mt-2">
                     
-                    {/* ZASEBNI / SKUPNI NAČIN PREKLOPNIK */}
-                    <div className="absolute top-0 left-2 z-20">
-                        <button 
-                            onClick={() => {
-                                triggerVibration(10);
-                                const newMode = !isPrivateMode;
-                                setIsPrivateMode(newMode);
-                                if (typeof window !== 'undefined' && window.localStorage) {
-                                    localStorage.setItem('rosary_private_mode', newMode);
-                                }
-                                
-                                // TAKOJŠNJI PREKLOP STANJA, DA PREPREČIMO UHAJANJE SPOMINA
-                                if (newMode) {
-                                    const saved = typeof window !== 'undefined' && window.localStorage ? localStorage.getItem('rosary_private_state') : null;
-                                    if (saved) {
-                                        try { applyState(JSON.parse(saved)); } catch(e) { resetToStart(); }
-                                    } else {
-                                        resetToStart();
-                                    }
-                                } else {
-                                    if (lastSharedState.current) {
-                                        applyState(lastSharedState.current);
-                                    } else {
-                                        resetToStart();
-                                    }
-                                }
-                            }}
-                            className={`flex items-center gap-1.5 px-3 py-1 rounded-full shadow-sm text-[9px] font-black tracking-widest uppercase transition-colors border ${
-                                isPrivateMode 
-                                ? 'bg-[#121c33] text-[#d4af37] border-[#d4af37]' 
-                                : 'bg-white/60 text-[#6d5a42] border-[#d2c5aa] hover:bg-white/90'
-                            }`}
-                        >
-                            <Icon name={isPrivateMode ? "user" : "users"} className="w-3.5 h-3.5" />
-                            {isPrivateMode ? 'ZASEBNO' : 'SKUPNO'}
-                        </button>
+                    {/* HEADER / STATUS */}
+                    <div className="w-full flex justify-end h-6">
+                        {!isPrivateMode && (
+                            <div className="flex items-center gap-1.5 opacity-80 z-20 px-3 py-1 rounded-full shadow-sm bg-white/60 backdrop-blur-sm border border-[#e8dfc8]">
+                               {user ? (
+                                   <>
+                                       <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_#22c55e] animate-pulse"></span>
+                                       <span className="text-[9px] text-[#22c55e] font-black tracking-widest uppercase">Povezano</span>
+                                   </>
+                               ) : (
+                                   <>
+                                       <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                                       <span className="text-[9px] text-[#8b1a1a] font-black tracking-widest uppercase">Brez povezave</span>
+                                   </>
+                               )}
+                            </div>
+                        )}
                     </div>
 
-                    {!isPrivateMode && (
-                        <div className="absolute top-0 right-2 flex items-center gap-1.5 opacity-80 z-20 bg-white/50 px-3 py-1 rounded-full shadow-sm">
-                           {user ? (
-                               <>
-                                   <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_#22c55e] animate-pulse"></span>
-                                   <span className="text-[9px] text-[#22c55e] font-black tracking-widest uppercase">POVEZANO</span>
-                               </>
-                           ) : (
-                               <>
-                                   <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                                   <span className="text-[9px] text-[#8b1a1a] font-black tracking-widest uppercase">BREZ POVEZAVE</span>
-                               </>
-                           )}
-                        </div>
-                    )}
-
-                    <div className="relative w-36 h-36 md:w-44 md:h-44 mx-auto flex items-center justify-center mt-2">
+                    {/* HERO SLIKA */}
+                    <div className="relative w-36 h-36 md:w-44 md:h-44 mx-auto flex items-center justify-center mt-0 mb-2">
                         <div className="absolute -inset-4 bg-[#d4af37]/20 rounded-full blur-xl pulse-soft"></div>
-                        <div className="relative w-full h-full shadow-[0_20px_40px_rgba(0,0,0,0.4)] rounded-full border-[4px] border-[#d4af37] overflow-hidden bg-[#121c33] flex items-center justify-center z-10">
+                        <div className="relative w-full h-full shadow-[0_20px_40px_rgba(0,0,0,0.3)] rounded-full border-[4px] border-[#d4af37] overflow-hidden bg-[#121c33] flex items-center justify-center z-10">
                             {HOLY_ART_IMAGE ? (
                                 <img src={HOLY_ART_IMAGE} alt="Holy Art" className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" />
                             ) : (
                                 <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-[#1a294c] via-[#121c33] to-[#0a0f1c]">
-                                    <span className="text-5xl md:text-6xl text-[#d4af37] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] font-serif-holy mb-1 transition-transform duration-700 hover:scale-110">✟</span>
-                                    <span className="text-[9px] md:text-[10px] text-[#d4af37] font-bold tracking-[0.4em] uppercase opacity-90">Ave Maria</span>
+                                    <span className="text-5xl text-[#d4af37] font-serif-holy mb-1">✟</span>
                                 </div>
                             )}
-                            <div className="absolute inset-0 rounded-full shadow-[inset_0_0_30px_rgba(0,0,0,0.8)] pointer-events-none"></div>
+                            <div className="absolute inset-0 rounded-full shadow-[inset_0_0_30px_rgba(0,0,0,0.6)] pointer-events-none"></div>
                         </div>
                     </div>
 
-                    <div className="text-center w-full">
-                        <div className="flex items-center justify-center space-x-4 mb-2 opacity-80">
-                            <span className="w-12 h-[1px] bg-gradient-to-r from-transparent to-[#d4af37]"></span>
-                            <span className="text-[#d4af37] text-lg">✟</span>
-                            <span className="w-12 h-[1px] bg-gradient-to-l from-transparent to-[#d4af37]"></span>
+                    {/* NASLOV */}
+                    <div className="text-center w-full mb-1">
+                        <div className="flex items-center justify-center space-x-3 mb-1 opacity-80">
+                            <span className="w-8 h-[1px] bg-gradient-to-r from-transparent to-[#d4af37]"></span>
+                            <span className="text-[#d4af37] text-sm">✟</span>
+                            <span className="w-8 h-[1px] bg-gradient-to-l from-transparent to-[#d4af37]"></span>
                         </div>
-                        <h2 className="text-3xl md:text-4xl font-serif-holy font-black text-[#121c33] tracking-wide mb-2 drop-shadow-sm">Nastavitve</h2>
-                        <p className="text-[#8b1a1a] font-bold text-[10px] tracking-[0.2em] uppercase italic opacity-90">Pripravi se na zbrano molitev</p>
+                        <h2 className="text-3xl font-serif-holy font-black text-[#121c33] tracking-wide drop-shadow-sm">Priprava</h2>
                     </div>
 
-                    <div className="w-full bg-gradient-to-b from-[#fdfbf7] to-[#f6f3eb] p-6 md:p-8 rounded-2xl shadow-[0_15px_35px_-5px_rgba(0,0,0,0.15)] border border-[#d4af37]/40 relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-10 h-10 border-t-2 border-l-2 border-[#d4af37]/40 rounded-tl-xl m-2 pointer-events-none"></div>
-                        <div className="absolute top-0 right-0 w-10 h-10 border-t-2 border-r-2 border-[#d4af37]/40 rounded-tr-xl m-2 pointer-events-none"></div>
-                        <div className="absolute bottom-0 left-0 w-10 h-10 border-b-2 border-l-2 border-[#d4af37]/40 rounded-bl-xl m-2 pointer-events-none"></div>
-                        <div className="absolute bottom-0 right-0 w-10 h-10 border-b-2 border-r-2 border-[#d4af37]/40 rounded-br-xl m-2 pointer-events-none"></div>
+                    {/* GLAVNI NASTAVITVENI BLOK */}
+                    <div className="w-full bg-gradient-to-b from-[#fdfbf7] to-[#f6f3eb] p-5 md:p-7 rounded-2xl shadow-[0_15px_35px_-5px_rgba(0,0,0,0.1)] border border-[#d4af37]/30 relative overflow-hidden">
+                        
+                        {/* SEGMENTED CONTROL ZA NAČIN (SKUPNO/ZASEBNO) */}
+                        <div className="flex bg-[#e8dfc8]/50 p-1.5 rounded-xl mb-6 relative z-10 shadow-inner">
+                            <button 
+                                onClick={() => toggleMode(false)} 
+                                className={`flex-1 py-2.5 rounded-lg text-[10px] md:text-[11px] font-black tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 ${!isPrivateMode ? 'bg-white text-[#8b1a1a] shadow-sm ring-1 ring-black/5' : 'text-[#6d5a42] hover:bg-white/40'}`}
+                            >
+                                <Icon name="users" className="w-4 h-4" /> Skupnost
+                            </button>
+                            <button 
+                                onClick={() => toggleMode(true)} 
+                                className={`flex-1 py-2.5 rounded-lg text-[10px] md:text-[11px] font-black tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 ${isPrivateMode ? 'bg-[#121c33] text-[#d4af37] shadow-md ring-1 ring-black/10' : 'text-[#6d5a42] hover:bg-black/5'}`}
+                            >
+                                <Icon name="user" className="w-4 h-4" /> Zasebno
+                            </button>
+                        </div>
 
-                        <div className="space-y-4 relative z-10">
+                        <div className="space-y-5 relative z-10">
                             
-                            {/* SOBA NASTAVITEV */}
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-[#8b1a1a] uppercase tracking-widest ml-1 opacity-90 flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]"></span> Soba
-                                </label>
-                                <input 
-                                    type="text" 
-                                    placeholder="Ime sobe (npr. DruzinaNovak)"
-                                    value={roomName}
-                                    onChange={(e) => setRoomName(e.target.value)}
-                                    disabled={isPrivateMode}
-                                    className="w-full bg-white border-2 border-[#e8dfc8] text-[#2c1810] p-3.5 rounded-xl font-bold outline-none focus:border-[#d4af37] transition-all shadow-sm disabled:opacity-60"
-                                />
-                            </div>
+                            {/* SEKCIJA 1: SKUPNOST (Vidno samo v SKUPNEM načinu) */}
+                            {!isPrivateMode && (
+                                <div className="space-y-4 pb-4 border-b border-[#e8dfc8]">
+                                    {/* Izbira Sobe */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-[#8b1a1a] uppercase tracking-wider ml-1 flex items-center gap-2">
+                                            <Icon name="home" className="w-3 h-3" /> Ime sobe
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="npr. DruzinaNovak"
+                                            value={roomName}
+                                            onChange={(e) => setRoomName(e.target.value)}
+                                            className="w-full bg-white border border-[#e8dfc8] text-[#2c1810] p-3 rounded-xl font-bold outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm"
+                                        />
+                                    </div>
 
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-[#8b1a1a] uppercase tracking-widest ml-1 opacity-90 flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]"></span> Jezik
-                                </label>
-                                <div className="relative group">
-                                    <select 
-                                        disabled={!canControl}
-                                        className="w-full bg-white border-2 border-[#e8dfc8] text-[#2c1810] p-3.5 rounded-xl font-bold outline-none appearance-none disabled:opacity-60 focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/20 transition-all cursor-pointer shadow-sm"
-                                        value={safeLang}
-                                        onChange={(e) => {
-                                            setLang(e.target.value);
-                                            pushUpdate({ lang: e.target.value });
-                                        }}
-                                    >
-                                        <option value="sl">🇸🇮 SLOVENŠČINA</option>
-                                        <option value="de">🇩🇪 DEUTSCH</option>
-                                        <option value="en">🇬🇧 ENGLISH</option>
-                                        <option value="it">🇮🇹 ITALIANO</option>
-                                        <option value="la">🇻🇦 LATINA</option>
-                                    </select>
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#d4af37]">
-                                        <Icon name="arrowRight" className="w-4 h-4 rotate-90" />
+                                    {/* Geslo Sobe */}
+                                    <div className="space-y-1.5 bg-white/40 p-3 rounded-xl border border-[#e8dfc8]/50">
+                                        <label className="text-[10px] font-bold text-[#8b1a1a] uppercase tracking-wider flex items-center gap-2">
+                                            <Icon name={dbAdminCode ? (isLeader ? "unlock" : "lock") : "star"} className="w-3 h-3" /> 
+                                            {dbAdminCode ? 'Vodenje molitve' : 'Ustvari novo sobo'}
+                                        </label>
+                                        
+                                        <div className="flex gap-2 items-center">
+                                            <input 
+                                                type="password" 
+                                                placeholder={dbAdminCode ? "Vnesi geslo za vodenje..." : "Določi geslo (za admina)..."}
+                                                value={leaderCode}
+                                                onChange={(e) => setLeaderCode(e.target.value)}
+                                                className="flex-1 bg-white border border-[#e8dfc8] text-[#2c1810] p-2.5 rounded-lg font-bold text-sm outline-none focus:border-[#d4af37] transition-all shadow-sm"
+                                            />
+                                            {isLeader && dbAdminCode && (
+                                                <button onClick={resetRoomCode} className="p-2.5 bg-[#8b1a1a]/10 text-[#8b1a1a] rounded-lg hover:bg-[#8b1a1a] hover:text-white transition-colors" title="Odkleni sobo">
+                                                    <Icon name="refresh" className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                        
+                                        <div className="text-[9px] font-bold uppercase tracking-widest mt-1 transition-colors">
+                                            {isLeader ? (
+                                                <span className="text-green-600">✅ Ti vodiš to sobo</span>
+                                            ) : dbAdminCode ? (
+                                                <span className="text-[#8b1a1a]">🔒 Sledilec (Soba je zaklenjena)</span>
+                                            ) : (
+                                                <span className="text-[#d4af37]">✨ Soba je prosta (Vnesi geslo in začni)</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* SEKCIJA 2: KAJ MOLIMO */}
+                            <div className="space-y-4">
+                                <div className="flex gap-3">
+                                    <div className="flex-1 space-y-1.5">
+                                        <label className="text-[10px] font-bold text-[#6d5a42] uppercase tracking-wider ml-1 flex items-center gap-1.5">
+                                            <Icon name="globe" className="w-3 h-3" /> Jezik
+                                        </label>
+                                        <div className="relative">
+                                            <select 
+                                                disabled={!canControl}
+                                                className="w-full bg-white border border-[#e8dfc8] text-[#2c1810] p-3 rounded-xl font-bold text-sm outline-none appearance-none disabled:opacity-60 focus:border-[#d4af37] shadow-sm cursor-pointer"
+                                                value={safeLang}
+                                                onChange={(e) => { setLang(e.target.value); pushUpdate({ lang: e.target.value }); }}
+                                            >
+                                                <option value="sl">🇸🇮 SLO</option>
+                                                <option value="de">🇩🇪 DEU</option>
+                                                <option value="en">🇬🇧 ENG</option>
+                                                <option value="it">🇮🇹 ITA</option>
+                                                <option value="la">🇻🇦 LAT</option>
+                                            </select>
+                                            <Icon name="arrowRight" className="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-[#d4af37] pointer-events-none" />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-[2] space-y-1.5">
+                                        <label className="text-[10px] font-bold text-[#6d5a42] uppercase tracking-wider ml-1 flex items-center gap-1.5">
+                                            <Icon name="book" className="w-3 h-3" /> Del rožnega venca
+                                        </label>
+                                        <div className="relative">
+                                            <select 
+                                                disabled={!canControl}
+                                                className="w-full bg-white border border-[#e8dfc8] text-[#2c1810] p-3 rounded-xl font-bold text-sm outline-none appearance-none disabled:opacity-60 focus:border-[#d4af37] shadow-sm cursor-pointer"
+                                                value={safeMysteryType}
+                                                onChange={(e) => { setMysteryType(e.target.value); pushUpdate({ mysteryType: e.target.value }); }}
+                                            >
+                                                {Object.entries(MYSTERY_NAMES).map(([key, name]) => (
+                                                    <option key={key} value={key}>{name}</option>
+                                                ))}
+                                            </select>
+                                            <Icon name="arrowRight" className="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-[#d4af37] pointer-events-none" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-[#8b1a1a] uppercase tracking-widest ml-1 opacity-90 flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]"></span> Skrivnosti
-                                </label>
-                                <div className="relative group">
-                                    <select 
-                                        disabled={!canControl}
-                                        className="w-full bg-white border-2 border-[#e8dfc8] text-[#2c1810] p-3.5 rounded-xl font-bold outline-none appearance-none disabled:opacity-60 focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/20 transition-all cursor-pointer shadow-sm"
-                                        value={safeMysteryType}
-                                        onChange={(e) => {
-                                            setMysteryType(e.target.value);
-                                            pushUpdate({ mysteryType: e.target.value });
-                                        }}
-                                    >
-                                        {Object.entries(MYSTERY_NAMES).map(([key, name]) => (
-                                            <option key={key} value={key}>{name.toUpperCase()}</option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#d4af37]">
-                                        <Icon name="arrowRight" className="w-4 h-4 rotate-90" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-[#8b1a1a] uppercase tracking-widest ml-1 opacity-90 flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]"></span> Vodenje (Koda)
-                                </label>
-                                <input 
-                                    type="password" 
-                                    placeholder={isPrivateMode ? "Ni potrebno v zasebnem načinu" : "Ustvari ali vnesi geslo sobe..."}
-                                    value={leaderCode}
-                                    onChange={(e) => setLeaderCode(e.target.value)}
-                                    disabled={isPrivateMode}
-                                    className="w-full bg-white border-2 border-[#e8dfc8] text-[#2c1810] p-3.5 rounded-xl font-bold outline-none focus:border-[#d4af37] transition-all shadow-sm disabled:opacity-60"
-                                />
-                                <div className="text-[9px] font-bold uppercase tracking-widest mt-1 ml-1 transition-colors">
-                                    {isPrivateMode ? (
-                                        <span className="text-[#6d5a42]">Lokalni nadzor (Geslo ni pomembno)</span>
-                                    ) : isLeader ? (
-                                        <span className="text-green-600">✅ Geslo sprejeto (Voditelj)</span>
-                                    ) : dbAdminCode ? (
-                                        <span className="text-[#8b1a1a]">🔒 Soba je zaklenjena (Sledilec)</span>
-                                    ) : (
-                                        <span className="text-[#d4af37]">✨ Soba je prosta (Prevzemi z geslom)</span>
-                                    )}
-                                </div>
-                            </div>
-
+                            {/* SEKCIJA 3: NAPREDNO (Rulete) */}
                             {canControl && (
-                                <div className="pt-2 space-y-2">
-                                    <button
-                                        onClick={() => {
-                                            triggerVibration(10);
-                                            const newVal = !isRoulettePrayer;
-                                            setIsRoulettePrayer(newVal);
-                                            const newDecadeVal = newVal ? false : isRouletteDecade;
-                                            if (newVal) setIsRouletteDecade(false); 
-                                            pushUpdate({ isRoulettePrayer: newVal, isRouletteDecade: newDecadeVal });
-                                        }}
-                                        className={`w-full flex items-center justify-between p-3.5 rounded-xl font-black text-[10px] md:text-xs transition-all duration-300 border-2 ${
-                                            isRoulettePrayer 
-                                            ? 'bg-[#d4af37] border-[#d4af37] text-white shadow-md' 
-                                            : 'bg-white border-[#e8dfc8] text-[#6d5a42] hover:border-[#d4af37]/50'
-                                        }`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <Icon name="dices" className={isRoulettePrayer ? "text-white" : "text-[#d4af37]"} />
-                                            <span className="tracking-wide">RULETA: VSAKA MOLITEV</span>
+                                <div className="space-y-2 pt-2 border-t border-[#e8dfc8]">
+                                    <div className="flex items-center justify-between p-3 bg-white border border-[#e8dfc8] rounded-xl shadow-sm">
+                                        <div className="flex items-center gap-2">
+                                            <Icon name="dices" className={`w-4 h-4 ${isRoulettePrayer ? 'text-[#d4af37]' : 'text-[#d2c5aa]'}`} />
+                                            <div>
+                                                <div className="text-[11px] font-bold text-[#2c1810] uppercase tracking-wide">Jezikovna Ruleta</div>
+                                                <div className="text-[8px] text-[#6d5a42] uppercase tracking-wider">Menja jezik ob vsaki molitvi</div>
+                                            </div>
                                         </div>
-                                        <div className={`w-10 h-6 rounded-full relative transition-colors duration-300 shadow-inner ${isRoulettePrayer ? 'bg-[#121c33]' : 'bg-[#e5dec8]'}`}>
-                                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-md ${isRoulettePrayer ? 'left-5' : 'left-1'}`} />
-                                        </div>
-                                    </button>
+                                        <button 
+                                            onClick={() => {
+                                                triggerVibration(10);
+                                                const newVal = !isRoulettePrayer;
+                                                setIsRoulettePrayer(newVal);
+                                                if (newVal) setIsRouletteDecade(false); 
+                                                pushUpdate({ isRoulettePrayer: newVal, isRouletteDecade: newVal ? false : isRouletteDecade });
+                                            }}
+                                            className={`w-11 h-6 rounded-full relative transition-colors duration-300 shadow-inner ${isRoulettePrayer ? 'bg-[#d4af37]' : 'bg-[#e5dec8]'}`}
+                                        >
+                                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm ${isRoulettePrayer ? 'translate-x-6' : 'translate-x-1'}`} />
+                                        </button>
+                                    </div>
 
-                                    <button
-                                        onClick={() => {
-                                            triggerVibration(10);
-                                            const newVal = !isRouletteDecade;
-                                            setIsRouletteDecade(newVal);
-                                            const newPrayerVal = newVal ? false : isRoulettePrayer;
-                                            if (newVal) setIsRoulettePrayer(false); 
-                                            pushUpdate({ isRouletteDecade: newVal, isRoulettePrayer: newPrayerVal });
-                                        }}
-                                        className={`w-full flex items-center justify-between p-3.5 rounded-xl font-black text-[10px] md:text-xs transition-all duration-300 border-2 ${
-                                            isRouletteDecade 
-                                            ? 'bg-[#d4af37] border-[#d4af37] text-white shadow-md' 
-                                            : 'bg-white border-[#e8dfc8] text-[#6d5a42] hover:border-[#d4af37]/50'
-                                        }`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <Icon name="dices" className={isRouletteDecade ? "text-white" : "text-[#d4af37]"} />
-                                            <span className="tracking-wide">RULETA: VSAKA DESETKA</span>
+                                    <div className="flex items-center justify-between p-3 bg-white border border-[#e8dfc8] rounded-xl shadow-sm">
+                                        <div className="flex items-center gap-2">
+                                            <Icon name="dices" className={`w-4 h-4 ${isRouletteDecade ? 'text-[#d4af37]' : 'text-[#d2c5aa]'}`} />
+                                            <div>
+                                                <div className="text-[11px] font-bold text-[#2c1810] uppercase tracking-wide">Ruleta desetk</div>
+                                                <div className="text-[8px] text-[#6d5a42] uppercase tracking-wider">Menja jezik na koncu desetke</div>
+                                            </div>
                                         </div>
-                                        <div className={`w-10 h-6 rounded-full relative transition-colors duration-300 shadow-inner ${isRouletteDecade ? 'bg-[#121c33]' : 'bg-[#e5dec8]'}`}>
-                                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-md ${isRouletteDecade ? 'left-5' : 'left-1'}`} />
-                                        </div>
-                                    </button>
+                                        <button 
+                                            onClick={() => {
+                                                triggerVibration(10);
+                                                const newVal = !isRouletteDecade;
+                                                setIsRouletteDecade(newVal);
+                                                if (newVal) setIsRoulettePrayer(false); 
+                                                pushUpdate({ isRouletteDecade: newVal, isRoulettePrayer: newVal ? false : isRoulettePrayer });
+                                            }}
+                                            className={`w-11 h-6 rounded-full relative transition-colors duration-300 shadow-inner ${isRouletteDecade ? 'bg-[#d4af37]' : 'bg-[#e5dec8]'}`}
+                                        >
+                                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm ${isRouletteDecade ? 'translate-x-6' : 'translate-x-1'}`} />
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="w-full flex flex-col gap-3 mt-4">
+                    {/* GLAVNI AKCIJSKI GUMB */}
+                    <div className="w-full flex flex-col gap-3 mt-2">
                         <button 
                             onClick={() => {
                                 triggerVibration(20);
@@ -964,11 +1038,13 @@
                                     pushUpdate({ lang: l, miraculousTriggers: triggers });
                                 }
                             }}
-                            className="group relative bg-gradient-to-b from-[#8b1a1a] to-[#5c0e0e] hover:from-[#a01e1e] hover:to-[#731212] text-[#f4e0aa] w-full py-4 rounded-xl font-serif-holy font-bold text-xl shadow-lg transition-all active:scale-95 flex items-center justify-center border border-[#3e0808] overflow-hidden pulse-soft"
+                            className="group relative bg-gradient-to-b from-[#8b1a1a] to-[#5c0e0e] hover:from-[#a01e1e] hover:to-[#731212] text-[#f4e0aa] w-full py-4 rounded-2xl font-serif-holy font-bold text-xl shadow-lg transition-all active:scale-95 flex items-center justify-center border border-[#3e0808] overflow-hidden pulse-soft"
                         >
                             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-[200%] transition-transform duration-1000 ease-in-out"></div>
-                            <div className="mr-3 transform group-hover:scale-110 transition-transform duration-300 relative z-10"><Icon name="play" /></div>
-                            <span className="tracking-widest relative z-10">
+                            <div className="mr-3 transform group-hover:scale-110 transition-transform duration-300 relative z-10">
+                                <Icon name={canControl ? "play" : "users"} className="w-6 h-6" />
+                            </div>
+                            <span className="tracking-widest relative z-10 pt-1">
                                 {canControl 
                                     ? ((phase !== 'intro' || step > 0 || decadeIndex > 0) ? "NADALJUJ MOLITEV" : "ZAČNI MOLITEV")
                                     : "PRIDRUŽI SE MOLITVI"}
@@ -994,13 +1070,47 @@
                                         showMiraculous: false
                                     });
                                 }}
-                                className="group bg-transparent hover:bg-[#e8dfc8] text-[#8b1a1a] w-full py-3 rounded-xl font-bold text-xs shadow-sm transition-all active:scale-95 flex items-center justify-center border-2 border-[#d2c5aa]"
+                                className="group bg-transparent hover:bg-white text-[#8b1a1a] w-full py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest shadow-sm transition-all active:scale-95 flex items-center justify-center border border-[#d2c5aa]"
                             >
                                 <div className="mr-2 transform group-hover:-rotate-180 transition-transform duration-500"><Icon name="refresh" className="w-4 h-4" /></div>
-                                ZAČNI OD ZAČETKA
+                                Začni od začetka
                             </button>
                         )}
                     </div>
+
+                    {/* AKTIVNE SOBE (Premaknjeno na dno) */}
+                    {!isPrivateMode && activeRooms.length > 0 && (
+                        <div className="w-full mt-4 bg-[#fdfbf7]/80 p-4 rounded-2xl border border-[#d4af37]/30 shadow-sm relative overflow-hidden">
+                            <p className="text-[10px] text-[#8b1a1a] uppercase tracking-widest font-bold flex items-center justify-center gap-2 mb-3">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_4px_#22c55e] animate-pulse"></span>
+                                Aktivne molitve ({activeRooms.length})
+                            </p>
+                            <div className="flex flex-wrap justify-center gap-2 max-h-[140px] overflow-y-auto hide-scrollbar p-1">
+                                {activeRooms.map(room => {
+                                    const mins = Math.floor((Date.now() - room.updatedAt) / 60000);
+                                    let timeStr = mins < 1 ? "pravkar" : `${mins}m`;
+                                    if (mins >= 60) timeStr = `${Math.floor(mins/60)}h`;
+                                    
+                                    const isSelected = room.id === roomName;
+
+                                    return (
+                                        <button 
+                                            key={room.id} 
+                                            onClick={() => { triggerVibration(10); setRoomName(room.id); }}
+                                            className={`text-[10px] px-3 py-1.5 rounded-full font-bold shadow-sm transition-all flex items-center gap-1.5 border ${
+                                                isSelected 
+                                                ? 'bg-[#121c33] text-[#d4af37] border-[#121c33]' 
+                                                : 'bg-white text-[#6d5a42] border-[#e8dfc8] hover:border-[#d4af37] active:scale-95'
+                                            }`}
+                                        >
+                                            {room.id} <span className="opacity-50 text-[8px] font-normal">{timeStr}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
                 </div>
             );
 
@@ -1273,14 +1383,6 @@
                     onTouchStart={view === 'prayer' ? onTouchStart : undefined}
                     onTouchEnd={view === 'prayer' ? onTouchEndHandler : undefined}
                 >
-                    {view === 'menu' && (
-                        <div className="w-full bg-[#121c33] text-[#d4af37] p-4 flex items-center justify-center border-b-[4px] border-[#d4af37] sticky top-0 z-50 shadow-lg">
-                            <span className="text-xl md:text-2xl font-serif-holy font-bold flex items-center tracking-widest uppercase">
-                                <span className="text-2xl mr-2 text-[#f6f3eb]">✟</span> ROŽNI VENEC
-                            </span>
-                        </div>
-                    )}
-
                     <div className={`w-full max-w-lg flex flex-col px-4 md:px-6 ${view === 'menu' ? 'mt-0 md:mt-2' : 'mt-2 h-[95vh]'}`}>
                         {view === 'menu' ? renderMainMenu() : renderPrayerContent()}
                     </div>
