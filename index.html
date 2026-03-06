@@ -27,7 +27,7 @@
         window.dispatchEvent(new Event('firebase-loaded'));
     </script>
 
-    <!-- PWA Setup: Dinamični Manifest (Service Worker odstranjen zaradi omejitev brskalnika) -->
+    <!-- PWA Setup: Dinamični Manifest -->
     <script>
         const manifest = {
             "name": "Večjezični Rožni Venec",
@@ -39,29 +39,23 @@
         };
         const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
         document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(manifestBlob)}">`);
-        
-        // Opomba: Service Worker je bil odstranjen, saj brskalniki ne dovoljujejo registracije iz 'blob:' URL-jev.
-        // Za popolno PWA (delovanje brez povezave) bi potrebovali ločeno datoteko 'sw.js' na vašem strežniku.
     </script>
 
     <style>
-        /* Dodana klasična serifna pisava (Playfair Display) za naslove in tradicionalni občutek */
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Inter:wght@400;500;600;700&display=swap');
         
         body { 
             font-family: 'Inter', sans-serif; 
             overflow-x: hidden;
-            background-color: #f6f3eb; /* Pergamentno ozadje */
+            background-color: #f6f3eb;
             background-image: radial-gradient(#e5dec8 1px, transparent 1px);
             background-size: 32px 32px;
-            /* Prepreči osveževanje strani ob drsenju navzdol na mobilnih napravah */
             overscroll-behavior-y: none; 
         }
         .font-serif-holy {
             font-family: 'Playfair Display', serif;
         }
         
-        /* Animacije */
         .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
         .pulse-soft { animation: pulseSoft 2.5s infinite; }
@@ -79,14 +73,8 @@
             50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
         }
 
-        /* Skrivanje standardnih scrollbarjev za lepši UI pri seznamih */
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="text-[#3e2723] selection:bg-[#d4af37] selection:text-white">
@@ -95,14 +83,10 @@
     <script type="text/babel">
         const { useState, useEffect, useCallback, useRef } = React;
 
-        // =========================================================================
-        // NASTAVITVE SLIK IN KODE
-        // =========================================================================
         const HOLY_ART_IMAGE = "Slike/sin.png";
         const CUSTOM_BEAD_IMAGE = "Slike/Miraculous_medal.jpg"; 
         const MIRACULOUS_MEDAL_IMAGE = "Slike/Miraculous_medal.jpg";
 
-        // KODA ZA VODENJE MOLITVE
         const SECRET_CODE = "amen";
         const MASTER_ADMIN_CODE = "admin123"; 
         
@@ -113,9 +97,6 @@
             castitljivi: ["Slike/sin.png", "Slike/sin.png", "Slike/sin.png", "Slike/sin.png", "Slike/sin.png"],
         };
 
-        // =========================================================================
-        // BAZA MOLITEV IN SKRIVNOSTI
-        // =========================================================================
         const PRAYERS = {
             sl: {
                 credoTitle: "Apostolska veroizpoved",
@@ -271,7 +252,7 @@
 
         const UI_DICT = {
             sl: {
-                appLang: "UI", prep: "Priprava", community: "Skupnost", private: "Zasebno", connected: "Povezano", offline: "Brez povezave",
+                appLang: "UI", prep: "Rožni venec", community: "Skupnost", private: "Zasebno", connected: "Povezano", offline: "Brez povezave",
                 roomName: "Ime sobe", roomPh: "npr. DruzinaNovak", leadPrayer: "Vodenje molitve", createRoom: "Ustvari novo sobo",
                 pwdAdminPh: "Določi geslo (za admina)...", pwdEnterPh: "Vnesi geslo za vodenje...", localCtrl: "Lokalni nadzor", masterActive: "👑 MASTER ADMIN AKTIVEN",
                 youLead: "✅ Ti vodiš to sobo", followerLock: "🔒 Sledilec (Soba je zaklenjena)", roomFree: "✨ Soba je prosta (Vnesi geslo)",
@@ -280,10 +261,11 @@
                 btnStart: "ZAČNI MOLITEV", btnContinue: "NADALJUJ MOLITEV", btnJoin: "PRIDRUŽI SE MOLITVI", btnRestart: "Začni od začetka", activeRooms: "Aktivne molitve",
                 thanks: "Bog bodi zahvaljen!", finished: "Sveti rožni venec je zaključen.", btnMenu: "MENI / PONOVNO",
                 intro: "UVOD", outro: "ZAKLJUČEK", mystery: "SKRIVNOST", waitLeader: "Čakam voditelja...", adminLeads: "Molitev vodi administrator...",
-                m_veseli: "Veseli del", m_svetli: "Svetli del", m_zalostni: "Žalostni del", m_castitljivi: "Častitljivi del", justNow: "pravkar"
+                m_veseli: "Veseli del", m_svetli: "Svetli del", m_zalostni: "Žalostni del", m_castitljivi: "Častitljivi del", justNow: "pravkar",
+                logout: "Izpis", unlockRoom: "Odkleni sobo"
             },
             en: {
-                appLang: "UI", prep: "Preparation", community: "Community", private: "Private", connected: "Connected", offline: "Offline",
+                appLang: "UI", prep: "Holy Rosary", community: "Community", private: "Private", connected: "Connected", offline: "Offline",
                 roomName: "Room Name", roomPh: "e.g. FamilySmith", leadPrayer: "Lead Prayer", createRoom: "Create Room",
                 pwdAdminPh: "Set admin password...", pwdEnterPh: "Enter admin password...", localCtrl: "Local Control", masterActive: "👑 MASTER ADMIN",
                 youLead: "✅ You lead this room", followerLock: "🔒 Follower (Room locked)", roomFree: "✨ Room is free (Enter password)",
@@ -292,10 +274,11 @@
                 btnStart: "START PRAYER", btnContinue: "CONTINUE PRAYER", btnJoin: "JOIN PRAYER", btnRestart: "Start Over", activeRooms: "Active Prayers",
                 thanks: "Thanks be to God!", finished: "The Holy Rosary is finished.", btnMenu: "MENU / RESTART",
                 intro: "INTRODUCTION", outro: "CONCLUSION", mystery: "MYSTERY", waitLeader: "Waiting for leader...", adminLeads: "Administrator is leading...",
-                m_veseli: "Joyful Mysteries", m_svetli: "Luminous Mysteries", m_zalostni: "Sorrowful Mysteries", m_castitljivi: "Glorious Mysteries", justNow: "just now"
+                m_veseli: "Joyful Mysteries", m_svetli: "Luminous Mysteries", m_zalostni: "Sorrowful Mysteries", m_castitljivi: "Glorious Mysteries", justNow: "just now",
+                logout: "Logout", unlockRoom: "Unlock Room"
             },
             de: {
-                appLang: "UI", prep: "Vorbereitung", community: "Gemeinschaft", private: "Privat", connected: "Verbunden", offline: "Offline",
+                appLang: "UI", prep: "Rosenkranz", community: "Gemeinschaft", private: "Privat", connected: "Verbunden", offline: "Offline",
                 roomName: "Raumname", roomPh: "z.B. FamilieSchmidt", leadPrayer: "Gebet leiten", createRoom: "Raum erstellen",
                 pwdAdminPh: "Passwort festlegen...", pwdEnterPh: "Passwort eingeben...", localCtrl: "Lokale Kontrolle", masterActive: "👑 MASTER ADMIN",
                 youLead: "✅ Du leitest diesen Raum", followerLock: "🔒 Follower (Gesperrt)", roomFree: "✨ Raum ist frei",
@@ -304,10 +287,11 @@
                 btnStart: "GEBET BEGINNEN", btnContinue: "GEBET FORTSETZEN", btnJoin: "GEBET BEITRETEN", btnRestart: "Neu starten", activeRooms: "Aktive Gebete",
                 thanks: "Gott sei Dank!", finished: "Der Heilige Rosenkranz ist beendet.", btnMenu: "MENÜ / NEUSTART",
                 intro: "EINLEITUNG", outro: "ABSCHLUSS", mystery: "GEHEIMNIS", waitLeader: "Warte auf Leiter...", adminLeads: "Administrator leitet...",
-                m_veseli: "Freudenreiche", m_svetli: "Lichtreiche", m_zalostni: "Schmerzhafte", m_castitljivi: "Glorreiche", justNow: "gerade"
+                m_veseli: "Freudenreiche", m_svetli: "Lichtreiche", m_zalostni: "Schmerzhafte", m_castitljivi: "Glorreiche", justNow: "gerade",
+                logout: "Abmelden", unlockRoom: "Raum entsperren"
             },
             it: {
-                appLang: "UI", prep: "Preparazione", community: "Comunità", private: "Privato", connected: "Connesso", offline: "Offline",
+                appLang: "UI", prep: "Santo Rosario", community: "Comunità", private: "Privato", connected: "Connesso", offline: "Offline",
                 roomName: "Nome Stanza", roomPh: "es. FamigliaRossi", leadPrayer: "Guida Preghiera", createRoom: "Crea Stanza",
                 pwdAdminPh: "Imposta password...", pwdEnterPh: "Inserisci password...", localCtrl: "Controllo Locale", masterActive: "👑 MASTER ADMIN",
                 youLead: "✅ Tu guidi", followerLock: "🔒 Follower (Bloccato)", roomFree: "✨ Stanza libera",
@@ -316,10 +300,11 @@
                 btnStart: "INIZIA PREGHIERA", btnContinue: "CONTINUA PREGHIERA", btnJoin: "UNISCITI", btnRestart: "Ricomincia", activeRooms: "Preghiere Attive",
                 thanks: "Rendiamo grazie a Dio!", finished: "Il Santo Rosario è terminato.", btnMenu: "MENU / RIAVVIA",
                 intro: "INTRODUZIONE", outro: "CONCLUSIONE", mystery: "MISTERO", waitLeader: "In attesa...", adminLeads: "L'amministratore guida...",
-                m_veseli: "Misteri Gaudiosi", m_svetli: "Misteri Luminosi", m_zalostni: "Misteri Dolorosi", m_castitljivi: "Misteri Gloriosi", justNow: "adesso"
+                m_veseli: "Misteri Gaudiosi", m_svetli: "Misteri Luminosi", m_zalostni: "Misteri Dolorosi", m_castitljivi: "Misteri Gloriosi", justNow: "adesso",
+                logout: "Esci", unlockRoom: "Sblocca Stanza"
             },
             la: {
-                appLang: "UI", prep: "Praeparatio", community: "Communitas", private: "Privatus", connected: "Coniunctum", offline: "Sejunctum",
+                appLang: "UI", prep: "Sanctum Rosarium", community: "Communitas", private: "Privatus", connected: "Coniunctum", offline: "Sejunctum",
                 roomName: "Nomen Cellae", roomPh: "e.g. Familia", leadPrayer: "Dux Orationis", createRoom: "Creare Cella",
                 pwdAdminPh: "Signum creare...", pwdEnterPh: "Signum intrare...", localCtrl: "Regimen Loci", masterActive: "👑 MASTER ADMIN",
                 youLead: "✅ Tu ducis", followerLock: "🔒 Sequax (Clausum)", roomFree: "✨ Cella libera est",
@@ -328,11 +313,11 @@
                 btnStart: "INIPE ORATIONEM", btnContinue: "PERGE ORATIONEM", btnJoin: "IUNGE ORATIONEM", btnRestart: "A Capite", activeRooms: "Orationes Activae",
                 thanks: "Deo Gratias!", finished: "Sanctum Rosarium finitum est.", btnMenu: "MENU / ITERUM",
                 intro: "INTRODUCTIO", outro: "CONCLUSIO", mystery: "MYSTERIUM", waitLeader: "Exspecto ducem...", adminLeads: "Dux gubernat...",
-                m_veseli: "Mysteria Gaudiosa", m_svetli: "Mysteria Luminosa", m_zalostni: "Mysteria Dolorosa", m_castitljivi: "Mysteria Gloriosa", justNow: "nunc"
+                m_veseli: "Mysteria Gaudiosa", m_svetli: "Mysteria Luminosa", m_zalostni: "Mysteria Dolorosa", m_castitljivi: "Mysteria Gloriosa", justNow: "nunc",
+                logout: "Exire", unlockRoom: "Cella Aperire"
             }
         };
 
-        // --- IMAGINES ET ICONES ---
         const Icon = ({ name, className = "" }) => {
             const paths = {
                 play: "M5 3l14 9-14 9V3z",
@@ -398,12 +383,11 @@
                 }
             }, [uiLang]);
 
-            // NOVO: Samodejen skok na vrh ob menjavi zaslona
             useEffect(() => {
                 window.scrollTo(0, 0);
             }, [view]);
 
-            // NOVO: Upravljanje "Wake Lock" za preprečevanje izklopa zaslona
+            // Wake Lock
             const wakeLockRef = useRef(null);
             const requestWakeLock = useCallback(async () => {
                 if ('wakeLock' in navigator) {
@@ -458,7 +442,6 @@
                 return 'SkupnaMolitev';
             });
 
-            // NOVO: Osebni namen
             const [intention, setIntention] = useState(() => {
                 if (typeof window !== 'undefined' && window.localStorage) {
                     return localStorage.getItem('rosary_intention') || '';
@@ -487,7 +470,7 @@
                 if (data.isRoulettePrayer !== undefined) setIsRoulettePrayer(data.isRoulettePrayer);
                 if (data.isRouletteDecade !== undefined) setIsRouletteDecade(data.isRouletteDecade);
                 if (data.showMiraculous !== undefined) setShowMiraculous(data.showMiraculous);
-                if (data.intention !== undefined) setIntention(data.intention); // Sinhroniziraj namen
+                if (data.intention !== undefined) setIntention(data.intention); 
             }, []);
 
             const resetToStart = useCallback(() => {
@@ -549,7 +532,6 @@
                 }
             }, [phase, step, decadeIndex, lang, mysteryType, miraculousTriggers, isRoulettePrayer, isRouletteDecade, showMiraculous, intention, isPrivateMode]);
 
-            // Nalaganje zasebnega napredka ob zagonu
             useEffect(() => {
                 if (isPrivateMode) {
                     const saved = typeof window !== 'undefined' && window.localStorage ? localStorage.getItem('rosary_private_state') : null;
@@ -557,7 +539,6 @@
                         try { applyState(JSON.parse(saved)); } catch (e) { resetToStart(); }
                     } else { resetToStart(); }
                 }
-                // eslint-disable-next-line react-hooks/exhaustive-deps
             }, []);
 
             const triggerVibration = useCallback((duration = 15) => {
@@ -566,7 +547,6 @@
                 }
             }, []);
 
-            // Inicializacija Firebase
             useEffect(() => {
                 if (fbReady) return;
                 const handler = () => setFbReady(true);
@@ -622,7 +602,6 @@
                 return () => unsubscribe();
             }, [fbReady]);
 
-            // Pošiljanje podatkov
             const pushUpdate = useCallback(async (updates) => {
                 if (isPrivateMode || !isLeader || !db || !user || !appId) return;
                 const { doc, setDoc } = window.Firebase;
@@ -665,7 +644,6 @@
                 } catch (e) {}
             }, [db, user, appId, isCanvasEnv, isMasterAdmin, isPrivateMode, roomName, resetToStart]);
 
-            // Poslušanje baze
             useEffect(() => {
                 if (!user || !db || !appId) return;
                 const { doc, onSnapshot } = window.Firebase;
@@ -868,22 +846,26 @@
             const renderMainMenu = () => (
                 <div className="flex flex-col items-center pt-8 pb-8 px-4 w-full max-w-md mx-auto relative z-10">
                     
-                    {/* Osrednja, večja slika z elegantnim sijajem */}
-                    <div className="relative w-48 h-48 md:w-56 md:h-56 mx-auto flex items-center justify-center mb-8 animate-slide-up">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-[#d4af37]/40 to-transparent rounded-full blur-2xl pulse-soft opacity-70"></div>
-                        <div className="relative w-full h-full shadow-[0_20px_50px_rgba(0,0,0,0.25)] rounded-full border-[3px] border-[#d4af37]/80 overflow-hidden bg-[#121c33] flex items-center justify-center z-10 group">
-                            {HOLY_ART_IMAGE ? (
-                                <img src={HOLY_ART_IMAGE} alt="Holy Art" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-                            ) : (
-                                <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-[#1a294c] via-[#121c33] to-[#0a0f1c]"><span className="text-6xl text-[#d4af37] font-serif-holy mb-1">✟</span></div>
-                            )}
-                            <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.6)] pointer-events-none"></div>
+                    {/* Nova oblika slike - Eleganten sakralni lok (cerkveno okno) */}
+                    <div className="relative w-40 h-56 md:w-48 md:h-64 mx-auto flex items-center justify-center mb-6 animate-slide-up mt-2">
+                        <div className="absolute -inset-1 bg-gradient-to-b from-[#d4af37]/50 via-transparent to-transparent rounded-t-full rounded-b-[2rem] blur-lg pulse-soft opacity-60"></div>
+                        <div className="relative w-full h-full shadow-[0_20px_40px_rgba(0,0,0,0.3)] rounded-t-full rounded-b-[2rem] border-[2px] border-[#d4af37]/60 overflow-hidden bg-[#121c33] flex items-center justify-center z-10 group p-1.5">
+                            <div className="w-full h-full rounded-t-full rounded-b-[1.5rem] overflow-hidden relative border border-[#121c33]">
+                                {HOLY_ART_IMAGE ? (
+                                    <img src={HOLY_ART_IMAGE} alt="Holy Art" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-[#1a294c] via-[#121c33] to-[#0a0f1c]">
+                                        <span className="text-6xl text-[#d4af37] font-serif-holy mb-1">✟</span>
+                                    </div>
+                                )}
+                                <div className="absolute inset-0 shadow-[inset_0_0_30px_rgba(0,0,0,0.6)] pointer-events-none"></div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Naslov aplikacije / Priprava */}
+                    {/* Naslov aplikacije */}
                     <div className="text-center w-full mb-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                        <h2 className="text-3xl md:text-4xl font-serif-holy font-black text-[#2c1810] tracking-wider drop-shadow-sm">{t('prep')}</h2>
+                        <h2 className="text-3xl md:text-4xl font-serif-holy font-black text-[#2c1810] tracking-wider drop-shadow-sm uppercase">{t('prep')}</h2>
                         <div className="flex items-center justify-center space-x-4 mt-3 opacity-60">
                             <span className="w-16 h-[1px] bg-gradient-to-r from-transparent to-[#d4af37]"></span>
                             <span className="text-[#d4af37] text-xl">✟</span>
@@ -912,22 +894,51 @@
                                         <label className="text-[10px] font-bold text-[#8b1a1a] uppercase tracking-wider ml-1 flex items-center gap-2"><Icon name="home" className="w-3.5 h-3.5" /> {t('roomName')}</label>
                                         <input type="text" placeholder={t('roomPh')} value={roomName} onChange={(e) => setRoomName(e.target.value)} className="w-full bg-[#fdfbf7] border border-[#e8dfc8] text-[#2c1810] px-4 py-3.5 rounded-xl font-bold text-base outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm" />
                                     </div>
+                                    
+                                    {/* Prijava Admina / Geslo */}
                                     <div className="space-y-2 bg-[#fdfbf7] p-4 rounded-2xl border border-[#e8dfc8]/70 shadow-sm">
-                                        <label className="text-[10px] font-bold text-[#8b1a1a] uppercase tracking-wider flex items-center gap-2"><Icon name={dbAdminCode ? (isLeader ? "unlock" : "lock") : "star"} className="w-3.5 h-3.5" /> {dbAdminCode ? t('leadPrayer') : t('createRoom')}</label>
-                                        <div className="flex gap-2 items-center">
-                                            <input type="password" placeholder={dbAdminCode ? t('pwdEnterPh') : t('pwdAdminPh')} value={leaderCode} onChange={(e) => setLeaderCode(e.target.value)} className="flex-1 bg-white border border-[#e8dfc8] text-[#2c1810] px-4 py-3 rounded-xl font-bold text-base outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm" />
-                                            {isLeader && dbAdminCode && (<button onClick={resetRoomCode} className="p-3 bg-[#8b1a1a]/10 text-[#8b1a1a] rounded-xl hover:bg-[#8b1a1a] hover:text-white transition-colors" title="Odkleni sobo"><Icon name="refresh" className="w-4 h-4" /></button>)}
-                                        </div>
-                                        <div className="text-[9px] font-bold uppercase tracking-widest mt-2 ml-1 transition-colors">
-                                            {isPrivateMode ? <span className="text-[#6d5a42]">{t('localCtrl')}</span> : isMasterAdmin ? <span className="text-purple-600">{t('masterActive')}</span> : isLeader ? <span className="text-green-600">{t('youLead')}</span> : dbAdminCode ? <span className="text-[#8b1a1a]">{t('followerLock')}</span> : <span className="text-[#d4af37]">{t('roomFree')}</span>}
-                                        </div>
+                                        {dbAdminCode && isLeader ? (
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 shadow-sm"><Icon name="unlock" className="w-4 h-4" /></div>
+                                                    <div>
+                                                        <div className="text-[11px] font-bold text-green-700 uppercase tracking-wide">{isMasterAdmin ? t('masterActive') : t('youLead')}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    {dbAdminCode && (
+                                                        <button onClick={resetRoomCode} className="p-2 bg-white border border-green-200 text-green-700 rounded-lg hover:bg-green-50 transition-colors shadow-sm" title={t('unlockRoom')}>
+                                                            <Icon name="refresh" className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    )}
+                                                    <button onClick={() => setLeaderCode('')} className="px-3 py-2 bg-white border border-red-100 text-red-600 rounded-lg text-[10px] font-bold uppercase hover:bg-red-50 transition-colors shadow-sm tracking-wide">
+                                                        {t('logout')}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <label className="text-[10px] font-bold text-[#8b1a1a] uppercase tracking-wider flex items-center gap-2"><Icon name={dbAdminCode ? "lock" : "star"} className="w-3.5 h-3.5" /> {dbAdminCode ? t('leadPrayer') : t('createRoom')}</label>
+                                                <div className="flex gap-2 items-center">
+                                                    <input type="password" placeholder={dbAdminCode ? t('pwdEnterPh') : t('pwdAdminPh')} value={leaderCode} onChange={(e) => setLeaderCode(e.target.value)} className="flex-1 bg-white border border-[#e8dfc8] text-[#2c1810] px-4 py-3 rounded-xl font-bold text-base outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm" />
+                                                    {!dbAdminCode && leaderCode.trim() !== '' && (
+                                                        <button onClick={() => { triggerVibration(10); pushUpdate({}); }} className="px-4 py-3 bg-green-100 text-green-700 rounded-xl font-bold text-xs uppercase hover:bg-green-200 transition-colors shadow-sm active:scale-95" title="Potrdi geslo">
+                                                            <Icon name="check" className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <div className="text-[9px] font-bold uppercase tracking-widest mt-2 ml-1 transition-colors">
+                                                    {dbAdminCode ? <span className="text-[#8b1a1a]">{t('followerLock')}</span> : <span className="text-[#d4af37]">{t('roomFree')}</span>}
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             )}
 
                             <div className="space-y-5">
-                                <div className="flex flex-col md:flex-row gap-4">
-                                    <div className="flex-1 space-y-2">
+                                <div className="flex flex-col md:flex-row gap-4 items-end">
+                                    <div className="flex-1 w-full space-y-2">
                                         <label className="text-[10px] font-bold text-[#6d5a42] uppercase tracking-wider ml-1 flex items-center gap-2">
                                             <Icon name="globe" className="w-3.5 h-3.5 flex-shrink-0" /> 
                                             {t('prayerLang')}
@@ -939,7 +950,7 @@
                                             <Icon name="arrowRight" className="w-3.5 h-3.5 absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-[#d4af37] pointer-events-none" />
                                         </div>
                                     </div>
-                                    <div className="flex-[1.5] space-y-2">
+                                    <div className="flex-[1.5] w-full space-y-2">
                                         <label className="text-[10px] font-bold text-[#6d5a42] uppercase tracking-wider ml-1 flex items-center gap-2">
                                             <Icon name="book" className="w-3.5 h-3.5 flex-shrink-0" /> 
                                             {t('mysteryPart')}
@@ -1001,8 +1012,9 @@
                             <span className="tracking-widest relative z-10 pt-1 drop-shadow-md">{canControl ? ((phase !== 'intro' || step > 0 || decadeIndex > 0) ? t('btnContinue') : t('btnStart')) : t('btnJoin')}</span>
                         </button>
                         
+                        {/* Gumb ZAČNI OD ZAČETKA (ne prestavi več v molitev, ostaneš v meniju) */}
                         {canControl && (phase !== 'intro' || step > 0 || decadeIndex > 0) && (
-                            <button onClick={() => { triggerVibration(10); const trigs = getNewTriggers(); setPhase('intro'); setStep(0); setDecadeIndex(0); setMiraculousTriggers(trigs); setView('prayer'); pushUpdate({ phase: 'intro', step: 0, decadeIndex: 0, miraculousTriggers: trigs, showMiraculous: false }); }} className="group bg-transparent hover:bg-white/50 text-[#8b1a1a] w-full py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center border border-[#d2c5aa] hover:border-[#8b1a1a] shadow-sm hover:shadow-md">
+                            <button onClick={() => { triggerVibration(10); const trigs = getNewTriggers(); setPhase('intro'); setStep(0); setDecadeIndex(0); setMiraculousTriggers(trigs); pushUpdate({ phase: 'intro', step: 0, decadeIndex: 0, miraculousTriggers: trigs, showMiraculous: false }); }} className="group bg-transparent hover:bg-white/50 text-[#8b1a1a] w-full py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center border border-[#d2c5aa] hover:border-[#8b1a1a] shadow-sm hover:shadow-md">
                                 <div className="mr-2 transform group-hover:-rotate-180 transition-transform duration-500"><Icon name="refresh" className="w-4 h-4" /></div>
                                 {t('btnRestart')}
                             </button>
@@ -1184,37 +1196,30 @@
             };
 
             return (
-                <div className={`min-h-screen flex flex-col items-center ${view === 'menu' ? 'pb-12' : 'pb-4'}`} onTouchStart={view === 'prayer' ? onTouchStart : undefined} onTouchEnd={view === 'prayer' ? onTouchEndHandler : undefined}>
+                <div className={`min-h-screen flex flex-col items-center relative ${view === 'menu' ? 'pb-12' : 'pb-4'}`} onTouchStart={view === 'prayer' ? onTouchStart : undefined} onTouchEnd={view === 'prayer' ? onTouchEndHandler : undefined}>
+                    
+                    {/* DISKRETEN STATUS POVEZAVE V KOTU */}
+                    {!isPrivateMode && view === 'menu' && (
+                        <div className="absolute top-4 right-5 z-50 flex items-center gap-1.5 opacity-40 hover:opacity-100 transition-opacity duration-300">
+                            <span className={`w-1.5 h-1.5 rounded-full ${user ? 'bg-green-500 shadow-[0_0_4px_#22c55e]' : 'bg-red-500'}`}></span>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-[#6d5a42]">{user ? t('connected') : t('offline')}</span>
+                        </div>
+                    )}
+
                     <div className={`w-full max-w-lg flex flex-col px-4 md:px-6 ${view === 'menu' ? 'mt-0 md:mt-2' : 'mt-2 h-[95vh]'}`}>
                         {view === 'menu' ? renderMainMenu() : renderPrayerContent()}
                     </div>
 
+                    {/* DISKRETNI JEZIKI MENIJA NA DNU */}
                     {view === 'menu' && (
-                        <div className="mt-auto pt-8 pb-4 px-4 w-full max-w-md flex flex-col items-center gap-6">
-                            <div className="w-full flex justify-between items-center">
-                                <div className="flex gap-1 bg-white/60 backdrop-blur-sm border border-[#e8dfc8] rounded-full px-2 py-1 shadow-sm">
-                                    {['sl', 'en', 'de', 'it', 'la'].map(l => (
-                                        <button key={l} onClick={() => { triggerVibration(10); setUiLang(l); }} className={`text-[10px] font-bold uppercase w-7 h-6 rounded flex items-center justify-center transition-colors ${uiLang === l ? 'bg-[#121c33] text-[#d4af37]' : 'text-[#6d5a42] hover:bg-black/5'}`}>{l}</button>
-                                    ))}
-                                </div>
-                                {!isPrivateMode && (
-                                    <div className="flex items-center gap-1.5 opacity-80 z-20 px-3 py-1.5 rounded-full shadow-sm bg-white/60 backdrop-blur-sm border border-[#e8dfc8]">
-                                       {user ? (
-                                           <>
-                                               <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_#22c55e] animate-pulse"></span>
-                                               <span className="text-[9px] text-[#22c55e] font-black tracking-widest uppercase">{t('connected')}</span>
-                                           </>
-                                       ) : (
-                                           <>
-                                               <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                                               <span className="text-[9px] text-[#8b1a1a] font-black tracking-widest uppercase">{t('offline')}</span>
-                                           </>
-                                       )}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="text-[#8b1a1a] text-[10px] font-bold text-center uppercase tracking-[0.3em] opacity-70 leading-loose">
+                        <div className="mt-auto pt-8 pb-6 px-4 w-full max-w-md flex flex-col items-center gap-4">
+                            <div className="text-[#8b1a1a] text-[10px] font-bold text-center uppercase tracking-[0.3em] opacity-60 leading-loose">
                                 Ave Maria ✟ Gratia Plena<br/>Dominus Tecum
+                            </div>
+                            <div className="flex gap-4 items-center justify-center opacity-40 hover:opacity-100 transition-opacity duration-300 mt-2">
+                                {['sl', 'en', 'de', 'it', 'la'].map(l => (
+                                    <button key={l} onClick={() => { triggerVibration(10); setUiLang(l); }} className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${uiLang === l ? 'text-[#8b1a1a] scale-110' : 'text-[#6d5a42] hover:text-[#121c33]'}`}>{l}</button>
+                                ))}
                             </div>
                         </div>
                     )}
