@@ -253,7 +253,7 @@
                 la: ["Agonia in Horto", "Flagellatio", "Coronatio Spinis", "Baiulatio Crucis", "Crucifixio et Mors"]
             },
             castitljivi: {
-                sl: ["ki je od mrtvih vstal", "ki je v nebesa šel", "ki je Svetega Duha poslal", "ki je tebe, Devica, v nebesa vzel", "ki je tebe, Devica, v nebesih kronal"],
+                sl: ["ki je od mrtvih vstal", "ki je v nebesa šel", "ki je Svetega Duha poslal", "ki je tebe, Devica, v nebesa v vzel", "ki je tebe, Devica, v nebesih kronal"],
                 de: ["der von den Toten auferstanden ist", "der in den Himmel aufgefahren ist", "der uns den Heiligen Geist gesandt hat", "der dich, o Jungfrau, in den Himmel aufgenommen hat", "der dich, o Jungfrau, im Himmel gekrönt hat"],
                 en: ["The Resurrection", "The Ascension", "The Descent of the Holy Spirit", "The Assumption of Mary", "The Coronation of the Virgin"],
                 it: ["La Risurrezione", "L'Ascensione", "La Discesa dello Spirito Santo", "L'Assunzione di Maria", "L'Incoronazione di Maria"],
@@ -388,9 +388,9 @@
             return Array.from(triggers);
         };
 
-        // Vizualni separator za molitve
+        // Vizualni separator za molitve - zdaj manjši in bolj diskreten
         const PrayerDivider = () => (
-            <span className="block text-center text-[#d4af37] opacity-40 my-4 text-2xl drop-shadow-sm">✟</span>
+            <span className="block text-center text-[#d4af37] opacity-30 my-1.5 md:my-2 text-lg md:text-xl drop-shadow-sm">✟</span>
         );
 
         function App() {
@@ -1024,13 +1024,10 @@
                     const uiMysteryText = MYSTERIES[safeMysteryType][uiLang]?.[decadeIndex] || "";
                     if (isInsertLanguage) { 
                         subtitle = `${decadeIndex + 1}. ${prayerDict.mystery}`; 
-                        // Za vstavljene jezike (npr. slovenščino) vedno dodamo pomožni tekst, 
-                        // saj v nadnaslovu sicer ne piše imena skrivnosti!
                         helperSubtitle = `(${uiMysteryText})`;
                     } 
                     else { 
                         subtitle = `${decadeIndex + 1}. ${prayerDict.mystery}: ${currentMysteryText}`; 
-                        // Pri ostalih jezikih ga dodamo samo, če molimo v tujem jeziku.
                         if (safeLang !== uiLang) {
                             helperSubtitle = `(${uiMysteryText})`;
                         }
@@ -1089,7 +1086,6 @@
                     else if (step === 5) { title = p.slavaTitle; content = <p className={pClass}>{p.slava1}<PrayerDivider />{p.slava2}</p>; } 
                     else if (step === 6) { title = p.salveTitle; content = <p className={pClass}>{p.salve}</p>; } 
                     else if (step === 7) { title = p.michaelTitle; content = <p className={pClass}>{p.michael}</p>; }
-                    // NOVE MOLITVE ZA DUŠE V VICAH:
                     else if (step === 8) { 
                         title = p.ocenasTitle; 
                         helperSubtitle = `(${p.soulsIntention})`; 
@@ -1113,8 +1109,9 @@
                 else if (phase === 'decades') beadArray = Array.from({ length: 13 });
                 else if (phase === 'outro') beadArray = Array.from({ length: 12 });
 
+                // Absolutno pozicionirana značka, vedno v levem zgornjem kotu
                 const hailMaryBadge = (phase === 'decades' && step >= 1 && step <= 10) && (
-                    <div className="absolute top-5 left-5 z-[70] w-10 h-10 md:w-12 md:h-12 bg-[#0a0e17]/90 backdrop-blur-md rounded-full border border-[#d4af37]/60 flex items-center justify-center text-xl md:text-2xl font-serif-holy font-bold text-[#d4af37] shadow-[0_5px_15px_rgba(0,0,0,0.6)] animate-fade-in leading-none pb-[2px] md:pb-1">
+                    <div className="absolute top-5 left-5 md:top-6 md:left-6 z-[70] w-10 h-10 md:w-12 md:h-12 bg-[#0a0e17]/95 backdrop-blur-md rounded-full border border-[#d4af37]/60 flex items-center justify-center text-xl md:text-2xl font-serif-holy font-bold text-[#d4af37] shadow-[0_5px_15px_rgba(0,0,0,0.6)] animate-fade-in leading-none pb-[2px] md:pb-1">
                         {step}
                     </div>
                 );
@@ -1155,14 +1152,16 @@
                                 <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-[#d4af37]/20 rounded-tl-2xl m-2 pointer-events-none"></div>
                                 <div className="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-[#d4af37]/20 rounded-tr-2xl m-2 pointer-events-none"></div>
 
+                                {/* Plavajoči števec */}
                                 {hailMaryBadge}
 
-                                <div className="text-center mb-6 flex flex-col items-center relative z-10">
+                                {/* Varnostni padding (px-10 md:px-16), da naslov nikoli ne zapelje POD absolutno značko na levi */}
+                                <div className="text-center mb-5 md:mb-6 flex flex-col items-center relative z-10 px-10 md:px-16 mt-2">
                                     <span className={`px-3 py-1.5 bg-[#0c101d] text-[#d4af37] border border-[#d4af37]/30 rounded text-[10px] font-bold uppercase tracking-[0.2em] shadow-sm text-center ${helperSubtitle ? 'mb-1.5' : 'mb-4'}`}>
                                         {subtitle}
                                     </span>
                                     {helperSubtitle && (
-                                        <span className="text-[#94a3b8] text-[12px] md:text-sm italic font-medium mb-4 px-4 text-center leading-snug">
+                                        <span className="text-[#94a3b8] text-[12px] md:text-sm italic font-medium mb-4 px-2 md:px-4 text-center leading-snug">
                                             {helperSubtitle}
                                         </span>
                                     )}
@@ -1186,6 +1185,7 @@
                                 <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black/80 to-transparent pointer-events-none"></div>
                                 <div className="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-black/80 to-transparent pointer-events-none"></div>
                                 
+                                {/* Plavajoči števec na sliki */}
                                 {hailMaryBadge}
                             </div>
                         )}
