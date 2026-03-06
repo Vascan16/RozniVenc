@@ -2,8 +2,11 @@
 <html lang="sl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#121c33">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTIxYzMzIi8+PHRleHQgeT0iNTVweCIgeD0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZDRhZjM3IiBmb250LXNpemU9IjYwIj7inJ88L3RleHQ+PC9zdmc+">
     <title>Večjezični Rožni Venec</title>
+    
     <!-- Elementa pro bibliothecis (CDN) - ZAMRZNJENE VERZIJE -->
     <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
@@ -22,6 +25,23 @@
             getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc
         };
         window.dispatchEvent(new Event('firebase-loaded'));
+    </script>
+
+    <!-- PWA Setup: Dinamični Manifest (Service Worker odstranjen zaradi omejitev brskalnika) -->
+    <script>
+        const manifest = {
+            "name": "Večjezični Rožni Venec",
+            "short_name": "Rožni Venec",
+            "display": "standalone",
+            "background_color": "#f6f3eb",
+            "theme_color": "#121c33",
+            "icons": [{"src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTIxYzMzIi8+PHRleHQgeT0iNTVweCIgeD0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZDRhZjM3IiBmb250LXNpemU9IjYwIj7inJ88L3RleHQ+PC9zdmc+","sizes":"192x192","type":"image/svg+xml"}]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(manifestBlob)}">`);
+        
+        // Opomba: Service Worker je bil odstranjen, saj brskalniki ne dovoljujejo registracije iz 'blob:' URL-jev.
+        // Za popolno PWA (delovanje brez povezave) bi potrebovali ločeno datoteko 'sw.js' na vašem strežniku.
     </script>
 
     <style>
@@ -84,7 +104,7 @@
 
         // KODA ZA VODENJE MOLITVE
         const SECRET_CODE = "amen";
-        const MASTER_ADMIN_CODE = "admin123"; // NOVO: Koda za brisanje sob
+        const MASTER_ADMIN_CODE = "admin123"; 
         
         const MYSTERY_IMAGES = {
             veseli: ["Slike/sin.png", "Slike/sin.png", "Slike/sin.png", "Slike/sin.png", "Slike/sin.png"],
@@ -106,7 +126,6 @@
                 salve: "Pozdravljena, Kraljica, mati usmiljenja, življenje, sladkost in upanje naše, pozdravljena. K tebi vpijemo izgnani Evini otroci, k tebi zdihujemo, žalujoči in jokajoči v tej solzni dolini. Obrni torej, naša priprošnjica, svoje milostljive oči v nas in pokaži nam po tem izgnanstvu Jezusa, blagoslovljeni sad svojega telesa. O milostljiva, o ljubezniva, o sladka Devica Marija!",
                 michaelTitle: "Molitev sv. nadangela Mihaela",
                 michael: "Sveti nadangel Mihael, brani nas v boju, bodi nam v pomoč zoper zlobnost in zalezovanje hudobnega duha. Ukroti naj ga Bog, ponižno prosimo. In ti, vodnik nebeške vojske, satana in druge hudobne duhove, ki hodijo po svetu v pogubo duš, z božjo močjo v pekel pahni. Amen.",
-                intentionsTitle: "Za osebne namene",
                 ocenasTitle: "Oče naš",
                 ocenas: "Oče naš, ki si v nebesih, posvečeno bodi tvoje ime, pridi k nam tvoje kraljestvo, zgodi se tvoja volja kakor v nebesih tako na zemlji. Daj nam danes naš vsakdanji kruh in odpusti nam naše dolge, kakor tudi mi odpuščamo svojim dolžnikom, in ne vpelji nas v skušnjavo, temveč reši nas hudega. Amen.",
                 zdravaTitle: "Zdrava Marija",
@@ -128,7 +147,6 @@
                 salve: "Sei gegrüßt, o Königin, Mutter der Barmherzigkeit, unser Leben, unsre Wonne und unsre Hoffnung, sei gegrüßt! Zu dir rufen wir verbannte Kinder Evas, zu dir seufzen wir trauernd und weinend in diesem Tal der Tränen. Wohlan denn, unsre Fürsprecherin, wende deine barmherzigen Augen uns zu und zeige uns nach diesem Elend Jesus, die gebenedeite Frucht deines Leibes. O gütige, o milde, o süße Jungfrau Maria.",
                 michaelTitle: "Gebet zum hl. Erzengel Michael",
                 michael: "Heiliger Erzengel Michael, verteidige uns im Kampfe; gegen die Bosheit und die Nachstellungen des Teufels sei unser Schutz. 'Gott gebiete ihm', so bitten wir flehentlich; du aber, Fürst der himmlischen Heerscharen, stoße den Satan und die anderen bösen Geister, die in der Welt umhergehen, um die Seelen zu verderben, durch die Kraft Gottes in die Hölle. Amen.",
-                intentionsTitle: "Für persönliche Anliegen",
                 ocenasTitle: "Vater unser",
                 ocenas: "Vater unser im Himmel, geheiligt werde dein Name. Dein Reich komme. Dein Wille geschehe, wie im Himmel so auf Erden. Unser tägliches Brot gib uns heute. Und vergib uns unsere Schuld, wie auch wir vergeben unsern Schuldigern. Und führe uns nicht in Versuchung, sondern erlöse uns von dem Bösen. Amen.",
                 zdravaTitle: "Gegrüßet seist du, Maria",
@@ -150,7 +168,6 @@
                 salve: "Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve: to thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious Advocate, thine eyes of mercy toward us, and after this our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary! Amen.",
                 michaelTitle: "Prayer to St. Michael",
                 michael: "St. Michael the Archangel, defend us in battle, be our protection against the wickedness and snares of the devil. May God rebuke him we humbly pray; and do thou, O Prince of the Heavenly host, by the power of God, cast into hell Satan and all the evil spirits who prowl about the world seeking the ruin of souls. Amen.",
-                intentionsTitle: "For personal intentions",
                 ocenasTitle: "Our Father",
                 ocenas: "Our Father, who art in heaven, hallowed be thy name; thy kingdom come; thy will be done on earth as it is in heaven. Give us this day our daily bread; and forgive us our trespasses as we forgive those who trespass against us; and lead us not into temptation, but deliver us from evil. Amen.",
                 zdravaTitle: "Hail Mary",
@@ -172,7 +189,6 @@
                 salve: "Salve, Regina, madre di misericordia, vita, dolcezza e speranza nostra, salve. A te riccorriamo, esuli figli di Eva; a te sospiriamo gementi e piangenti in questa valle di lacrime. Orsù dunque, avvocata nostra, rivolgi a noi gli occhi tuoi misericordiosi. E mostraci, dopo questo esilio, Gesù, il frutto benedetto del tuo seno. O clemente, o pia, o dolce Vergine Maria.",
                 michaelTitle: "Preghiera a San Michele Arcangelo",
                 michael: "San Michele Arcangelo, difendici nella battaglia; sii nostro aiuto contro la malvagità e le insidie del diavolo. Che Dio eserciti il suo dominio su di lui, preghiamo supplichevoli; e tu, o Principe della milizia celeste, con il potere divino, ricaccia nell'inferno Satana e gli altri spiriti maligni i quali errano nel mondo per perdere le anime. Amen.",
-                intentionsTitle: "Per le intenzioni personali",
                 ocenasTitle: "Padre nostro",
                 ocenas: "Padre nostro, che sei nei cieli, sia santificato il tuo nome, venga il tuo regno, sia fatta la tua volontà, come in cielo così in terra. Dacci oggi il nostro pane quotidiano, e rimetti a noi i nostri debiti come anche noi li rimettiamo ai nostri debitori, e non abbandonarci alla tentazione, ma liberaci dal male. Amen.",
                 zdravaTitle: "Ave Maria",
@@ -194,7 +210,6 @@
                 salve: "Salve, Regina, mater misericordiae, vita, dulcedo, et spes nostra, salve. Ad te clamamus, exsules filii Evae, ad te suspiramus, gementes et flentes in hac lacrimarum valle. Eia, ergo, advocata nostra, illos tuos misericordes oculos ad nos converte; et Iesum, benedictum fructum ventris tui, nobis post hoc exsilium ostende. O clemens, O pia, O dulcis Virgo Maria.",
                 michaelTitle: "Oratio ad Sanctum Michaelem",
                 michael: "Sancte Michael Archangele, defende nos in proelio, contra nequitiam et insidias diaboli esto praesidium. Imperet illi Deus, supplices deprecamur: tuque, Princeps militiae caelestis, Satanam aliosque spiritus malignos, qui ad perditionem animarum pervagantur in mundo, divina virtute, in infernum detrude. Amen.",
-                intentionsTitle: "Pro intentionibus personalibus",
                 ocenasTitle: "Pater noster",
                 ocenas: "Pater noster, qui es in caelis, sanctificetur nomen tuum. Adveniat regnum tuum. Fiat voluntas tua, sicut in caelo et in terra. Panem nostrum quotidianum da nobis hodie, et dimitte nobis debita nostra sicut et nos dimittimus debitoribus nostris. Et ne nos inducas in tentationem, sed libera nos a malo. Amen.",
                 zdravaTitle: "Ave Maria",
@@ -302,13 +317,47 @@
 
         function App() {
             // Lokalno Stanje
-            const [view, setView] = useState('menu'); // Strogo lokalno!
+            const [view, setView] = useState('menu'); 
             const [showMysteryImage, setShowMysteryImage] = useState(false); 
             
-            // NOVO: Samodejen skok na vrh ob menjavi zaslona (popravi težavo na telefonu)
+            // NOVO: Samodejen skok na vrh ob menjavi zaslona
             useEffect(() => {
                 window.scrollTo(0, 0);
             }, [view]);
+
+            // NOVO: Upravljanje "Wake Lock" za preprečevanje izklopa zaslona
+            const wakeLockRef = useRef(null);
+            const requestWakeLock = useCallback(async () => {
+                if ('wakeLock' in navigator) {
+                    try {
+                        wakeLockRef.current = await navigator.wakeLock.request('screen');
+                    } catch (err) {
+                        console.log(`Wake Lock error: ${err.message}`);
+                    }
+                }
+            }, []);
+            const releaseWakeLock = useCallback(async () => {
+                if (wakeLockRef.current !== null) {
+                    await wakeLockRef.current.release();
+                    wakeLockRef.current = null;
+                }
+            }, []);
+
+            useEffect(() => {
+                if (view === 'prayer') requestWakeLock();
+                else releaseWakeLock();
+                return () => releaseWakeLock();
+            }, [view, requestWakeLock, releaseWakeLock]);
+
+            useEffect(() => {
+                const handleVisChange = () => {
+                    if (document.visibilityState === 'visible' && view === 'prayer') {
+                        requestWakeLock();
+                    }
+                };
+                document.addEventListener('visibilitychange', handleVisChange);
+                return () => document.removeEventListener('visibilitychange', handleVisChange);
+            }, [view, requestWakeLock]);
             
             // Zasebni / Skupni način
             const [isPrivateMode, setIsPrivateMode] = useState(() => {
@@ -326,19 +375,27 @@
             // SOBE in Geslo Sobe iz baze
             const [roomName, setRoomName] = useState(() => {
                 if (typeof window !== 'undefined' && window.localStorage) {
-                    return localStorage.getItem('rosary_room_name') || 'JavnaSoba';
+                    return localStorage.getItem('rosary_room_name') || 'SkupnaMolitev';
                 }
-                return 'JavnaSoba';
+                return 'SkupnaMolitev';
+            });
+
+            // NOVO: Osebni namen
+            const [intention, setIntention] = useState(() => {
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    return localStorage.getItem('rosary_intention') || '';
+                }
+                return '';
             });
 
             useEffect(() => {
                 if (typeof window !== 'undefined' && window.localStorage) {
                     localStorage.setItem('rosary_room_name', roomName);
+                    localStorage.setItem('rosary_intention', intention);
                 }
-            }, [roomName]);
+            }, [roomName, intention]);
 
             const [dbAdminCode, setDbAdminCode] = useState(null);
-
             const lastSharedState = useRef(null);
 
             const applyState = useCallback((data) => {
@@ -352,6 +409,7 @@
                 if (data.isRoulettePrayer !== undefined) setIsRoulettePrayer(data.isRoulettePrayer);
                 if (data.isRouletteDecade !== undefined) setIsRouletteDecade(data.isRouletteDecade);
                 if (data.showMiraculous !== undefined) setShowMiraculous(data.showMiraculous);
+                if (data.intention !== undefined) setIntention(data.intention); // Sinhroniziraj namen
             }, []);
 
             const resetToStart = useCallback(() => {
@@ -362,7 +420,7 @@
                 setShowMiraculous(false);
             }, []);
 
-            // Koda uporabnika za vodenje (iz local storage)
+            // Koda uporabnika za vodenje
             const [leaderCode, setLeaderCode] = useState(() => {
                 if (typeof window !== 'undefined' && window.localStorage) {
                     return localStorage.getItem('rosary_leader_code') || '';
@@ -370,14 +428,8 @@
                 return '';
             });
             
-            // NOVO: Preverjanje, če je uporabnik Master Admin
             const isMasterAdmin = leaderCode.trim() === MASTER_ADMIN_CODE;
-
-            // Določi, če je trenutni uporabnik voditelj v sobi
-            // Pravilo: Če ima soba geslo, se mora ujemati. Če soba nima gesla, postane voditelj kdorkoli prvi vnese geslo.
             const isLeader = (leaderCode.trim() !== '' && (!dbAdminCode || leaderCode.trim() === dbAdminCode)) || isMasterAdmin;
-            
-            // Dovoljenje za nadzor UI - Voditelj skupine ALI uporaba v zasebnem načinu
             const canControl = isPrivateMode || isLeader;
 
             useEffect(() => {
@@ -403,15 +455,10 @@
             const [db, setDb] = useState(null);
             const [isCanvasEnv, setIsCanvasEnv] = useState(false);
             const [appId, setAppId] = useState("");
-            
-            // NOVO: Aktivne sobe
             const [activeRooms, setActiveRooms] = useState([]);
 
-            // Reference za zaznavanje drsenja
             const touchStartX = useRef(null);
             const touchStartY = useRef(null);
-            
-            // Referenca za zaznavanje prvega nalaganja baze
             const isFirstLoad = useRef(true);
 
             // Shranjevanje zasebnega napredka
@@ -419,24 +466,18 @@
                 if (isPrivateMode && typeof window !== 'undefined' && window.localStorage) {
                     localStorage.setItem('rosary_private_state', JSON.stringify({
                         phase, step, decadeIndex, lang, mysteryType, 
-                        miraculousTriggers, isRoulettePrayer, isRouletteDecade, showMiraculous
+                        miraculousTriggers, isRoulettePrayer, isRouletteDecade, showMiraculous, intention
                     }));
                 }
-            }, [phase, step, decadeIndex, lang, mysteryType, miraculousTriggers, isRoulettePrayer, isRouletteDecade, showMiraculous, isPrivateMode]);
+            }, [phase, step, decadeIndex, lang, mysteryType, miraculousTriggers, isRoulettePrayer, isRouletteDecade, showMiraculous, intention, isPrivateMode]);
 
-            // Nalaganje zasebnega napredka ob zagonu (če smo v zasebnem načinu)
+            // Nalaganje zasebnega napredka ob zagonu
             useEffect(() => {
                 if (isPrivateMode) {
                     const saved = typeof window !== 'undefined' && window.localStorage ? localStorage.getItem('rosary_private_state') : null;
                     if (saved) {
-                        try {
-                            applyState(JSON.parse(saved));
-                        } catch (e) {
-                            resetToStart();
-                        }
-                    } else {
-                        resetToStart();
-                    }
+                        try { applyState(JSON.parse(saved)); } catch (e) { resetToStart(); }
+                    } else { resetToStart(); }
                 }
                 // eslint-disable-next-line react-hooks/exhaustive-deps
             }, []);
@@ -495,9 +536,7 @@
                         } else {
                             await signInAnonymously(auth);
                         }
-                    } catch (err) {
-                        console.error("Auth error", err);
-                    }
+                    } catch (err) { console.error("Auth error", err); }
                 };
                 initAuth();
 
@@ -505,15 +544,12 @@
                 return () => unsubscribe();
             }, [fbReady]);
 
-            // Pošiljanje podatkov (Samo če si Voditelj in v Skupnem načinu!)
+            // Pošiljanje podatkov
             const pushUpdate = useCallback(async (updates) => {
-                if (isPrivateMode) return; // ZASEBNI NAČIN - blokada pošiljanja!
-                if (!isLeader) return; 
-                if (!db || !user || !appId) return;
+                if (isPrivateMode || !isLeader || !db || !user || !appId) return;
                 const { doc, setDoc } = window.Firebase;
                 
-                const activeRoomName = (roomName.trim() || 'JavnaSoba').replace(/[^a-zA-Z0-9_-]/g, '_');
-                
+                const activeRoomName = (roomName.trim() || 'SkupnaMolitev').replace(/[^a-zA-Z0-9_-]/g, '_');
                 let path = isCanvasEnv 
                     ? ['artifacts', appId, 'public', 'data', 'sessions', activeRoomName] 
                     : ['sessions', activeRoomName];
@@ -523,106 +559,70 @@
                 try {
                     await setDoc(roomRef, {
                         ...updates,
-                        ...(dbAdminCode ? {} : { adminCode: leaderCode.trim() }), // Samodejno zakleni sobo ob prvi molitvi
+                        ...(dbAdminCode ? {} : { adminCode: leaderCode.trim() }), 
                         updatedAt: Date.now(),
                         updatedBy: user.uid
                     }, { merge: true });
-                } catch (e) {
-                    console.error("Napaka", e);
-                }
+                } catch (e) { console.error("Napaka", e); }
             }, [db, user, appId, isCanvasEnv, isLeader, isPrivateMode, roomName, dbAdminCode, leaderCode]);
 
-            // NOVO: Funkcija za ročni odklep sobe (Opcija A)
             const resetRoomCode = useCallback(async () => {
-                if (!isLeader || isPrivateMode) return;
-                if (!db || !user || !appId) return;
+                if (!isLeader || isPrivateMode || !db || !user || !appId) return;
                 const { doc, setDoc } = window.Firebase;
-                const activeRoomName = (roomName.trim() || 'JavnaSoba').replace(/[^a-zA-Z0-9_-]/g, '_');
-                let path = isCanvasEnv 
-                    ? ['artifacts', appId, 'public', 'data', 'sessions', activeRoomName] 
-                    : ['sessions', activeRoomName];
-                const roomRef = doc(db, ...path);
+                const activeRoomName = (roomName.trim() || 'SkupnaMolitev').replace(/[^a-zA-Z0-9_-]/g, '_');
+                let path = isCanvasEnv ? ['artifacts', appId, 'public', 'data', 'sessions', activeRoomName] : ['sessions', activeRoomName];
                 try {
-                    await setDoc(roomRef, { adminCode: null, updatedAt: Date.now() }, { merge: true });
-                    if (!isMasterAdmin) setLeaderCode(""); // lokalno počisti geslo (če nisi master admin)
-                } catch(e) { console.error(e); }
+                    await setDoc(doc(db, ...path), { adminCode: null, updatedAt: Date.now() }, { merge: true });
+                    if (!isMasterAdmin) setLeaderCode(""); 
+                } catch(e) {}
             }, [db, user, appId, isCanvasEnv, isLeader, isPrivateMode, roomName, isMasterAdmin]);
 
-            // NOVO: Brisanje sobe iz baze (samo za Master Admina)
             const deleteRoom = useCallback(async (roomIdToDel) => {
-                if (!isMasterAdmin || isPrivateMode) return;
-                if (!db || !user || !appId) return;
+                if (!isMasterAdmin || isPrivateMode || !db || !user || !appId) return;
                 const { doc, deleteDoc } = window.Firebase;
-                let path = isCanvasEnv 
-                    ? ['artifacts', appId, 'public', 'data', 'sessions', roomIdToDel] 
-                    : ['sessions', roomIdToDel];
+                let path = isCanvasEnv ? ['artifacts', appId, 'public', 'data', 'sessions', roomIdToDel] : ['sessions', roomIdToDel];
                 try {
                     await deleteDoc(doc(db, ...path));
-                    if (roomIdToDel === roomName) {
-                        resetToStart();
-                    }
-                } catch (e) {
-                    console.error("Napaka pri brisanju", e);
-                }
+                    if (roomIdToDel === roomName) resetToStart();
+                } catch (e) {}
             }, [db, user, appId, isCanvasEnv, isMasterAdmin, isPrivateMode, roomName, resetToStart]);
-
 
             // Poslušanje baze
             useEffect(() => {
                 if (!user || !db || !appId) return;
-                
                 const { doc, onSnapshot } = window.Firebase;
+                isFirstLoad.current = true; 
+                const activeRoomName = (roomName.trim() || 'SkupnaMolitev').replace(/[^a-zA-Z0-9_-]/g, '_');
                 
-                isFirstLoad.current = true; // Ob vsaki novi povezavi resetiramo
-                
-                const activeRoomName = (roomName.trim() || 'JavnaSoba').replace(/[^a-zA-Z0-9_-]/g, '_');
-                
-                let path = isCanvasEnv 
-                    ? ['artifacts', appId, 'public', 'data', 'sessions', activeRoomName] 
-                    : ['sessions', activeRoomName];
-                    
+                let path = isCanvasEnv ? ['artifacts', appId, 'public', 'data', 'sessions', activeRoomName] : ['sessions', activeRoomName];
                 const roomRef = doc(db, ...path);
                 
                 const unsubscribe = onSnapshot(roomRef, (snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.data();
+                        setDbAdminCode(data.adminCode || null);
+                        lastSharedState.current = data;
                         
-                        setDbAdminCode(data.adminCode || null); // Shrani admin geslo trenutne sobe
-                        lastSharedState.current = data; // Tih zapis zadnjega skupnega stanja
+                        if (isPrivateModeRef.current) return; 
                         
-                        if (isPrivateModeRef.current) return; // Zasebni način ignorira posodobitve UI
-                        
-                        // Ob prvem nalaganju VEDNO prevzamemo stanje iz baze
-                        // V nadaljevanju pa ignoriramo posodobitve, ki smo jih sprožili sami
-                        if (isFirstLoad.current) {
-                            isFirstLoad.current = false;
-                        } else if (data.updatedBy === user.uid) {
-                            return; 
-                        }
+                        if (isFirstLoad.current) isFirstLoad.current = false;
+                        else if (data.updatedBy === user.uid) return; 
 
                         applyState(data);
                     } else {
-                        // Soba ne obstaja
                         setDbAdminCode(null);
                         lastSharedState.current = null;
-                        if (!isPrivateModeRef.current) {
-                            resetToStart();
-                        }
+                        if (!isPrivateModeRef.current) resetToStart();
                     }
                 }, (error) => console.error("Sync error", error));
 
                 return () => unsubscribe();
             }, [user, db, appId, isCanvasEnv, roomName, applyState, resetToStart]);
 
-            // NOVO: Poslušanje vseh aktivnih sob (za prikaz "utripa" aplikacije)
             useEffect(() => {
                 if (!user || !db || !appId) return;
                 const { collection, onSnapshot } = window.Firebase;
-                
-                let path = isCanvasEnv 
-                    ? ['artifacts', appId, 'public', 'data', 'sessions'] 
-                    : ['sessions'];
-                    
+                let path = isCanvasEnv ? ['artifacts', appId, 'public', 'data', 'sessions'] : ['sessions'];
                 const colRef = collection(db, ...path);
                 
                 const unsubscribe = onSnapshot(colRef, (snapshot) => {
@@ -630,18 +630,13 @@
                     const now = Date.now();
                     snapshot.forEach(doc => {
                         const data = doc.data();
-                        // Prikaži sobe, ki so bile aktivne v zadnjih 24 urah (86400000 ms)
                         if (data.updatedAt && (now - data.updatedAt < 86400000)) {
-                            rooms.push({
-                                id: doc.id,
-                                updatedAt: data.updatedAt
-                            });
+                            rooms.push({ id: doc.id, updatedAt: data.updatedAt });
                         }
                     });
-                    // Razvrsti od najbolj nedavno aktivne naprej
                     rooms.sort((a, b) => b.updatedAt - a.updatedAt);
                     setActiveRooms(rooms);
-                }, (error) => console.error("Sync error collections", error));
+                }, (error) => {});
     
                 return () => unsubscribe();
             }, [user, db, appId, isCanvasEnv]);
@@ -653,9 +648,7 @@
             }, []);
 
             useEffect(() => {
-                if (miraculousTriggers.length === 0) {
-                    setMiraculousTriggers(getNewTriggers());
-                }
+                if (miraculousTriggers.length === 0) setMiraculousTriggers(getNewTriggers());
             }, [miraculousTriggers.length]);
 
             useEffect(() => {
@@ -667,11 +660,7 @@
                         const newTriggers = safeTriggers.filter(t => t !== absoluteStep);
                         setShowMiraculous(true);
                         setMiraculousTriggers(newTriggers);
-                        
-                        pushUpdate({
-                            showMiraculous: true,
-                            miraculousTriggers: newTriggers
-                        });
+                        pushUpdate({ showMiraculous: true, miraculousTriggers: newTriggers });
                     }
                 }
             }, [phase, decadeIndex, step, miraculousTriggers, showMiraculous, pushUpdate]);
@@ -718,12 +707,7 @@
                 setStep(newStep);
                 setDecadeIndex(newDecadeIndex);
 
-                pushUpdate({
-                    lang: newLang,
-                    phase: newPhase,
-                    step: newStep,
-                    decadeIndex: newDecadeIndex
-                });
+                pushUpdate({ lang: newLang, phase: newPhase, step: newStep, decadeIndex: newDecadeIndex });
             }, [phase, step, decadeIndex, lang, isRoulettePrayer, isRouletteDecade, pickRandomLang, pushUpdate]);
 
             const handlePrevStep = useCallback(() => {
@@ -751,26 +735,17 @@
                 setStep(newStep);
                 setDecadeIndex(newDecadeIndex);
 
-                pushUpdate({
-                    phase: newPhase,
-                    step: newStep,
-                    decadeIndex: newDecadeIndex
-                });
+                pushUpdate({ phase: newPhase, step: newStep, decadeIndex: newDecadeIndex });
             }, [phase, step, decadeIndex, pushUpdate]);
-
 
             useEffect(() => {
                 const handleKeyDown = (e) => {
                     if (!canControl) return;
                     if (view === 'prayer' && !showMiraculous) {
                         if (e.key === 'ArrowRight' || e.key === ' ') {
-                            e.preventDefault();
-                            triggerVibration(15);
-                            handleNextStep();
+                            e.preventDefault(); triggerVibration(15); handleNextStep();
                         } else if (e.key === 'ArrowLeft') {
-                            e.preventDefault();
-                            triggerVibration(10);
-                            handlePrevStep();
+                            e.preventDefault(); triggerVibration(10); handlePrevStep();
                         }
                     }
                 };
@@ -779,56 +754,33 @@
             }, [view, showMiraculous, canControl, handleNextStep, handlePrevStep, triggerVibration]);
 
             const onTouchStart = (e) => {
-                touchStartX.current = e.touches[0].clientX;
-                touchStartY.current = e.touches[0].clientY;
+                touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY;
             };
 
             const onTouchEndHandler = (e) => {
-                if (!canControl) return;
-                if (touchStartX.current === null || touchStartY.current === null) return;
-                if (showMiraculous) return;
+                if (!canControl || showMiraculous || touchStartX.current === null) return;
 
-                const touchEndX = e.changedTouches[0].clientX;
-                const touchEndY = e.changedTouches[0].clientY;
-                const deltaX = touchStartX.current - touchEndX;
-                const deltaY = touchStartY.current - touchEndY;
+                const deltaX = touchStartX.current - e.changedTouches[0].clientX;
+                const deltaY = touchStartY.current - e.changedTouches[0].clientY;
 
                 if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-                    if (deltaX > 0) {
-                        triggerVibration(15);
-                        handleNextStep();
-                    } else {
-                        triggerVibration(10);
-                        handlePrevStep();
-                    }
+                    if (deltaX > 0) { triggerVibration(15); handleNextStep(); } 
+                    else { triggerVibration(10); handlePrevStep(); }
                 }
-                
-                touchStartX.current = null;
-                touchStartY.current = null;
+                touchStartX.current = null; touchStartY.current = null;
             };
 
-            // Pomožna funkcija za preklop načina
             const toggleMode = (newMode) => {
                 if (newMode === isPrivateMode) return;
                 triggerVibration(10);
                 setIsPrivateMode(newMode);
-                if (typeof window !== 'undefined' && window.localStorage) {
-                    localStorage.setItem('rosary_private_mode', newMode);
-                }
+                if (typeof window !== 'undefined' && window.localStorage) localStorage.setItem('rosary_private_mode', newMode);
                 
-                if (newMode) { // V ZASEBNO
+                if (newMode) { 
                     const saved = typeof window !== 'undefined' && window.localStorage ? localStorage.getItem('rosary_private_state') : null;
-                    if (saved) {
-                        try { applyState(JSON.parse(saved)); } catch(e) { resetToStart(); }
-                    } else {
-                        resetToStart();
-                    }
-                } else { // V SKUPNO
-                    if (lastSharedState.current) {
-                        applyState(lastSharedState.current);
-                    } else {
-                        resetToStart();
-                    }
+                    if (saved) { try { applyState(JSON.parse(saved)); } catch(e) { resetToStart(); } } else { resetToStart(); }
+                } else { 
+                    if (lastSharedState.current) applyState(lastSharedState.current); else resetToStart();
                 }
             };
             
@@ -838,7 +790,6 @@
             const renderMainMenu = () => (
                 <div className="flex flex-col items-center pt-2 pb-6 px-4 space-y-5 animate-slide-up w-full max-w-md mx-auto relative z-10 mt-2">
                     
-                    {/* HEADER / STATUS */}
                     <div className="w-full flex justify-end h-6">
                         {!isPrivateMode && (
                             <div className="flex items-center gap-1.5 opacity-80 z-20 px-3 py-1 rounded-full shadow-sm bg-white/60 backdrop-blur-sm border border-[#e8dfc8]">
@@ -857,22 +808,18 @@
                         )}
                     </div>
 
-                    {/* HERO SLIKA */}
                     <div className="relative w-36 h-36 md:w-44 md:h-44 mx-auto flex items-center justify-center mt-0 mb-2">
                         <div className="absolute -inset-4 bg-[#d4af37]/20 rounded-full blur-xl pulse-soft"></div>
                         <div className="relative w-full h-full shadow-[0_20px_40px_rgba(0,0,0,0.3)] rounded-full border-[4px] border-[#d4af37] overflow-hidden bg-[#121c33] flex items-center justify-center z-10">
                             {HOLY_ART_IMAGE ? (
                                 <img src={HOLY_ART_IMAGE} alt="Holy Art" className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" />
                             ) : (
-                                <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-[#1a294c] via-[#121c33] to-[#0a0f1c]">
-                                    <span className="text-5xl text-[#d4af37] font-serif-holy mb-1">✟</span>
-                                </div>
+                                <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-[#1a294c] via-[#121c33] to-[#0a0f1c]"><span className="text-5xl text-[#d4af37] font-serif-holy mb-1">✟</span></div>
                             )}
                             <div className="absolute inset-0 rounded-full shadow-[inset_0_0_30px_rgba(0,0,0,0.6)] pointer-events-none"></div>
                         </div>
                     </div>
 
-                    {/* NASLOV */}
                     <div className="text-center w-full mb-1">
                         <div className="flex items-center justify-center space-x-3 mb-1 opacity-80">
                             <span className="w-8 h-[1px] bg-gradient-to-r from-transparent to-[#d4af37]"></span>
@@ -882,121 +829,54 @@
                         <h2 className="text-3xl font-serif-holy font-black text-[#121c33] tracking-wide drop-shadow-sm">Priprava</h2>
                     </div>
 
-                    {/* GLAVNI NASTAVITVENI BLOK */}
                     <div className="w-full bg-gradient-to-b from-[#fdfbf7] to-[#f6f3eb] p-5 md:p-7 rounded-2xl shadow-[0_15px_35px_-5px_rgba(0,0,0,0.1)] border border-[#d4af37]/30 relative overflow-hidden">
                         
-                        {/* SEGMENTED CONTROL ZA NAČIN (SKUPNO/ZASEBNO) */}
                         <div className="flex bg-[#e8dfc8]/50 p-1.5 rounded-xl mb-6 relative z-10 shadow-inner">
-                            <button 
-                                onClick={() => toggleMode(false)} 
-                                className={`flex-1 py-2.5 rounded-lg text-[10px] md:text-[11px] font-black tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 ${!isPrivateMode ? 'bg-white text-[#8b1a1a] shadow-sm ring-1 ring-black/5' : 'text-[#6d5a42] hover:bg-white/40'}`}
-                            >
+                            <button onClick={() => toggleMode(false)} className={`flex-1 py-2.5 rounded-lg text-[10px] md:text-[11px] font-black tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 ${!isPrivateMode ? 'bg-white text-[#8b1a1a] shadow-sm ring-1 ring-black/5' : 'text-[#6d5a42] hover:bg-white/40'}`}>
                                 <Icon name="users" className="w-4 h-4" /> Skupnost
                             </button>
-                            <button 
-                                onClick={() => toggleMode(true)} 
-                                className={`flex-1 py-2.5 rounded-lg text-[10px] md:text-[11px] font-black tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 ${isPrivateMode ? 'bg-[#121c33] text-[#d4af37] shadow-md ring-1 ring-black/10' : 'text-[#6d5a42] hover:bg-black/5'}`}
-                            >
+                            <button onClick={() => toggleMode(true)} className={`flex-1 py-2.5 rounded-lg text-[10px] md:text-[11px] font-black tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 ${isPrivateMode ? 'bg-[#121c33] text-[#d4af37] shadow-md ring-1 ring-black/10' : 'text-[#6d5a42] hover:bg-black/5'}`}>
                                 <Icon name="user" className="w-4 h-4" /> Zasebno
                             </button>
                         </div>
 
                         <div className="space-y-5 relative z-10">
                             
-                            {/* SEKCIJA 1: SKUPNOST (Vidno samo v SKUPNEM načinu) */}
                             {!isPrivateMode && (
                                 <div className="space-y-4 pb-4 border-b border-[#e8dfc8]">
-                                    {/* Izbira Sobe */}
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold text-[#8b1a1a] uppercase tracking-wider ml-1 flex items-center gap-2">
-                                            <Icon name="home" className="w-3 h-3" /> Ime sobe
-                                        </label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="npr. DruzinaNovak"
-                                            value={roomName}
-                                            onChange={(e) => setRoomName(e.target.value)}
-                                            className="w-full bg-white border border-[#e8dfc8] text-[#2c1810] p-3 rounded-xl font-bold outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm"
-                                        />
+                                        <label className="text-[10px] font-bold text-[#8b1a1a] uppercase tracking-wider ml-1 flex items-center gap-2"><Icon name="home" className="w-3 h-3" /> Ime sobe</label>
+                                        <input type="text" placeholder="npr. DruzinaNovak" value={roomName} onChange={(e) => setRoomName(e.target.value)} className="w-full bg-white border border-[#e8dfc8] text-[#2c1810] p-3 rounded-xl font-bold text-base outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm" />
                                     </div>
-
-                                    {/* Geslo Sobe */}
                                     <div className="space-y-1.5 bg-white/40 p-3 rounded-xl border border-[#e8dfc8]/50">
-                                        <label className="text-[10px] font-bold text-[#8b1a1a] uppercase tracking-wider flex items-center gap-2">
-                                            <Icon name={dbAdminCode ? (isLeader ? "unlock" : "lock") : "star"} className="w-3 h-3" /> 
-                                            {dbAdminCode ? 'Vodenje molitve' : 'Ustvari novo sobo'}
-                                        </label>
-                                        
+                                        <label className="text-[10px] font-bold text-[#8b1a1a] uppercase tracking-wider flex items-center gap-2"><Icon name={dbAdminCode ? (isLeader ? "unlock" : "lock") : "star"} className="w-3 h-3" /> {dbAdminCode ? 'Vodenje molitve' : 'Ustvari novo sobo'}</label>
                                         <div className="flex gap-2 items-center">
-                                            <input 
-                                                type="password" 
-                                                placeholder={dbAdminCode ? "Vnesi geslo za vodenje..." : "Določi geslo (za admina)..."}
-                                                value={leaderCode}
-                                                onChange={(e) => setLeaderCode(e.target.value)}
-                                                className="flex-1 bg-white border border-[#e8dfc8] text-[#2c1810] p-2.5 rounded-lg font-bold text-sm outline-none focus:border-[#d4af37] transition-all shadow-sm"
-                                            />
-                                            {isLeader && dbAdminCode && (
-                                                <button onClick={resetRoomCode} className="p-2.5 bg-[#8b1a1a]/10 text-[#8b1a1a] rounded-lg hover:bg-[#8b1a1a] hover:text-white transition-colors" title="Odkleni sobo">
-                                                    <Icon name="refresh" className="w-4 h-4" />
-                                                </button>
-                                            )}
+                                            <input type="password" placeholder={dbAdminCode ? "Vnesi geslo za vodenje..." : "Določi geslo (za admina)..."} value={leaderCode} onChange={(e) => setLeaderCode(e.target.value)} className="flex-1 bg-white border border-[#e8dfc8] text-[#2c1810] p-2.5 rounded-lg font-bold text-base outline-none focus:border-[#d4af37] transition-all shadow-sm" />
+                                            {isLeader && dbAdminCode && (<button onClick={resetRoomCode} className="p-2.5 bg-[#8b1a1a]/10 text-[#8b1a1a] rounded-lg hover:bg-[#8b1a1a] hover:text-white transition-colors" title="Odkleni sobo"><Icon name="refresh" className="w-4 h-4" /></button>)}
                                         </div>
-                                        
                                         <div className="text-[9px] font-bold uppercase tracking-widest mt-1 transition-colors">
-                                            {isPrivateMode ? (
-                                                <span className="text-[#6d5a42]">Lokalni nadzor (Geslo ni pomembno)</span>
-                                            ) : isMasterAdmin ? (
-                                                <span className="text-purple-600">👑 MASTER ADMIN AKTIVEN</span>
-                                            ) : isLeader ? (
-                                                <span className="text-green-600">✅ Ti vodiš to sobo</span>
-                                            ) : dbAdminCode ? (
-                                                <span className="text-[#8b1a1a]">🔒 Sledilec (Soba je zaklenjena)</span>
-                                            ) : (
-                                                <span className="text-[#d4af37]">✨ Soba je prosta (Vnesi geslo in začni)</span>
-                                            )}
+                                            {isPrivateMode ? <span className="text-[#6d5a42]">Lokalni nadzor</span> : isMasterAdmin ? <span className="text-purple-600">👑 MASTER ADMIN AKTIVEN</span> : isLeader ? <span className="text-green-600">✅ Ti vodiš to sobo</span> : dbAdminCode ? <span className="text-[#8b1a1a]">🔒 Sledilec (Soba je zaklenjena)</span> : <span className="text-[#d4af37]">✨ Soba je prosta (Vnesi geslo in začni)</span>}
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* SEKCIJA 2: KAJ MOLIMO */}
                             <div className="space-y-4">
                                 <div className="flex gap-3">
                                     <div className="flex-1 space-y-1.5">
-                                        <label className="text-[10px] font-bold text-[#6d5a42] uppercase tracking-wider ml-1 flex items-center gap-1.5">
-                                            <Icon name="globe" className="w-3 h-3" /> Jezik
-                                        </label>
+                                        <label className="text-[10px] font-bold text-[#6d5a42] uppercase tracking-wider ml-1 flex items-center gap-1.5"><Icon name="globe" className="w-3 h-3" /> Jezik</label>
                                         <div className="relative">
-                                            <select 
-                                                disabled={!canControl}
-                                                className="w-full bg-white border border-[#e8dfc8] text-[#2c1810] p-3 rounded-xl font-bold text-sm outline-none appearance-none disabled:opacity-60 focus:border-[#d4af37] shadow-sm cursor-pointer"
-                                                value={safeLang}
-                                                onChange={(e) => { setLang(e.target.value); pushUpdate({ lang: e.target.value }); }}
-                                            >
-                                                <option value="sl">🇸🇮 SLO</option>
-                                                <option value="de">🇩🇪 DEU</option>
-                                                <option value="en">🇬🇧 ENG</option>
-                                                <option value="it">🇮🇹 ITA</option>
-                                                <option value="la">🇻🇦 LAT</option>
+                                            <select disabled={!canControl} className="w-full bg-white border border-[#e8dfc8] text-[#2c1810] p-3 rounded-xl font-bold text-base outline-none appearance-none disabled:opacity-60 focus:border-[#d4af37] shadow-sm cursor-pointer" value={safeLang} onChange={(e) => { setLang(e.target.value); pushUpdate({ lang: e.target.value }); }}>
+                                                <option value="sl">🇸🇮 SLO</option><option value="de">🇩🇪 DEU</option><option value="en">🇬🇧 ENG</option><option value="it">🇮🇹 ITA</option><option value="la">🇻🇦 LAT</option>
                                             </select>
                                             <Icon name="arrowRight" className="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-[#d4af37] pointer-events-none" />
                                         </div>
                                     </div>
-
                                     <div className="flex-[2] space-y-1.5">
-                                        <label className="text-[10px] font-bold text-[#6d5a42] uppercase tracking-wider ml-1 flex items-center gap-1.5">
-                                            <Icon name="book" className="w-3 h-3" /> Del rožnega venca
-                                        </label>
+                                        <label className="text-[10px] font-bold text-[#6d5a42] uppercase tracking-wider ml-1 flex items-center gap-1.5"><Icon name="book" className="w-3 h-3" /> Del rožnega venca</label>
                                         <div className="relative">
-                                            <select 
-                                                disabled={!canControl}
-                                                className="w-full bg-white border border-[#e8dfc8] text-[#2c1810] p-3 rounded-xl font-bold text-sm outline-none appearance-none disabled:opacity-60 focus:border-[#d4af37] shadow-sm cursor-pointer"
-                                                value={safeMysteryType}
-                                                onChange={(e) => { setMysteryType(e.target.value); pushUpdate({ mysteryType: e.target.value }); }}
-                                            >
-                                                {Object.entries(MYSTERY_NAMES).map(([key, name]) => (
-                                                    <option key={key} value={key}>{name}</option>
-                                                ))}
+                                            <select disabled={!canControl} className="w-full bg-white border border-[#e8dfc8] text-[#2c1810] p-3 rounded-xl font-bold text-base outline-none appearance-none disabled:opacity-60 focus:border-[#d4af37] shadow-sm cursor-pointer" value={safeMysteryType} onChange={(e) => { setMysteryType(e.target.value); pushUpdate({ mysteryType: e.target.value }); }}>
+                                                {Object.entries(MYSTERY_NAMES).map(([key, name]) => (<option key={key} value={key}>{name}</option>))}
                                             </select>
                                             <Icon name="arrowRight" className="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-[#d4af37] pointer-events-none" />
                                         </div>
@@ -1004,160 +884,72 @@
                                 </div>
                             </div>
 
-                            {/* SEKCIJA 3: NAPREDNO (Rulete) */}
+                            {/* NOVO: SEKCIJA OSEBNI NAMEN MOLITVE */}
+                            {!isPrivateMode && canControl && (
+                                <div className="space-y-1.5 pt-2 border-t border-[#e8dfc8]">
+                                    <label className="text-[10px] font-bold text-[#6d5a42] uppercase tracking-wider ml-1 flex items-center gap-1.5">
+                                        <Icon name="star" className="w-3 h-3" /> Namen molitve (neobvezno)
+                                    </label>
+                                    <textarea 
+                                        placeholder="Za koga ali kaj molimo danes? (npr. Za mir na svetu, za zdravje...)"
+                                        value={intention}
+                                        onChange={(e) => setIntention(e.target.value)}
+                                        onBlur={() => pushUpdate({ intention })}
+                                        rows="2"
+                                        className="w-full bg-white border border-[#e8dfc8] text-[#2c1810] p-3 rounded-xl font-medium text-sm outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm resize-none"
+                                    />
+                                </div>
+                            )}
+
                             {canControl && (
                                 <div className="space-y-2 pt-2 border-t border-[#e8dfc8]">
                                     <div className="flex items-center justify-between p-3 bg-white border border-[#e8dfc8] rounded-xl shadow-sm">
-                                        <div className="flex items-center gap-2">
-                                            <Icon name="dices" className={`w-4 h-4 ${isRoulettePrayer ? 'text-[#d4af37]' : 'text-[#d2c5aa]'}`} />
-                                            <div>
-                                                <div className="text-[11px] font-bold text-[#2c1810] uppercase tracking-wide">Jezikovna Ruleta</div>
-                                                <div className="text-[8px] text-[#6d5a42] uppercase tracking-wider">Menja jezik ob vsaki molitvi</div>
-                                            </div>
-                                        </div>
-                                        <button 
-                                            onClick={() => {
-                                                triggerVibration(10);
-                                                const newVal = !isRoulettePrayer;
-                                                setIsRoulettePrayer(newVal);
-                                                if (newVal) setIsRouletteDecade(false); 
-                                                pushUpdate({ isRoulettePrayer: newVal, isRouletteDecade: newVal ? false : isRouletteDecade });
-                                            }}
-                                            className={`w-11 h-6 rounded-full relative transition-colors duration-300 shadow-inner ${isRoulettePrayer ? 'bg-[#d4af37]' : 'bg-[#e5dec8]'}`}
-                                        >
-                                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm ${isRoulettePrayer ? 'translate-x-6' : 'translate-x-1'}`} />
-                                        </button>
+                                        <div className="flex items-center gap-2"><Icon name="dices" className={`w-4 h-4 ${isRoulettePrayer ? 'text-[#d4af37]' : 'text-[#d2c5aa]'}`} /><div><div className="text-[11px] font-bold text-[#2c1810] uppercase tracking-wide">Jezikovna Ruleta</div><div className="text-[8px] text-[#6d5a42] uppercase tracking-wider">Menja jezik ob vsaki molitvi</div></div></div>
+                                        <button onClick={() => { triggerVibration(10); const newVal = !isRoulettePrayer; setIsRoulettePrayer(newVal); if (newVal) setIsRouletteDecade(false); pushUpdate({ isRoulettePrayer: newVal, isRouletteDecade: newVal ? false : isRouletteDecade }); }} className={`w-11 h-6 rounded-full relative transition-colors duration-300 shadow-inner ${isRoulettePrayer ? 'bg-[#d4af37]' : 'bg-[#e5dec8]'}`}><div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm ${isRoulettePrayer ? 'translate-x-6' : 'translate-x-1'}`} /></button>
                                     </div>
-
                                     <div className="flex items-center justify-between p-3 bg-white border border-[#e8dfc8] rounded-xl shadow-sm">
-                                        <div className="flex items-center gap-2">
-                                            <Icon name="dices" className={`w-4 h-4 ${isRouletteDecade ? 'text-[#d4af37]' : 'text-[#d2c5aa]'}`} />
-                                            <div>
-                                                <div className="text-[11px] font-bold text-[#2c1810] uppercase tracking-wide">Ruleta desetk</div>
-                                                <div className="text-[8px] text-[#6d5a42] uppercase tracking-wider">Menja jezik na koncu desetke</div>
-                                            </div>
-                                        </div>
-                                        <button 
-                                            onClick={() => {
-                                                triggerVibration(10);
-                                                const newVal = !isRouletteDecade;
-                                                setIsRouletteDecade(newVal);
-                                                if (newVal) setIsRoulettePrayer(false); 
-                                                pushUpdate({ isRouletteDecade: newVal, isRoulettePrayer: newVal ? false : isRoulettePrayer });
-                                            }}
-                                            className={`w-11 h-6 rounded-full relative transition-colors duration-300 shadow-inner ${isRouletteDecade ? 'bg-[#d4af37]' : 'bg-[#e5dec8]'}`}
-                                        >
-                                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm ${isRouletteDecade ? 'translate-x-6' : 'translate-x-1'}`} />
-                                        </button>
+                                        <div className="flex items-center gap-2"><Icon name="dices" className={`w-4 h-4 ${isRouletteDecade ? 'text-[#d4af37]' : 'text-[#d2c5aa]'}`} /><div><div className="text-[11px] font-bold text-[#2c1810] uppercase tracking-wide">Ruleta desetk</div><div className="text-[8px] text-[#6d5a42] uppercase tracking-wider">Menja jezik na koncu desetke</div></div></div>
+                                        <button onClick={() => { triggerVibration(10); const newVal = !isRouletteDecade; setIsRouletteDecade(newVal); if (newVal) setIsRoulettePrayer(false); pushUpdate({ isRouletteDecade: newVal, isRoulettePrayer: newVal ? false : isRoulettePrayer }); }} className={`w-11 h-6 rounded-full relative transition-colors duration-300 shadow-inner ${isRouletteDecade ? 'bg-[#d4af37]' : 'bg-[#e5dec8]'}`}><div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm ${isRouletteDecade ? 'translate-x-6' : 'translate-x-1'}`} /></button>
                                     </div>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* GLAVNI AKCIJSKI GUMB */}
                     <div className="w-full flex flex-col gap-3 mt-2">
-                        <button 
-                            onClick={() => {
-                                triggerVibration(20);
-                                setView('prayer');
-                                // Samo kontrolor ob prvem kliku postavi začetne podatke
-                                if (canControl && phase === 'intro' && step === 0) {
-                                    let l = safeLang;
-                                    if (isRoulettePrayer || isRouletteDecade) {
-                                        l = pickRandomLang(safeLang);
-                                        setLang(l);
-                                    }
-                                    const triggers = getNewTriggers();
-                                    setMiraculousTriggers(triggers);
-                                    pushUpdate({ lang: l, miraculousTriggers: triggers });
-                                }
-                            }}
-                            className="group relative bg-gradient-to-b from-[#8b1a1a] to-[#5c0e0e] hover:from-[#a01e1e] hover:to-[#731212] text-[#f4e0aa] w-full py-4 rounded-2xl font-serif-holy font-bold text-xl shadow-lg transition-all active:scale-95 flex items-center justify-center border border-[#3e0808] overflow-hidden pulse-soft"
-                        >
+                        <button onClick={() => { triggerVibration(20); setView('prayer'); if (canControl && phase === 'intro' && step === 0) { let l = safeLang; if (isRoulettePrayer || isRouletteDecade) { l = pickRandomLang(safeLang); setLang(l); } const triggers = getNewTriggers(); setMiraculousTriggers(triggers); pushUpdate({ lang: l, miraculousTriggers: triggers, intention: intention }); } }} className="group relative bg-gradient-to-b from-[#8b1a1a] to-[#5c0e0e] hover:from-[#a01e1e] hover:to-[#731212] text-[#f4e0aa] w-full py-4 rounded-2xl font-serif-holy font-bold text-xl shadow-lg transition-all active:scale-95 flex items-center justify-center border border-[#3e0808] overflow-hidden pulse-soft">
                             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-[200%] transition-transform duration-1000 ease-in-out"></div>
-                            <div className="mr-3 transform group-hover:scale-110 transition-transform duration-300 relative z-10">
-                                <Icon name={canControl ? "play" : "users"} className="w-6 h-6" />
-                            </div>
-                            <span className="tracking-widest relative z-10 pt-1">
-                                {canControl 
-                                    ? ((phase !== 'intro' || step > 0 || decadeIndex > 0) ? "NADALJUJ MOLITEV" : "ZAČNI MOLITEV")
-                                    : "PRIDRUŽI SE MOLITVI"}
-                            </span>
+                            <div className="mr-3 transform group-hover:scale-110 transition-transform duration-300 relative z-10"><Icon name={canControl ? "play" : "users"} className="w-6 h-6" /></div>
+                            <span className="tracking-widest relative z-10 pt-1">{canControl ? ((phase !== 'intro' || step > 0 || decadeIndex > 0) ? "NADALJUJ MOLITEV" : "ZAČNI MOLITEV") : "PRIDRUŽI SE MOLITVI"}</span>
                         </button>
                         
                         {canControl && (phase !== 'intro' || step > 0 || decadeIndex > 0) && (
-                            <button 
-                                onClick={() => { 
-                                    triggerVibration(10); 
-                                    const trigs = getNewTriggers();
-                                    setPhase('intro'); 
-                                    setStep(0); 
-                                    setDecadeIndex(0); 
-                                    setMiraculousTriggers(trigs); 
-                                    setView('prayer'); 
-                                    
-                                    pushUpdate({
-                                        phase: 'intro',
-                                        step: 0,
-                                        decadeIndex: 0,
-                                        miraculousTriggers: trigs,
-                                        showMiraculous: false
-                                    });
-                                }}
-                                className="group bg-transparent hover:bg-white text-[#8b1a1a] w-full py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest shadow-sm transition-all active:scale-95 flex items-center justify-center border border-[#d2c5aa]"
-                            >
+                            <button onClick={() => { triggerVibration(10); const trigs = getNewTriggers(); setPhase('intro'); setStep(0); setDecadeIndex(0); setMiraculousTriggers(trigs); setView('prayer'); pushUpdate({ phase: 'intro', step: 0, decadeIndex: 0, miraculousTriggers: trigs, showMiraculous: false }); }} className="group bg-transparent hover:bg-white text-[#8b1a1a] w-full py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest shadow-sm transition-all active:scale-95 flex items-center justify-center border border-[#d2c5aa]">
                                 <div className="mr-2 transform group-hover:-rotate-180 transition-transform duration-500"><Icon name="refresh" className="w-4 h-4" /></div>
                                 Začni od začetka
                             </button>
                         )}
                     </div>
 
-                    {/* AKTIVNE SOBE (Premaknjeno na dno) */}
                     {!isPrivateMode && activeRooms.length > 0 && (
                         <div className="w-full mt-4 bg-[#fdfbf7]/80 p-4 rounded-2xl border border-[#d4af37]/30 shadow-sm relative overflow-hidden">
-                            <p className="text-[10px] text-[#8b1a1a] uppercase tracking-widest font-bold flex items-center justify-center gap-2 mb-3">
-                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_4px_#22c55e] animate-pulse"></span>
-                                Aktivne molitve ({activeRooms.length})
-                            </p>
+                            <p className="text-[10px] text-[#8b1a1a] uppercase tracking-widest font-bold flex items-center justify-center gap-2 mb-3"><span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_4px_#22c55e] animate-pulse"></span>Aktivne molitve ({activeRooms.length})</p>
                             <div className="flex flex-wrap justify-center gap-2 max-h-[140px] overflow-y-auto hide-scrollbar p-1">
                                 {activeRooms.map(room => {
                                     const mins = Math.floor((Date.now() - room.updatedAt) / 60000);
                                     let timeStr = mins < 1 ? "pravkar" : `${mins}m`;
                                     if (mins >= 60) timeStr = `${Math.floor(mins/60)}h`;
-                                    
                                     const isSelected = room.id === roomName;
-
                                     return (
-                                        <div key={room.id} className={`flex items-stretch rounded-full shadow-sm transition-all border ${
-                                            isSelected 
-                                            ? 'bg-[#121c33] text-[#d4af37] border-[#121c33]' 
-                                            : 'bg-white text-[#6d5a42] border-[#e8dfc8] hover:border-[#d4af37]'
-                                        }`}>
-                                            <button 
-                                                onClick={() => { triggerVibration(10); setRoomName(room.id); }}
-                                                className="text-[10px] px-3 py-1.5 font-bold flex items-center gap-1.5 active:scale-95"
-                                            >
-                                                {room.id} <span className="opacity-50 text-[8px] font-normal">{timeStr}</span>
-                                            </button>
-                                            
-                                            {/* Gumb za brisanje sobe (Master Admin) */}
-                                            {isMasterAdmin && (
-                                                <button 
-                                                    onClick={(e) => { e.stopPropagation(); triggerVibration(15); deleteRoom(room.id); }}
-                                                    className={`pr-2.5 pl-1 py-1 flex items-center justify-center transition-colors active:scale-90 ${isSelected ? 'text-[#d4af37] hover:text-red-400' : 'text-red-400 hover:text-red-600'}`}
-                                                    title="Trajno izbriši sobo"
-                                                >
-                                                    <Icon name="trash" className="w-3.5 h-3.5" />
-                                                </button>
-                                            )}
+                                        <div key={room.id} className={`flex items-stretch rounded-full shadow-sm transition-all border ${isSelected ? 'bg-[#121c33] text-[#d4af37] border-[#121c33]' : 'bg-white text-[#6d5a42] border-[#e8dfc8] hover:border-[#d4af37]'}`}>
+                                            <button onClick={() => { triggerVibration(10); setRoomName(room.id); }} className="text-[10px] px-3 py-1.5 font-bold flex items-center gap-1.5 active:scale-95">{room.id} <span className="opacity-50 text-[8px] font-normal">{timeStr}</span></button>
+                                            {isMasterAdmin && (<button onClick={(e) => { e.stopPropagation(); triggerVibration(15); deleteRoom(room.id); }} className={`pr-2.5 pl-1 py-1 flex items-center justify-center transition-colors active:scale-90 ${isSelected ? 'text-[#d4af37] hover:text-red-400' : 'text-red-400 hover:text-red-600'}`} title="Trajno izbriši sobo"><Icon name="trash" className="w-3.5 h-3.5" /></button>)}
                                         </div>
                                     );
                                 })}
                             </div>
                         </div>
                     )}
-
                 </div>
             );
 
@@ -1169,29 +961,10 @@
                 if (phase === 'finished') {
                     return (
                         <div className="text-center py-12 px-6 animate-slide-up flex flex-col justify-center h-full">
-                            <div className="w-24 h-24 bg-[#121c33] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl border-[4px] border-[#d4af37] text-[#d4af37]">
-                                <Icon name="check" className="w-12 h-12" />
-                            </div>
+                            <div className="w-24 h-24 bg-[#121c33] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl border-[4px] border-[#d4af37] text-[#d4af37]"><Icon name="check" className="w-12 h-12" /></div>
                             <h2 className="text-4xl font-serif-holy font-bold text-[#8b1a1a] mb-3 uppercase tracking-tight">Bog bodi zahvaljen!</h2>
                             <p className="text-[#3e2723] mb-10 text-lg font-medium italic">Sveti rožni venec je zaključen.</p>
-                            <button 
-                                onClick={() => { 
-                                    triggerVibration(10); 
-                                    setView('menu'); 
-                                    if(canControl){
-                                        const trigs = getNewTriggers();
-                                        setPhase('intro'); 
-                                        setStep(0); 
-                                        setDecadeIndex(0); 
-                                        setMiraculousTriggers(trigs); 
-                                        pushUpdate({ phase: 'intro', step: 0, decadeIndex: 0, miraculousTriggers: trigs, showMiraculous: false });
-                                    }
-                                }}
-                                className="group bg-gradient-to-b from-[#121c33] to-[#0a0f1c] hover:from-[#1a294c] hover:to-[#121c33] text-[#d4af37] w-full max-w-xs py-4 rounded-xl font-serif-holy font-bold text-lg shadow-lg transition flex items-center justify-center mx-auto border-b-4 border-[#000]"
-                            >
-                                <div className="mr-3 transform group-hover:rotate-180 transition-transform duration-500"><Icon name="refresh" /></div>
-                                MENI / PONOVNO
-                            </button>
+                            <button onClick={() => { triggerVibration(10); setView('menu'); if(canControl){ const trigs = getNewTriggers(); setPhase('intro'); setStep(0); setDecadeIndex(0); setMiraculousTriggers(trigs); pushUpdate({ phase: 'intro', step: 0, decadeIndex: 0, miraculousTriggers: trigs, showMiraculous: false }); } }} className="group bg-gradient-to-b from-[#121c33] to-[#0a0f1c] hover:from-[#1a294c] hover:to-[#121c33] text-[#d4af37] w-full max-w-xs py-4 rounded-xl font-serif-holy font-bold text-lg shadow-lg transition flex items-center justify-center mx-auto border-b-4 border-[#000]"><div className="mr-3 transform group-hover:rotate-180 transition-transform duration-500"><Icon name="refresh" /></div>MENI / PONOVNO</button>
                         </div>
                     );
                 }
@@ -1213,9 +986,8 @@
                     else if (safeLang === 'la') subtitle = "CONCLUSIO";
                     else subtitle = "CONCLUSION";
                 } else if (phase === 'decades') {
-                    if (isInsertLanguage) {
-                        subtitle = safeLang === 'de' ? `${decadeIndex + 1}. GEHEIMNIS` : `${decadeIndex + 1}. SKRIVNOST`;
-                    } else {
+                    if (isInsertLanguage) subtitle = safeLang === 'de' ? `${decadeIndex + 1}. GEHEIMNIS` : `${decadeIndex + 1}. SKRIVNOST`;
+                    else {
                         subtitle = `${decadeIndex + 1}. MYSTERY: ${currentMysteryText}`;
                         if (safeLang === 'it') subtitle = `${decadeIndex + 1}° MISTERO: ${currentMysteryText}`;
                         if (safeLang === 'la') subtitle = `MYSTERIUM ${decadeIndex + 1}: ${currentMysteryText}`;
@@ -1231,64 +1003,26 @@
                         content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.ocenas}</p>;
                     } else if (step >= 2 && step <= 4) {
                         title = p.zdravaTitle;
-                        content = (
-                            <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">
-                                {p.zdrava1}{safeLang === 'sl' ? ", " : ""}{safeLang === 'sl' && <span className="text-[#8b1a1a] bg-[#fcfaf5] px-1 rounded underline decoration-[#d4af37] decoration-2 underline-offset-4 font-bold">{INTRO_INSERTS[safeMysteryType][step - 2]}</span>}{p.zdrava2}
-                            </p>
-                        );
+                        content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.zdrava1}{safeLang === 'sl' ? ", " : ""}{safeLang === 'sl' && <span className="text-[#8b1a1a] bg-[#fcfaf5] px-1 rounded underline decoration-[#d4af37] decoration-2 underline-offset-4 font-bold">{INTRO_INSERTS[safeMysteryType][step - 2]}</span>}{p.zdrava2}</p>;
                     } else if (step === 5) {
                         title = p.slavaTitle;
                         content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.slava}</p>;
                     }
                 } else if (phase === 'decades') {
-                    const tClass = showMysteryImage 
-                        ? "text-lg md:text-xl leading-relaxed font-serif-holy font-medium text-[#fcfaf5] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" 
-                        : "text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]";
-                    const hlClass = showMysteryImage 
-                        ? "text-[#d4af37] px-1 rounded font-bold underline decoration-[#d4af37] decoration-2 underline-offset-4 bg-black/40 backdrop-blur-sm shadow-sm" 
-                        : "text-[#8b1a1a] bg-[#fcfaf5] px-1 rounded underline decoration-[#d4af37] decoration-2 underline-offset-4 font-bold";
+                    const tClass = showMysteryImage ? "text-lg md:text-xl leading-relaxed font-serif-holy font-medium text-[#fcfaf5] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" : "text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]";
+                    const hlClass = showMysteryImage ? "text-[#d4af37] px-1 rounded font-bold underline decoration-[#d4af37] decoration-2 underline-offset-4 bg-black/40 backdrop-blur-sm shadow-sm" : "text-[#8b1a1a] bg-[#fcfaf5] px-1 rounded underline decoration-[#d4af37] decoration-2 underline-offset-4 font-bold";
 
-                    if (step === 0) {
-                        title = p.ocenasTitle;
-                        content = <p className={tClass}>{p.ocenas}</p>;
-                    } else if (step >= 1 && step <= 10) {
-                        title = p.zdravaTitle;
-                        content = (
-                            <p className={tClass}>
-                                {p.zdrava1}{isInsertLanguage ? ", " : ""}{isInsertLanguage && <span className={hlClass}>{currentMysteryText}</span>}{p.zdrava2}
-                            </p>
-                        );
-                    } else if (step === 11) {
-                        title = p.slavaTitle;
-                        content = <p className={tClass}>{p.slava}</p>;
-                    } else if (step === 12) {
-                        title = p.fatimaTitle;
-                        content = <p className={tClass}>{p.fatima}</p>;
-                    }
+                    if (step === 0) { title = p.ocenasTitle; content = <p className={tClass}>{p.ocenas}</p>; } 
+                    else if (step >= 1 && step <= 10) { title = p.zdravaTitle; content = <p className={tClass}>{p.zdrava1}{isInsertLanguage ? ", " : ""}{isInsertLanguage && <span className={hlClass}>{currentMysteryText}</span>}{p.zdrava2}</p>; } 
+                    else if (step === 11) { title = p.slavaTitle; content = <p className={tClass}>{p.slava}</p>; } 
+                    else if (step === 12) { title = p.fatimaTitle; content = <p className={tClass}>{p.fatima}</p>; }
                 } else if (phase === 'outro') {
-                    if (step === 0) {
-                        title = p.benedictTitle;
-                        content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.benedict}</p>;
-                    } else if (step === 1) {
-                        title = p.ocenasTitle;
-                        content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.ocenas}</p>;
-                    } else if (step >= 2 && step <= 4) {
-                        title = p.zdravaTitle;
-                        content = (
-                            <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">
-                                {p.zdrava1}{p.zdrava2}
-                            </p>
-                        );
-                    } else if (step === 5) {
-                        title = p.slavaTitle;
-                        content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.slava}</p>;
-                    } else if (step === 6) {
-                        title = p.salveTitle;
-                        content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.salve}</p>;
-                    } else if (step === 7) {
-                        title = p.michaelTitle;
-                        content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.michael}</p>;
-                    }
+                    if (step === 0) { title = p.benedictTitle; content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.benedict}</p>; } 
+                    else if (step === 1) { title = p.ocenasTitle; content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.ocenas}</p>; } 
+                    else if (step >= 2 && step <= 4) { title = p.zdravaTitle; content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.zdrava1}{p.zdrava2}</p>; } 
+                    else if (step === 5) { title = p.slavaTitle; content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.slava}</p>; } 
+                    else if (step === 6) { title = p.salveTitle; content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.salve}</p>; } 
+                    else if (step === 7) { title = p.michaelTitle; content = <p className="text-base md:text-lg leading-relaxed font-serif-holy font-semibold text-[#2c1810]">{p.michael}</p>; }
                 }
 
                 let beadArray = [];
@@ -1300,62 +1034,30 @@
                     <div className="flex flex-col h-full animate-fade-in w-full">
                         
                         <div className="w-full flex justify-between items-center mb-3 mt-1">
-                            <button 
-                                onClick={() => { 
-                                    triggerVibration(10); 
-                                    setView('menu'); // Samo lokalni skok nazaj v meni
-                                }}
-                                className="w-10 h-10 bg-[#fcfaf5] rounded-full shadow-sm flex items-center justify-center text-[#8b1a1a] hover:text-[#121c33] transform transition-all active:scale-90 border border-[#d2c5aa] flex-shrink-0 relative z-[60]"
-                                aria-label="Nazaj na meni"
-                            >
-                                <Icon name="book" className="w-5 h-5" />
-                            </button>
+                            <button onClick={() => { triggerVibration(10); setView('menu'); }} className="w-10 h-10 bg-[#fcfaf5] rounded-full shadow-sm flex items-center justify-center text-[#8b1a1a] hover:text-[#121c33] transform transition-all active:scale-90 border border-[#d2c5aa] flex-shrink-0 relative z-[60]" aria-label="Nazaj na meni"><Icon name="book" className="w-5 h-5" /></button>
 
                             <div className="flex flex-col items-center gap-1.5 relative z-[60]">
                                 <div className="flex gap-1.5">
                                     {[0, 1, 2, 3, 4].map(i => {
                                         let stateClass = 'w-3 bg-[#d2c5aa]/60';
-                                        if (phase === 'outro' || (phase === 'decades' && i < decadeIndex)) {
-                                            stateClass = 'w-3 bg-[#d4af37]';
-                                        } else if (phase === 'decades' && i === decadeIndex) {
-                                            stateClass = 'w-6 bg-[#8b1a1a] shadow-sm';
-                                        }
+                                        if (phase === 'outro' || (phase === 'decades' && i < decadeIndex)) stateClass = 'w-3 bg-[#d4af37]';
+                                        else if (phase === 'decades' && i === decadeIndex) stateClass = 'w-6 bg-[#8b1a1a] shadow-sm';
                                         return <div key={`d-${i}`} className={`h-1.5 rounded-sm transition-all duration-500 ${stateClass}`} />;
                                     })}
                                 </div>
-                                
                                 <div className="flex gap-1 items-center">
                                     {beadArray.map((_, i) => {
                                         let isLarge = false;
                                         if (phase === 'intro') isLarge = (i === 0 || i === 1 || i === 5);
                                         else if (phase === 'decades') isLarge = (i === 0 || i === 11 || i === 12);
                                         else if (phase === 'outro') isLarge = (i === 0 || i === 1 || i === 5 || i === 6 || i === 7);
-
-                                        return (
-                                            <div 
-                                                key={`b-${i}`}
-                                                className={`rounded-full transition-all duration-300 ${
-                                                    isLarge ? 'w-1.5 h-1.5' : 'w-1 h-1'
-                                                } ${
-                                                    i === step ? 'bg-[#121c33] ring-1 ring-[#d4af37] ring-offset-1 ring-offset-[#f6f3eb] scale-125' : 
-                                                    i < step ? 'bg-[#8b1a1a]/60' : 'bg-[#d2c5aa]'
-                                                }`}
-                                            />
-                                        );
+                                        return <div key={`b-${i}`} className={`rounded-full transition-all duration-300 ${isLarge ? 'w-1.5 h-1.5' : 'w-1 h-1'} ${i === step ? 'bg-[#121c33] ring-1 ring-[#d4af37] ring-offset-1 ring-offset-[#f6f3eb] scale-125' : i < step ? 'bg-[#8b1a1a]/60' : 'bg-[#d2c5aa]'}`} />;
                                     })}
                                 </div>
                             </div>
 
                             <div className="w-10 h-10 flex-shrink-0 flex justify-end relative z-[60]">
-                                {phase === 'decades' && (
-                                    <button 
-                                        onClick={() => { triggerVibration(10); setShowMysteryImage(!showMysteryImage); }}
-                                        className={`w-10 h-10 rounded-full shadow-sm flex items-center justify-center transform transition-all active:scale-90 border ${showMysteryImage ? 'bg-[#121c33] text-[#d4af37] border-[#121c33]' : 'bg-[#fcfaf5] text-[#8b1a1a] hover:text-[#121c33] border-[#d2c5aa]'}`}
-                                        aria-label="Prikaži sliko"
-                                    >
-                                        <Icon name="eye" className="w-5 h-5" />
-                                    </button>
-                                )}
+                                {phase === 'decades' && (<button onClick={() => { triggerVibration(10); setShowMysteryImage(!showMysteryImage); }} className={`w-10 h-10 rounded-full shadow-sm flex items-center justify-center transform transition-all active:scale-90 border ${showMysteryImage ? 'bg-[#121c33] text-[#d4af37] border-[#121c33]' : 'bg-[#fcfaf5] text-[#8b1a1a] hover:text-[#121c33] border-[#d2c5aa]'}`} aria-label="Prikaži sliko"><Icon name="eye" className="w-5 h-5" /></button>)}
                             </div>
                         </div>
                         
@@ -1365,26 +1067,25 @@
                                 <div className="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-[#d4af37]/20 rounded-tr-xl m-2 pointer-events-none"></div>
 
                                 <div className="text-center mb-4 flex flex-col items-center relative z-10">
-                                    <span className="px-3 py-1 bg-[#121c33] text-[#d4af37] rounded-sm text-[9px] font-bold mb-3 uppercase tracking-[0.2em] shadow-sm">
-                                        {subtitle}
-                                    </span>
+                                    <span className="px-3 py-1 bg-[#121c33] text-[#d4af37] rounded-sm text-[9px] font-bold mb-3 uppercase tracking-[0.2em] shadow-sm">{subtitle}</span>
                                     <h2 className="text-xl md:text-2xl font-serif-holy font-bold text-[#8b1a1a] uppercase tracking-tight drop-shadow-sm">{title}</h2>
                                 </div>
                                 
                                 <div className="block text-center relative z-10 mt-1">
-                                    <div className="animate-fade-in" key={`${phase}-${decadeIndex}-${step}-${safeLang}`}>
-                                        {content}
-                                    </div>
+                                    <div className="animate-fade-in" key={`${phase}-${decadeIndex}-${step}-${safeLang}`}>{content}</div>
                                 </div>
+
+                                {/* Prikaz osebnega namena molitve na dnu */}
+                                {!isPrivateMode && intention && intention.trim() !== '' && (
+                                    <div className="mt-8 pt-5 border-t border-[#e8dfc8]/50 text-center relative z-10 animate-fade-in">
+                                        <span className="text-[9px] text-[#6d5a42] font-bold uppercase tracking-[0.2em] mb-1 block">Namen molitve</span>
+                                        <p className="text-[#8b1a1a] font-serif-holy font-semibold italic text-base md:text-lg px-2">"{intention}"</p>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="rounded-xl shadow-2xl relative overflow-hidden flex-grow flex flex-col justify-center items-center border border-[#d4af37]/50 animate-fade-in bg-black z-10">
-                                {MYSTERY_IMAGES[safeMysteryType]?.[decadeIndex] ? (
-                                    <img src={MYSTERY_IMAGES[safeMysteryType][decadeIndex]} className="absolute inset-0 w-full h-full object-cover animate-fade-in" />
-                                ) : (
-                                    <div className="absolute inset-0 bg-gradient-to-br from-[#121c33] to-[#0a0f1c]"></div>
-                                )}
-                                
+                                {MYSTERY_IMAGES[safeMysteryType]?.[decadeIndex] ? <img src={MYSTERY_IMAGES[safeMysteryType][decadeIndex]} className="absolute inset-0 w-full h-full object-cover animate-fade-in" /> : <div className="absolute inset-0 bg-gradient-to-br from-[#121c33] to-[#0a0f1c]"></div>}
                                 <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-black/40 to-transparent pointer-events-none"></div>
                                 <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"></div>
                             </div>
@@ -1392,23 +1093,9 @@
 
                         {canControl ? (
                             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-lg px-4 md:px-6 flex justify-between items-end pointer-events-none z-50">
-                                <button 
-                                    onClick={() => { triggerVibration(10); handlePrevStep(); }}
-                                    className="w-12 h-12 bg-[#fcfaf5] rounded-full shadow-lg flex items-center justify-center text-[#6d5a42] hover:text-[#8b1a1a] transform transition-all active:scale-90 border border-[#d2c5aa] pointer-events-auto mb-2 md:mb-4"
-                                    aria-label="Nazaj"
-                                >
-                                    <Icon name="arrowLeft" className="w-6 h-6" />
-                                </button>
-
-                                <button 
-                                    onClick={() => { triggerVibration(15); handleNextStep(); }}
-                                    className="w-20 h-20 md:w-24 md:h-24 rounded-full shadow-[0_10px_25px_rgba(0,0,0,0.3)] flex items-center justify-center text-[#d4af37] transform transition-all active:scale-95 border-[4px] border-[#d4af37] group pointer-events-auto relative overflow-hidden bg-gradient-to-br from-[#8b1a1a] to-[#4a0e0e]"
-                                >
-                                    {CUSTOM_BEAD_IMAGE ? (
-                                        <img src={CUSTOM_BEAD_IMAGE} alt="Naprej" className="absolute inset-0 w-full h-full object-cover rounded-full" />
-                                    ) : (
-                                        <span className="text-4xl md:text-5xl drop-shadow-md group-hover:scale-110 group-active:scale-90 transition-transform duration-300 font-serif-holy relative z-10">✟</span>
-                                    )}
+                                <button onClick={() => { triggerVibration(10); handlePrevStep(); }} className="w-12 h-12 bg-[#fcfaf5] rounded-full shadow-lg flex items-center justify-center text-[#6d5a42] hover:text-[#8b1a1a] transform transition-all active:scale-90 border border-[#d2c5aa] pointer-events-auto mb-2 md:mb-4" aria-label="Nazaj"><Icon name="arrowLeft" className="w-6 h-6" /></button>
+                                <button onClick={() => { triggerVibration(15); handleNextStep(); }} className="w-20 h-20 md:w-24 md:h-24 rounded-full shadow-[0_10px_25px_rgba(0,0,0,0.3)] flex items-center justify-center text-[#d4af37] transform transition-all active:scale-95 border-[4px] border-[#d4af37] group pointer-events-auto relative overflow-hidden bg-gradient-to-br from-[#8b1a1a] to-[#4a0e0e]">
+                                    {CUSTOM_BEAD_IMAGE ? <img src={CUSTOM_BEAD_IMAGE} alt="Naprej" className="absolute inset-0 w-full h-full object-cover rounded-full" /> : <span className="text-4xl md:text-5xl drop-shadow-md group-hover:scale-110 group-active:scale-90 transition-transform duration-300 font-serif-holy relative z-10">✟</span>}
                                     {CUSTOM_BEAD_IMAGE && <div className="absolute inset-0 bg-black/10 group-active:bg-black/30 transition-colors pointer-events-none rounded-full"></div>}
                                 </button>
                             </div>
@@ -1425,57 +1112,32 @@
             };
 
             return (
-                <div 
-                    className={`min-h-screen flex flex-col items-center ${view === 'menu' ? 'pb-12' : 'pb-4'}`}
-                    onTouchStart={view === 'prayer' ? onTouchStart : undefined}
-                    onTouchEnd={view === 'prayer' ? onTouchEndHandler : undefined}
-                >
+                <div className={`min-h-screen flex flex-col items-center ${view === 'menu' ? 'pb-12' : 'pb-4'}`} onTouchStart={view === 'prayer' ? onTouchStart : undefined} onTouchEnd={view === 'prayer' ? onTouchEndHandler : undefined}>
                     <div className={`w-full max-w-lg flex flex-col px-4 md:px-6 ${view === 'menu' ? 'mt-0 md:mt-2' : 'mt-2 h-[95vh]'}`}>
                         {view === 'menu' ? renderMainMenu() : renderPrayerContent()}
                     </div>
 
                     {view === 'menu' && (
                         <div className="mt-auto pt-8 px-8 text-[#8b1a1a] text-[10px] font-bold text-center uppercase tracking-[0.3em] opacity-70 leading-loose">
-                            Ave Maria ✟ Gratia Plena<br/>
-                            Dominus Tecum
+                            Ave Maria ✟ Gratia Plena<br/>Dominus Tecum
                         </div>
                     )}
 
-                    {/* MODAL ZA ČUDODELNO SVETINJO */}
                     {showMiraculous && (
                         <div className="fixed inset-0 bg-[#121c33]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
                             <div className="bg-[#fdfbf7] p-8 rounded-2xl max-w-sm w-full shadow-2xl border-2 border-[#d4af37] text-center relative overflow-hidden transform transition-all animate-slide-up">
                                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#d4af37] via-[#f4e0aa] to-[#d4af37]"></div>
-                                
                                 <div className="w-20 h-28 mx-auto mb-6 bg-gradient-to-br from-[#121c33] to-[#0a0f1c] rounded-[40%] border-[3px] border-[#d4af37] flex items-center justify-center shadow-lg relative overflow-hidden">
-                                    {MIRACULOUS_MEDAL_IMAGE ? (
-                                        <img src={MIRACULOUS_MEDAL_IMAGE} alt="Čudodelna svetinja" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <span className="text-4xl filter drop-shadow-md">🏅</span>
-                                    )}
+                                    {MIRACULOUS_MEDAL_IMAGE ? <img src={MIRACULOUS_MEDAL_IMAGE} alt="Čudodelna svetinja" className="w-full h-full object-cover" /> : <span className="text-4xl filter drop-shadow-md">🏅</span>}
                                     <div className="absolute inset-0 shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] rounded-[40%] pointer-events-none"></div>
                                 </div>
-                                
                                 <h3 className="text-xl font-serif-holy font-bold text-[#8b1a1a] mb-4 uppercase tracking-wider">{PRAYERS[safeLang].miraculousTitle}</h3>
-                                <p className="text-lg md:text-xl font-serif-holy font-bold text-[#2c1810] mb-8 italic px-2">
-                                    "{PRAYERS[safeLang].miraculous}"
-                                </p>
+                                <p className="text-lg md:text-xl font-serif-holy font-bold text-[#2c1810] mb-8 italic px-2">"{PRAYERS[safeLang].miraculous}"</p>
                                 
                                 {canControl ? (
-                                    <button 
-                                        onClick={() => { 
-                                            triggerVibration(10); 
-                                            setShowMiraculous(false); 
-                                            pushUpdate({ showMiraculous: false });
-                                        }}
-                                        className="bg-gradient-to-b from-[#8b1a1a] to-[#5c0e0e] text-[#f4e0aa] w-full py-4 rounded-xl font-serif-holy font-bold text-lg shadow-lg hover:from-[#a01e1e] hover:to-[#731212] transition-colors border-b-4 border-[#3e0808] active:translate-y-1 active:border-b-0"
-                                    >
-                                        AMEN
-                                    </button>
+                                    <button onClick={() => { triggerVibration(10); setShowMiraculous(false); pushUpdate({ showMiraculous: false }); }} className="bg-gradient-to-b from-[#8b1a1a] to-[#5c0e0e] text-[#f4e0aa] w-full py-4 rounded-xl font-serif-holy font-bold text-lg shadow-lg hover:from-[#a01e1e] hover:to-[#731212] transition-colors border-b-4 border-[#3e0808] active:translate-y-1 active:border-b-0">AMEN</button>
                                 ) : (
-                                    <div className="text-[#8b1a1a] font-bold text-xs uppercase tracking-widest">
-                                        Čakam voditelja...
-                                    </div>
+                                    <div className="text-[#8b1a1a] font-bold text-xs uppercase tracking-widest">Čakam voditelja...</div>
                                 )}
                             </div>
                         </div>
