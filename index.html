@@ -56,8 +56,9 @@
             font-family: 'Playfair Display', serif;
         }
         
-        .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        /* Dodan 'both', ki prepreči, da elementi med zamikom (delay) utripnejo in padejo dol */
+        .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) both; }
+        .animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
         .pulse-soft { animation: pulseSoft 2.5s infinite; }
         
         @keyframes fadeIn { 
@@ -88,7 +89,8 @@
         const MIRACULOUS_MEDAL_IMAGE = null;
 
         const SECRET_CODE = "amen";
-        const MASTER_ADMIN_CODE = "admin123"; 
+        // Koda je zdaj šifrirana v Base64 obliki (izvirnik: "admin123")
+        const ENCODED_MASTER_CODE = "YWRtaW4xMjM="; 
         
         const MYSTERY_IMAGES = {
             veseli: [null, null, null, null, null],
@@ -97,7 +99,7 @@
             castitljivi: [null, null, null, null, null],
         };
 
-        const PRAYERS = {
+             const PRAYERS = {
             sl: {
                 signTitle: "Znamenje križa",
                 sign: "V imenu Očeta in Sina in Svetega Duha. Amen.",
@@ -227,54 +229,219 @@
                 miraculousTitle: "Numisma Mirabile",
                 miraculous: "O Maria, sine labe concepta, ora pro nobis qui ad te confugimus!",
                 soulsIntention: "pro omnibus animabus fidelium defunctorum"
-            }
-        };
+            },
+            pl: {
+                signTitle: "Znak krzyża",
+                sign: "W imię Ojca i Syna, i Ducha Świętego. Amen.",
+                credoTitle: "Skład Apostolski",
+                credo: "Wierzę w Boga, Ojca wszechmogącego, Stworzyciela nieba i ziemi, i w Jezusa Chrystusa, Syna Jego jedynego, Pana naszego, który się począł z Ducha Świętego, narodził się z Maryi Panny, umęczył pod Ponckim Piłatem, ukrzyżowan, umarł i pogrzebion, zstąpił do piekieł, trzeciego dnia zmartwychwstał, wstąpił na niebiosa, siedzi po prawicy Boga Ojca wszechmogącego, stamtąd przyjdzie sądzić żywych i umarłych. Wierzę w Ducha Świętego, święty Kościół powszechny, świętych obcowanie, grzechów odpuszczenie, ciała zmartwychwstanie, żywot wieczny. Amen.",
+                benedictTitle: "Modlitwa św. Benedykta",
+                benedict: "Krzyż święty niech mi będzie światłem, a smok niech nie będzie mi przewodnikiem. Idź precz, szatanie, nie kuś mnie do próżności. Złe jest to, co podsuwasz, sam pij swoją truciznę.",
+                salveTitle: "Witaj, Królowo",
+                salve: "Witaj, Królowo, Matko miłosierdzia, życie, słodyczy i nadziejo nasza, witaj! Do Ciebie wołamy wygnańcy, synowie Ewy; do Ciebie wzdychamy jęcząc i płacząc na tym łez padole. Przeto, Orędowniczko nasza, one miłosierne oczy Twoje na nas zwróć, a Jezusa, błogosławiony owoc żywota Twojego, po tym wygnaniu nam okaż. O łaskawa, o litościwa, o słodka Panno Maryjo!",
+                michaelTitle: "Modlitwa do św. Michała Archanioła",
+                michael: "Święty Michale Archaniele, wspomagaj nas w walce, a przeciw niegodziwości i zasadzkom złego ducha bądź naszą obroną. Oby go Bóg pogromić raczył, pokornie o to prosimy, a Ty, Wodzu niebieskich zastępów, szatana i inne duchy złe, które na zgubę dusz ludzkich po tym świecie krążą, mocą Bożą strąć do piekła. Amen.",
+                ocenasTitle: "Ojcze nasz",
+                ocenas1: "Ojcze nasz, któryś jest w niebie, święć się imię Twoje; przyjdź królestwo Twoje; bądź wola Twoja, jako w niebie tak i na ziemi.",
+                ocenas2: "Chleba naszego powszedniego daj nam dzisiaj i odpuść nam nasze winy, jako i my odpuszczamy naszym winowajcom; i nie wódź nas na pokuszenie, ale nas zbaw ode złego. Amen.",
+                zdravaTitle: "Zdrowaś Maryjo",
+                zdrava1: "Zdrowaś Maryjo, łaski pełna, Pan z Tobą. Błogosławionaś Ty między niewiastami i błogosławiony owoc żywota Twojego, Jezus",
+                zdrava2: "Święta Maryjo, Matko Boża, módl się za nami grzesznymi, teraz i w godzinę śmierci naszej. Amen.",
+                slavaTitle: "Chwała Ojcu",
+                slava1: "Chwała Ojcu i Synowi, i Duchowi Świętemu.",
+                slava2: "Jak była na początku, teraz i zawsze, i na wieki wieków. Amen.",
+                fatimaTitle: "Modlitwa fatimska",
+                fatima: "O mój Jezu, przebacz nam nasze grzechy, zachowaj nas od ognia piekielnego, zaprowadź wszystkie dusze do nieba i dopomóż szczególnie tym, którzy najbardziej potrzebują Twojego miłosierdzia.",
+                miraculousTitle: "Cudowny Medalik",
+                miraculous: "O Maryjo bez grzechu poczęta, módl się za nami, którzy się do Ciebie uciekamy!",
+                soulsIntention: "za wszystkie dusze w czyśćcu cierpiące"
+            },
+            hr: { 
+                signTitle: "Znak križa", 
+                sign: "U ime Oca i Sina i Duha Svetoga. Amen.", 
+                credoTitle: "Apostolsko vjerovanje", 
+        credoTitle: "Apostolsko vjerovanje", 
+        credo: "Vjerujem u Boga, Oca svemogućega, Stvoritelja neba i zemlje...", 
+        benedictTitle: "Blagoslov", 
+        benedict: "Blagoslovi, Gospodine, nas i ove tvoje darove...", 
+        salveTitle: "Zdravo Kraljice", 
+        salve: "Zdravo Kraljice, Majko milosrđa, vilo naša, sladosti i ufanje naše...", 
+        michaelTitle: "Sveti Mihaele", 
+        michael: "Sveti Mihaele arkanđele, brani nas u boju...", 
+        ocenasTitle: "Oče naš", 
+        ocenas1: "Oče naš, koji jesi na nebesima, sveti se ime tvoje, dođi kraljevstvo tvoje, budi volja tvoja, kako na nebu, tako i na zemlji.", 
+        ocenas2: "Kruh naš svagdanji daj nam danas, i otpusti nam duge naše, kako i mi otpuštamo dužnicima našim, i ne uvedi nas u napast, nego izbavi nas od zla. Amen.", 
+        zdravaTitle: "Zdravo Marijo", 
+        zdrava1: "Zdravo Marijo, milosti puna, Gospodin s tobom, blagoslovljena ti među ženama i blagoslovljen plod utrobe tvoje, Isus", 
+        zdrava2: "Sveta Marijo, Majko Božja, moli za nas grješnike, sada i na času smrti naše. Amen.", 
+        slavaTitle: "Slava Ocu", 
+        slava1: "Slava Ocu i Sinu i Duhu Svetomu.", 
+        slava2: "Kako bijaše na početku, tako i sada i vazda i u vijeke vjekova. Amen.", 
+        fatimaTitle: "Fatimska molitva", 
+        fatima: "O moj Isuse, oprosti nam naše grijehe, očuvaj nas od paklenoga ognja, dovedi u nebo sve duše, osobito one kojima je najpotrebnije tvoje milosrđe.", 
+        miraculousTitle: "Čudotvorna medaljica", 
+        miraculous: "O Marijo, bez grijeha začeta, moli za nas koji se tebi utječemo.", 
+        soulsIntention: "Pokoj vječni daruj im, Gospodine, i svjetlost vječna svjetlila im." 
+    },
+    sq: { 
+        signTitle: "Shenja e Kryqit", 
+        sign: "Në emër të Atit e të Birit e të Shpirtit Shenjt. Amen.", 
+        credoTitle: "Besojma", 
+        credo: "Besoj në Perëndinë, Atin e gjithëpushtetshëm, Krijuesin e qiellit dhe të tokës...", 
+        benedictTitle: "Bekimi", 
+        benedict: "Na beko, o Zot, ne dhe këto dhuntitë e tua...", 
+        salveTitle: "Të falemi Mbretëreshë", 
+        salve: "Të falemi Mbretëreshë, Nëna e mëshirës, jeta, ëmbëlsia dhe shpresa jonë...", 
+        michaelTitle: "Shën Mikaeli", 
+        michael: "Shën Mikaeli Kryeengjëll, na mbro në betejë...", 
+        ocenasTitle: "Ati ynë", 
+        ocenas1: "Ati ynë, që je në qiell, u shenjtëroftë emri yt, ardhtë mbretëria jote, u bëftë vullnesa jote, si në qiell ashtu edhe në tokë.", 
+        ocenas2: "Bukën tonë të përditshme na e jep sot, na i fal fajet tona, siç i falim ne fajtorët tanë, e mos na lër të biem në tundim, por na liro nga i keqi. Amen.", 
+        zdravaTitle: "Të falemi Mari", 
+        zdrava1: "Të falemi Mari, hiriplotë Zoti me ty, e bekuar je mbi të gjitha gratë dhe i bekuar fryti i barkut tënd, Jezus", 
+        zdrava2: "Shenjtja Mari, Nëna e Hyjit, lutu për ne mëkatarët, tash e në fill të vdekjes sonë. Amen.", 
+        slavaTitle: "Lavdi Atit", 
+        slava1: "Lavdi Atit e Birit e Shpirtit Shenjt.", 
+        slava2: "Si holdshte në fillim, ashtu tash e përgjithmonë e në jetë të jetëve. Amen.", 
+        fatimaTitle: "Lutja e Fatimes", 
+        fatima: "O Jezusi im, na i fal mëkatet tona, na shpëto prej flakës së ferrit dhe çoji në qiell të gjitha shpirtrat, sidomos ata që kanë më shumë nevojë për mëshirën tënde.", 
+        miraculousTitle: "Medalja e mrekullueshme", 
+        miraculous: "O Mari, e zënë pa mëkat, lutu për ne që vrapojmë te ti.", 
+        soulsIntention: "Jepuave, o Zot, paqen e lumninë e pambaruar." 
+    },
+    es: { 
+        signTitle: "Señal de la Cruz", 
+        sign: "En el nombre del Padre, y del Hijo, y del Espíritu Santo. Amén.", 
+        credoTitle: "Credo de los Apóstoles", 
+        credo: "Creo en Dios, Padre Todopoderoso, Creador del cielo y de la tierra...", 
+        benedictTitle: "Bendición", 
+        benedict: "Bendícenos, Señor, y bendice estos alimentos...", 
+        salveTitle: "Salve Regina", 
+        salve: "Dios te salve, Reina y Madre de misericordia, vida, dulzura y esperanza nuestra...", 
+        michaelTitle: "San Miguel Arcángel", 
+        michael: "San Miguel Arcángel, defiéndenos en la lucha...", 
+        ocenasTitle: "Padre Nuestro", 
+        ocenas1: "Padre nuestro, que estás en el cielo, santificado sea tu Nombre; venga a nosotros tu reino; hágase tu voluntad en la tierra como en el cielo.", 
+        ocenas2: "Danos hoy nuestro pan de cada día; perdona nuestras ofensas, como también nosotros perdonamos a los que nos ofenden; no nos dejes caer en la tentación, y líbranos del mal. Amén.", 
+        zdravaTitle: "Ave María", 
+        zdrava1: "Dios te salve, María, llena eres de gracia, el Señor es contigo; bendita tú eres entre todas las mujeres, y bendito es el fruto de tu vientre, Jesús", 
+        zdrava2: "Santa María, Madre de Dios, ruega por nosotros, pecadores, ahora y en la hora de nuestra muerte. Amén.", 
+        slavaTitle: "Gloria", 
+        slava1: "Gloria al Padre, y al Hijo, y al Espíritu Santo.", 
+        slava2: "Como era en el principio, ahora y siempre, por los siglos de los siglos. Amén.", 
+        fatimaTitle: "Oración de Fátima", 
+        fatima: "Oh Jesús mío, perdona nuestros pecados, líbranos del fuego del infierno, lleva al cielo a todas las almas, especialmente a las más necesitadas de tu misericordia.", 
+        miraculousTitle: "Medalla Milagrosa", 
+        miraculous: "Oh María, sin pecado concebida, ruega por nosotros que recurrimos a ti.", 
+        soulsIntention: "Dales, Señor, el descanso eterno, y brille para ellos la luz perpetua." 
+    },
+    fr: { 
+        signTitle: "Signe de la Croix", 
+        sign: "Au nom du Père, et du Fils, et du Saint-Esprit. Amen.", 
+        credoTitle: "Symbole des Apôtres", 
+        credo: "Je crois en Dieu, le Père tout-puissant, Créateur du ciel et de la terre...", 
+        benedictTitle: "Bénédicité", 
+        benedict: "Bénissez-nous, Seigneur, bénissez ce repas...", 
+        salveTitle: "Salve Regina", 
+        salve: "Salut, ô Reine, Mère de miséricorde, notre vie, notre douceur et notre espérance...", 
+        michaelTitle: "Saint Michel Archange", 
+        michael: "Saint Michel Archange, défendez-nous dans le combat...", 
+        ocenasTitle: "Notre Père", 
+        ocenas1: "Notre Père, qui es aux cieux, que ton nom soit sanctifié, que ton règne vienne, que ta volonté soit faite sur la terre comme au ciel.", 
+        ocenas2: "Donne-nous aujourd’hui notre pain de ce jour. Pardonne-nous nos offenses, comme nous pardonnons aussi à ceux qui nous ont offensés. Et ne nous laisse pas entrer en tentation, mais délivre-nous du Mal. Amen.", 
+        zdravaTitle: "Je vous salue Marie", 
+        zdrava1: "Je vous salue Marie, pleine de grâce ; le Seigneur est avec vous. Vous êtes bénie entre toutes les femmes et Jésus, le fruit de vos entrailles, est béni", 
+        zdrava2: "Sainte Marie, Mère de Dieu, priez pour nous pauvres pécheurs, maintenant et à l’heure de notre mort. Amen.", 
+        slavaTitle: "Gloire au Père", 
+        slava1: "Gloire au Père, au Fils et au Saint-Esprit.", 
+        slava2: "Comme il était au commencement, maintenant et toujours, pour les siècles des siècles. Amen.", 
+        fatimaTitle: "Prière de Fatima", 
+        fatima: "Ô mon Jésus, pardonnez-nous nos péchés, préservez-nous du feu de l'enfer, et conduisez au ciel toutes les âmes, surtout celles qui ont le plus besoin de votre miséricorde.", 
+        miraculousTitle: "Médaille Miraculeuse", 
+        miraculous: "Ô Marie conçue sans péché, priez pour nous qui avons recours à vous.", 
+        soulsIntention: "Donne-leur, Seigneur, le repos éternel, et que la lumière sans fin brille sur eux." 
+    }
+};
 
         const MYSTERIES = {
-            veseli: {
-                sl: ["ki si ga Devica od Svetega Duha spočela", "ki si ga Devica k Elizabeti nosila", "ki si ga Devica rodila", "ki si ga Devica v templju darovala", "ki si ga Devica v templju našla"],
-                de: ["den du, o Jungfrau, vom Heiligen Geist empfangen hast", "den du, o Jungfrau, zu Elisabeth getragen hast", "den du, o Jungfrau, geboren hast", "den du, o Jungfrau, im Tempel aufgeopfert hast", "den du, o Jungfrau, im Tempel wiedergefunden hast"],
-                en: ["The Annunciation", "The Visitation", "The Nativity", "The Presentation", "The Finding of Jesus in the Temple"],
-                it: ["L'Annunciazione", "La Visitazione", "La Nascita di Gesù", "La Presentazione al Tempio", "Il Ritrovamento nel Tempio"],
-                la: ["Annuntiatio", "Visitatio", "Nativitas", "Praesentatio in Templo", "Inventio in Templo"]
-            },
-            svetli: {
-                sl: ["ki je bil krščen v reki Jordan", "ki je v Kani Galilejski naredil prvi čudež", "ki je oznanjal božje kraljestvo", "ki je na gori Tabor pokazal svoje veličastvo", "ki je postavil sveto rešnjo telo"],
-                de: ["der von Johannes getauft worden ist", "der sich bei der Hochzeit in Kana offenbart hat", "der uns das Reich Gottes verkündet hat", "der auf dem Berg verklärt worden ist", "der uns die Eucharistie geschenkt hat"],
-                en: ["The Baptism in the Jordan", "The Wedding Feast at Cana", "The Proclamation of the Kingdom", "The Transfiguration", "The Institution of the Eucharist"],
-                it: ["Il Battesimo nel Giordano", "Le Nozze di Cana", "L'Annuncio del Regno di Dio", "La Trasfigurazione", "L'Istituzione dell'Eucaristia"],
-                la: ["Baptismus in Iordane", "Nuptiae in Cana", "Proclamatio Regni Dei", "Transfiguratio", "Institutio Eucharistiae"]
-            },
-            zalostni: {
-                sl: ["ki je za nas krvavi pot potil", "ki je bil za nas bičan", "ki je bil za nas s trnjem kronan", "ki je za nas težki križ nesel", "ki je bil za nas križan"],
-                de: ["der für uns Blut geschwitzt hat", "der für uns gegeißelt worden ist", "der für uns mit Dornen gekrönt worden ist", "der für uns das schwere Kreuz getragen hat", "der für uns gekreuzigt worden ist"],
-                en: ["The Agony in the Garden", "The Scourging at the Pillar", "The Crowning with Thorns", "The Carrying of the Cross", "The Crucifixion"],
-                it: ["L'Agonia nell'Orto", "La Flagellazione", "L'Incoronazione di Spine", "La Salita al Calvario", "La Crocifissione e Morte"],
-                la: ["Agonia in Horto", "Flagellatio", "Coronatio Spinis", "Baiulatio Crucis", "Crucifixio et Mors"]
-            },
-            castitljivi: {
-                sl: ["ki je od mrtvih vstal", "ki je v nebesa šel", "ki je Svetega Duha poslal", "ki je tebe, Devica, v nebesa v vzel", "ki je tebe, Devica, v nebesih kronal"],
-                de: ["der von den Toten auferstanden ist", "der in den Himmel aufgefahren ist", "der uns den Heiligen Geist gesandt hat", "der dich, o Jungfrau, in den Himmel aufgenommen hat", "der dich, o Jungfrau, im Himmel gekrönt hat"],
-                en: ["The Resurrection", "The Ascension", "The Descent of the Holy Spirit", "The Assumption of Mary", "The Coronation of the Virgin"],
-                it: ["La Risurrezione", "L'Ascensione", "La Discesa dello Spirito Santo", "L'Assunzione di Maria", "L'Incoronazione di Maria"],
-                la: ["Resurrectio", "Ascensio", "Descensus Spiritus Sancti", "Assumptio", "Coronatio in Caelo"]
-            }
-        };
+    veseli: {
+        sl: ["ki si ga Devica od Svetega Duha spočela", "ki si ga Devica k Elizabeti nosila", "ki si ga Devica rodila", "ki si ga Devica v templju darovala", "ki si ga Devica v templju našla"],
+        de: ["den du, o Jungfrau, vom Heiligen Geist empfangen hast", "den du, o Jungfrau, zu Elisabeth getragen hast", "den du, o Jungfrau, geboren hast", "den du, o Jungfrau, im Tempel aufgeopfert hast", "den du, o Jungfrau, im Tempel wiedergefunden hast"],
+        en: ["The Annunciation", "The Visitation", "The Nativity", "The Presentation", "The Finding of Jesus in the Temple"],
+        it: ["L'Annunciazione", "La Visitazione", "La Nascita di Gesù", "La Presentazione al Tempio", "Il Ritrovamento nel Tempio"],
+        la: ["Annuntiatio", "Visitatio", "Nativitas", "Praesentatio in Templo", "Inventio in Templo"],
+        pl: ["któregoś Ty, Panno, z Ducha Świętego poczęła", "któregoś Ty, Panno, do Elżbiety niosła", "któregoś Ty, Panno, narodziła", "któregoś Ty, Panno, w świątyni ofiarowała", "któregoś Ty, Panno, w świątyni znalazła"],
+        hr: ["koga si Djevice po Duhu Svetom začela", "koga si Djevice Elizabeti u pohode nosila", "koga si Djevice rodila", "koga si Djevice u hramu prikazala", "koga si Djevice u hramu našla"],
+        sq: ["Lajmërimi i Engjëllit", "Vizita te Elizabeta", "Lindja e Jezusit", "Paraqitja në Tempull", "Gjetja e Jezusit në Tempull"],
+        es: ["La Anunciación", "La Visitación", "El Nacimiento de Jesús", "La Presentación", "El Niño Jesús perdido y hallado en el Templo"],
+        fr: ["L'Annonciation", "La Visitation", "La Nativité", "La Présentation au Temple", "Le Recouvrement de Jésus au Temple"]
+    },
+    svetli: {
+        sl: ["ki je bil krščen v reki Jordan", "ki je v Kani Galilejski naredil prvi čudež", "ki je oznanjal božje kraljestvo", "ki je na gori Tabor pokazal svoje veličastvo", "ki je postavil sveto rešnjo telo"],
+        de: ["der von Johannes getauft worden ist", "der sich bei der Hochzeit in Kana offenbart hat", "der uns das Reich Gottes verkündet hat", "der auf dem Berg verklärt worden ist", "der uns die Eucharistie geschenkt hat"],
+        en: ["The Baptism in the Jordan", "The Wedding Feast at Cana", "The Proclamation of the Kingdom", "The Transfiguration", "The Institution of the Eucharist"],
+        it: ["Il Battesimo nel Giordano", "Le Nozze di Cana", "L'Annuncio del Regno di Dio", "La Trasfigurazione", "L'Istituzione dell'Eucaristia"],
+        la: ["Baptismus in Iordane", "Nuptiae in Cana", "Proclamatio Regni Dei", "Transfiguratio", "Institutio Eucharistiae"],
+        pl: ["który był ochrzczony w Jordanie", "który na weselu w Kanie objawił swoją chwałę", "który głosił Królestwo Boże", "który na górze Tabor się przemienił", "który ustanowił Eucharystię"],
+        hr: ["koji je na rijeci Jordanu kršten bio", "koji nam se na svadbi u Kani objavio", "koji nam je kraljevstvo Božje navijestio", "koji se na gori preobrazio", "koji nam je ustanovio Euharistiju"],
+        sq: ["Pagëzimi i Jezusit në Jordan", "Dasmës në Kanë", "Shpallja e Mbretërisë së Hyjit", "Shpërfytyrimi i Jezusit", "Themelimi i Eukaristisë"],
+        es: ["El Bautismo en el Jordán", "Las bodas de Caná", "El anuncio del Reino de Dios", "La Transfiguración", "La Institución de la Eucaristía"],
+        fr: ["Le Baptême au Jourdain", "Les Noces de Cana", "L'Annonce du Royaume de Dieu", "La Transfiguration", "L'Institution de l'Eucharistie"]
+    },
+    zalostni: {
+        sl: ["ki je za nas krvavi pot potil", "ki je bil za nas bičan", "ki je bil za nas s trnjem kronan", "ki je za nas težki križ nesel", "ki je bil za nas križan"],
+        de: ["der für uns Blut geschwitzt hat", "der für uns gegeißelt worden ist", "der für uns mit Dornen gekrönt worden ist", "der für uns das schwere Kreuz getragen hat", "der für uns gekreuzigt worden ist"],
+        en: ["The Agony in the Garden", "The Scourging at the Pillar", "The Crowning with Thorns", "The Carrying of the Cross", "The Crucifixion"],
+        it: ["L'Agonia nell'Orto", "La Flagellazione", "L'Incoronazione di Spine", "La Salita al Calvario", "La Crocifissione e Morte"],
+        la: ["Agonia in Horto", "Flagellatio", "Coronatio Spinis", "Baiulatio Crucis", "Crucifixio et Mors"],
+        pl: ["który za nas krwią się pocił", "który za nas był biczowany", "który za nas był cierniem ukoronowany", "który za nas ciężki krzyż niósł", "który za nas był ukrzyżowany"],
+        hr: ["koji je za nas krvavim znojem znojio", "koji je za nas bičevan bio", "koji je za nas trnjem okrunjen bio", "koji je za nas teški križ nosio", "koji je za nas razapet bio"],
+        sq: ["Agonia e Jezusit në kopsht", "Rrahja e Jezusit", "Kurorëzimi me ferra", "Udhëtimi me kryq në krah", "Kryqëzimi i Jezusit"],
+        es: ["La Agonía en el Huerto", "La Flagelación", "La Coronación de Espinas", "La Cruz a cuestas", "La Crucifixión y Muerte"],
+        fr: ["L'Agonie au Jardin des Oliviers", "La Flagellation", "Le Couronnement d'épines", "Le Portement de la Croix", "La Crucifixion"]
+    },
+    castitljivi: {
+        sl: ["ki je od mrtvih vstal", "ki je v nebesa šel", "ki je Svetega Duha poslal", "ki je tebe, Devica, v nebesa v vzel", "ki je tebe, Devica, v nebesih kronal"],
+        de: ["der von den Toten auferstanden ist", "der in den Himmel aufgefahren ist", "der uns den Heiligen Geist gesandt hat", "der dich, o Jungfrau, in den Himmel aufgenommen hat", "der dich, o Jungfrau, im Himmel gekrönt hat"],
+        en: ["The Resurrection", "The Ascension", "The Descent of the Holy Spirit", "The Assumption of Mary", "The Coronation of the Virgin"],
+        it: ["La Risurrezione", "L'Ascensione", "La Discesa dello Spirito Santo", "L'Assunzione di Maria", "L'Incoronazione di Maria"],
+        la: ["Resurrectio", "Ascensio", "Descensus Spiritus Sancti", "Assumptio", "Coronatio in Caelo"],
+        pl: ["który zmartwychwstał", "który do nieba wstąpił", "który Ducha Świętego zesłał", "który Ciebie, Panno, do nieba wziął", "który Ciebie, Panno, w niebie ukoronował"],
+        hr: ["koji je od mrtvih uskrsnuo", "koji je na nebo uzašao", "koji je Duha Svetoga poslao", "koji je tebe, Djevice, na nebo uzeo", "koji je tebe, Djevice, na nebu okrunio"],
+        sq: ["Ngjallja e Jezusit", "Ngjitja e Jezusit në qiell", "Ardhja e Shpirtit Shenjt", "Të Ngriturit e Marisë në qiell", "Kurorëzimi i Marisë"],
+        es: ["La Resurrección", "La Ascensión", "La Venida del Espíritu Santo", "La Asunción de María", "La Coronación de María"],
+        fr: ["La Résurrection", "L'Ascension", "La Pentecôte", "L'Assomption", "Le Couronnement de la Vierge"]
+    }
+};
 
-        const MYSTERY_NAMES = {
-            veseli: "Veseli del",
-            svetli: "Svetli del",
-            zalostni: "Žalostni del",
-            castitljivi: "Častitljivi del"
+const INTRO_INSERTS = {
+    veseli: {
+        sl: ["ki nam poživi vero", "ki nam utrdi upanje", "ki nam vžgi ljubezen"],
+        pl: ["który w nas pomnaża wiarę", "który w nas utwierdza nadzieję", "który w nas rozpala miłość"],
+        hr: ["koji nam umnoži vjeru", "koji nam učvrsti ufanje", "koji nam usavrši ljubav"]
+    },
+    svetli: {
+        sl: ["ki nam daj duha pokorščine", "ki nam daj srečo uboštva", "ki nam podeli milost čistosti"],
+        pl: ["który nam daje ducha posłuszeństwa", "który nam daje szczęście ubóstwa", "który nam udziela łaski czystości"],
+        hr: ["koji nam daje duh poslušnosti", "koji nam daje sreću siromaštva", "koji nam udjeljuje milost čistoće"]
+    },
+    zalostni: {
+        sl: ["ki nam utrdi spomin", "ki nam razsvetli pamet", "ki nam omeči voljo"],
+        pl: ["który nam utwierdza pamięć", "który nam oświeca rozum", "który nam nagina wolę"],
+        hr: ["koji nam učvršćuje spomen", "koji nam prosvjetljuje pamet", "koji nam omekšava volju"]
+    },
+    castitljivi: {
+        sl: ["ki nam vodi naše misli", "ki nam vodi naše besede", "ki nam vodi naša dejanja"],
+        pl: ["który nam kieruje myślami", "który nam kieruje słowami", "który nam kieruje czynami"],
+        hr: ["koji nam upravlja misli", "koji nam upravlja riječi", "koji nam upravlja djela"]
+    }
+};
+        const PHASE_WORDS = {
+            intro: { sl: "UVOD", de: "EINLEITUNG", en: "INTRODUCTION", it: "INTRODUZIONE", la: "INTRODUCTIO", pl: "WSTĘP", hr: "UVOD", sq: "HYRJE", es: "INTRODUCCIÓN", fr: "INTRODUCTION" },
+            outro: { sl: "ZAKLJUČEK", de: "ABSCHLUSS", en: "CONCLUSION", it: "CONCLUSIONE", la: "CONCLUSIO", pl: "ZAKOŃCZENIE", hr: "ZAVRŠETAK", sq: "PËRFUNDIM", es: "CONCLUSIÓN", fr: "CONCLUSION" },
+            mystery: { sl: "SKRIVNOST", de: "GEHEIMNIS", en: "MYSTERY", it: "MISTERO", la: "MYSTERIUM", pl: "TAJEMNICA", hr: "OTAJSTVO", sq: "MISTERI", es: "MISTERIO", fr: "MYSTÈRE" }
         };
-
-        const INTRO_INSERTS = {
-            veseli: ["ki nam poživi vero", "ki nam utrdi upanje", "ki nam vžgi ljubezen"],
-            svetli: ["ki nam daj duha pokorščine", "ki nam daj srečo uboštva", "ki nam podeli milost čistosti"],
-            zalostni: ["ki nam utrdi spomin", "ki nam razsvetli pamet", "ki nam omeči voljo"],
-            castitljivi: ["ki nam vodi naše misli", "ki nam vodi naše besede", "ki nam vodi naša dejanja"]
-        };
-
+        
         const UI_DICT = {
             sl: {
                 appLang: "UI", prep: "Rožni venec", community: "Skupnost", private: "Zasebno", connected: "Povezano", offline: "Brez povezave",
@@ -391,11 +558,11 @@
             }, [uiLang]);
 
             useEffect(() => {
-                // Dodan zamik in gladko drsenje, da ob zamenjavi "view" preprečimo cukanje
-                const timer = setTimeout(() => {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }, 50);
-                return () => clearTimeout(timer);
+                // Takojšen skok na vrh ob menjavi pogleda
+                window.scrollTo(0, 0);
+                // Dvojno zavarovanje za mobilne naprave, ki včasih zakasnijo z izrisom DOM-a
+                const timeoutId = setTimeout(() => window.scrollTo(0, 0), 20);
+                return () => clearTimeout(timeoutId);
             }, [view]);
 
             const wakeLockRef = useRef(null);
@@ -441,9 +608,9 @@
             const [rouletteLangs, setRouletteLangs] = useState(() => {
                 if (typeof window !== 'undefined' && window.localStorage) {
                     const saved = localStorage.getItem('rosary_roulette_langs');
-                    return saved ? JSON.parse(saved) : ['sl', 'en', 'de', 'it', 'la'];
+                    return saved ? JSON.parse(saved) : ['sl', 'en', 'de', 'it', 'la', 'pl', 'hr', 'sq', 'es', 'fr'];
                 }
-                return ['sl', 'en', 'de', 'it', 'la'];
+                return ['sl', 'en', 'de', 'it', 'la', 'pl', 'hr', 'sq', 'es', 'fr'];
             });
 
             useEffect(() => {
@@ -485,7 +652,8 @@
                 return '';
             });
             
-            const isMasterAdmin = leaderCode.trim() === MASTER_ADMIN_CODE;
+            // Preverimo tako, da vneseno kodo pretvorimo v Base64 in jo primerjamo s skrito različico
+            const isMasterAdmin = btoa(leaderCode.trim()) === ENCODED_MASTER_CODE;
             const isLeader = (leaderCode.trim() !== '' && (!dbAdminCode || leaderCode.trim() === dbAdminCode)) || isMasterAdmin;
             const canControl = isPrivateMode || isLeader;
 
@@ -673,7 +841,7 @@
             }, [user, db, appId, isCanvasEnv]);
 
             const pickRandomLang = useCallback((currentLang) => {
-                const activeLangs = rouletteLangs.length > 0 ? rouletteLangs : ['sl', 'de', 'en', 'it', 'la'];
+                const activeLangs = rouletteLangs.length > 0 ? rouletteLangs : ['sl', 'en', 'de', 'it', 'la', 'pl', 'hr', 'sq', 'es', 'fr'];
                 let available = activeLangs.filter(l => l !== currentLang);
                 if (available.length === 0) available = activeLangs;
                 return available[Math.floor(Math.random() * available.length)];
@@ -892,6 +1060,7 @@
                                         <div className="relative">
                                             <select disabled={!canControl} className="w-full bg-[#0c101d] border border-[#2a3a5c] text-[#f3e8d3] px-4 py-3.5 rounded-xl font-bold text-sm md:text-base outline-none appearance-none disabled:opacity-50 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm cursor-pointer" value={safeLang} onChange={(e) => { setLang(e.target.value); pushUpdate({ lang: e.target.value }); }}>
                                                 <option value="sl">🇸🇮 SLO</option><option value="de">🇩🇪 DEU</option><option value="en">🇬🇧 ENG</option><option value="it">🇮🇹 ITA</option><option value="la">🇻🇦 LAT</option>
+                                                <option value="pl">🇵🇱 POL</option><option value="hr">🇭🇷 HRV</option><option value="sq">🇦🇱 ALB</option><option value="es">🇪🇸 ESP</option><option value="fr">🇫🇷 FRA</option>
                                             </select>
                                             <Icon name="arrowRight" className="w-3.5 h-3.5 absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-[#d4af37] pointer-events-none" />
                                         </div>
@@ -952,7 +1121,9 @@
                                             <div className="flex flex-wrap gap-2">
                                                 {[
                                                     {code: 'sl', flag: '🇸🇮'}, {code: 'de', flag: '🇩🇪'}, 
-                                                    {code: 'en', flag: '🇬🇧'}, {code: 'it', flag: '🇮🇹'}, {code: 'la', flag: '🇻🇦'}
+                                                    {code: 'en', flag: '🇬🇧'}, {code: 'it', flag: '🇮🇹'}, {code: 'la', flag: '🇻🇦'},
+                                                    {code: 'pl', flag: '🇵🇱'}, {code: 'hr', flag: '🇭🇷'}, {code: 'sq', flag: '🇦🇱'},
+                                                    {code: 'es', flag: '🇪🇸'}, {code: 'fr', flag: '🇫🇷'}
                                                 ].map(langItem => (
                                                     <button
                                                         key={langItem.code}
@@ -1021,7 +1192,7 @@
             const renderPrayerContent = () => {
                 const p = PRAYERS[safeLang];
                 const currentMysteryText = MYSTERIES[safeMysteryType][safeLang]?.[decadeIndex] || "";
-                const isInsertLanguage = safeLang === 'sl' || safeLang === 'de';
+                const isInsertLanguage = ['sl', 'de', 'pl', 'hr'].includes(safeLang);
 
                 if (phase === 'finished') {
                     return (
@@ -1039,21 +1210,20 @@
                 let subtitle = "";
                 let helperSubtitle = null;
 
-                const prayerDict = UI_DICT[safeLang] || UI_DICT['sl'];
-
-                if (phase === 'intro') { subtitle = prayerDict.intro; } 
-                else if (phase === 'outro') { subtitle = prayerDict.outro; } 
+                if (phase === 'intro') { subtitle = PHASE_WORDS.intro[safeLang] || PHASE_WORDS.intro['sl']; } 
+                else if (phase === 'outro') { subtitle = PHASE_WORDS.outro[safeLang] || PHASE_WORDS.outro['sl']; } 
                 else if (phase === 'decades') {
                     const uiMysteryText = MYSTERIES[safeMysteryType][uiLang]?.[decadeIndex] || "";
-                    if (isInsertLanguage) { 
-                        subtitle = `${decadeIndex + 1}. ${prayerDict.mystery}`; 
+                    const prayerMysteryWord = PHASE_WORDS.mystery[safeLang] || PHASE_WORDS.mystery['sl'];
+                    
+                    if (currentMysteryText) {
+                        subtitle = `${decadeIndex + 1}. ${prayerMysteryWord}: ${currentMysteryText}`;
+                    } else {
+                        subtitle = `${decadeIndex + 1}. ${prayerMysteryWord}`;
+                    }
+
+                    if (safeLang !== uiLang && uiMysteryText) {
                         helperSubtitle = `(${uiMysteryText})`;
-                    } 
-                    else { 
-                        subtitle = `${decadeIndex + 1}. ${prayerDict.mystery}: ${currentMysteryText}`; 
-                        if (safeLang !== uiLang) {
-                            helperSubtitle = `(${uiMysteryText})`;
-                        }
                     }
                 }
 
@@ -1066,10 +1236,10 @@
                         content = (
                             <p className="text-xl md:text-2xl leading-relaxed font-serif-holy font-semibold text-[#f3e8d3]">
                                 {p.zdrava1}
-                                {safeLang === 'sl' && (
+                                {['sl', 'pl', 'hr'].includes(safeLang) && INTRO_INSERTS[safeMysteryType][safeLang]?.[step - 3] && (
                                     <>
                                         {", "}
-                                        <span className="text-[#d4af37] font-bold mx-1">{INTRO_INSERTS[safeMysteryType][step - 3]}</span>
+                                        <span className="text-[#d4af37] font-bold mx-1">{INTRO_INSERTS[safeMysteryType][safeLang][step - 3]}</span>
                                     </>
                                 )}.
                                 <PrayerDivider />
@@ -1102,6 +1272,7 @@
                     else if (step === 12) { title = p.fatimaTitle; content = <p className={tClass}>{p.fatima}</p>; }
                 } else if (phase === 'outro') {
                     const pClass = "text-xl md:text-2xl leading-relaxed font-serif-holy font-semibold text-[#f3e8d3]";
+                    const uiSoulsIntention = PRAYERS[uiLang]?.soulsIntention || PRAYERS['sl'].soulsIntention;
                     
                     if (step === 0) { title = p.benedictTitle; content = <p className={pClass}>{p.benedict}</p>; } 
                     else if (step === 1) { title = p.ocenasTitle; content = <p className={pClass}>{p.ocenas1}<PrayerDivider />{p.ocenas2}</p>; } 
@@ -1111,17 +1282,17 @@
                     else if (step === 7) { title = p.michaelTitle; content = <p className={pClass}>{p.michael}</p>; }
                     else if (step === 8) { 
                         title = p.ocenasTitle; 
-                        helperSubtitle = `(${p.soulsIntention})`; 
+                        helperSubtitle = uiSoulsIntention ? `(${uiSoulsIntention})` : null; 
                         content = <p className={pClass}>{p.ocenas1}<PrayerDivider />{p.ocenas2}</p>; 
                     }
                     else if (step === 9) { 
                         title = p.zdravaTitle; 
-                        helperSubtitle = `(${p.soulsIntention})`; 
+                        helperSubtitle = uiSoulsIntention ? `(${uiSoulsIntention})` : null; 
                         content = <p className={pClass}>{p.zdrava1}<PrayerDivider />{p.zdrava2}</p>; 
                     }
                     else if (step === 10) { 
                         title = p.slavaTitle; 
-                        helperSubtitle = `(${p.soulsIntention})`; 
+                        helperSubtitle = uiSoulsIntention ? `(${uiSoulsIntention})` : null; 
                         content = <p className={pClass}>{p.slava1}<PrayerDivider />{p.slava2}</p>; 
                     }
                     else if (step === 11) { title = p.signTitle; content = <p className={pClass}>{p.sign}</p>; }
@@ -1171,24 +1342,24 @@
                         </div>
                         
                         {!showMysteryImage ? (
-                            <div className="bg-[#131b2f]/90 backdrop-blur-md rounded-2xl p-5 md:p-8 pt-6 md:pt-8 pb-36 md:pb-40 shadow-2xl border border-[#d4af37]/30 relative overflow-y-auto hide-scrollbar flex-grow flex flex-col justify-start z-10">
+                            <div className="bg-[#131b2f]/90 backdrop-blur-md rounded-2xl p-5 md:p-8 pt-5 md:pt-6 pb-36 md:pb-40 shadow-2xl border border-[#d4af37]/30 relative overflow-y-auto hide-scrollbar flex-grow flex flex-col justify-start z-10">
                                 <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-[#d4af37]/20 rounded-tl-2xl m-2 pointer-events-none"></div>
                                 <div className="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-[#d4af37]/20 rounded-tr-2xl m-2 pointer-events-none"></div>
 
                                 {/* Plavajoči števec */}
                                 {hailMaryBadge}
 
-                                {/* Varnostni padding (px-10 md:px-16), da naslov nikoli ne zapelje POD absolutno značko na levi */}
-                                <div className="text-center mb-5 md:mb-6 flex flex-col items-center relative z-10 px-10 md:px-16 mt-2">
-                                    <span className={`px-3 py-1.5 bg-[#0c101d] text-[#d4af37] border border-[#d4af37]/30 rounded text-[10px] font-bold uppercase tracking-[0.2em] shadow-sm text-center ${helperSubtitle ? 'mb-1.5' : 'mb-4'}`}>
+                                {/* Zmanjšani odmiki in pisave, da zagotovimo več prostora za samo molitev */}
+                                <div className="text-center mb-3 md:mb-4 flex flex-col items-center relative z-10 px-[3.8rem] md:px-20 mt-0 w-full mx-auto">
+                                    <div className={`px-2.5 py-1 bg-[#0c101d] text-[#d4af37] border border-[#d4af37]/30 rounded-lg text-[9px] md:text-[11px] font-bold uppercase tracking-wide shadow-sm text-center inline-block max-w-full leading-tight break-words ${helperSubtitle ? 'mb-1' : 'mb-2'}`}>
                                         {subtitle}
-                                    </span>
+                                    </div>
                                     {helperSubtitle && (
-                                        <span className="text-[#94a3b8] text-[12px] md:text-sm italic font-medium mb-4 px-2 md:px-4 text-center leading-snug">
+                                        <span className="text-[#94a3b8] text-[10px] md:text-xs italic font-medium mb-1.5 px-1 text-center leading-tight">
                                             {helperSubtitle}
                                         </span>
                                     )}
-                                    <h2 className="text-2xl md:text-3xl font-serif-holy font-bold text-[#d4af37] uppercase tracking-tight drop-shadow-sm">{title}</h2>
+                                    <h2 className="text-xl md:text-2xl font-serif-holy font-bold text-[#d4af37] uppercase tracking-tight drop-shadow-sm mt-0.5">{title}</h2>
                                 </div>
                                 
                                 <div className="block text-center relative z-10 mt-1">
@@ -1265,7 +1436,7 @@
                             <div className="text-[#d4af37] text-[10px] font-bold text-center uppercase tracking-[0.3em] opacity-40 leading-loose">
                                 Ave Maria ✟ Gratia Plena<br/>Dominus Tecum
                             </div>
-                            <div className="flex gap-4 items-center justify-center opacity-40 hover:opacity-100 transition-opacity duration-300 mt-2">
+                            <div className="flex gap-4 items-center justify-center opacity-40 hover:opacity-100 transition-opacity duration-300 mt-2 flex-wrap max-w-[250px]">
                                 {['sl', 'en', 'de'].map(l => (
                                     <button key={l} onClick={() => { triggerVibration(10); setUiLang(l); }} className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${uiLang === l ? 'text-[#d4af37] scale-110' : 'text-[#94a3b8] hover:text-[#f3e8d3]'}`}>{l}</button>
                                 ))}
