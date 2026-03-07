@@ -31,13 +31,20 @@
         const manifest = {
             "name": "Večjezični Rožni Venec",
             "short_name": "Rožni Venec",
+            "start_url": ".",
             "display": "standalone",
             "background_color": "#0a0e17",
             "theme_color": "#0a0e17",
-            "icons": [{"src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzBhMGUxNyIgcng9IjExMiIgLz48Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNTYiIHI9IjE4MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDRhZjM3IiBzdHJva2Utd2lkdGg9IjEyIiBzdHJva2UtZGFzaGFycmF5PSIyNCAzNiIgb3BhY2l0eT0iMC44Ii8+PHBhdGggZD0iTTI1NiAxMjAgdjI3MiBNMTYwIDIyMCBoMTkyIiBzdHJva2U9IiNkNGFmMzciIHN0cm9rZS13aWR0aD0iMjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==","sizes":"512x512","type":"image/svg+xml"}]
+            "icons": [{
+                "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzBhMGUxNyIgcng9IjExMiIgLz48Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNTYiIHI9IjE4MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDRhZjM3IiBzdHJva2Utd2lkdGg9IjEyIiBzdHJva2UtZGFzaGFycmF5PSIyNCAzNiIgb3BhY2l0eT0iMC44Ii8+PHBhdGggZD0iTTI1NiAxMjAgdjI3MiBNMTYwIDIyMCBoMTkyIiBzdHJva2U9IiNkNGFmMzciIHN0cm9rZS13aWR0aD0iMjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==",
+                "sizes": "192x192 512x512",
+                "type": "image/svg+xml",
+                "purpose": "any maskable"
+            }]
         };
-        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-        document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(manifestBlob)}">`);
+        const manifestString = JSON.stringify(manifest);
+        const manifestUrl = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(manifestString);
+        document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${manifestUrl}">`);
     </script>
 
     <style>
