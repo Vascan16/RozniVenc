@@ -442,6 +442,16 @@ const INTRO_INSERTS = {
             mystery: { sl: "SKRIVNOST", de: "GEHEIMNIS", en: "MYSTERY", it: "MISTERO", la: "MYSTERIUM", pl: "TAJEMNICA", hr: "OTAJSTVO", sq: "MISTERI", es: "MISTERIO", fr: "MYSTÈRE" }
         };
         
+        // Dodana preslikava za slikovne zastavice, da delujejo povsod (tudi na Windows prenosnikih)
+        const FLAG_MAP = { sl: 'si', en: 'gb', de: 'de', it: 'it', la: 'va', pl: 'pl', hr: 'hr', sq: 'al', es: 'es', fr: 'fr' };
+
+        const LANG_OPTIONS = [
+            { code: 'sl', name: 'SLO' }, { code: 'de', name: 'DEU' }, { code: 'en', name: 'ENG' },
+            { code: 'it', name: 'ITA' }, { code: 'la', name: 'LAT' }, { code: 'pl', name: 'POL' },
+            { code: 'hr', name: 'HRV' }, { code: 'sq', name: 'ALB' }, { code: 'es', name: 'ESP' },
+            { code: 'fr', name: 'FRA' }
+        ];
+
         const UI_DICT = {
             sl: {
                 appLang: "UI", prep: "Rožni venec", community: "Skupnost", private: "Zasebno", connected: "Povezano", offline: "Brez povezave",
@@ -670,6 +680,9 @@ const INTRO_INSERTS = {
             const [step, setStep] = useState(0); 
             const [showMiraculous, setShowMiraculous] = useState(false);
             const [miraculousTriggers, setMiraculousTriggers] = useState([]);
+            
+            // Novo stanje za nadzor našega po meri narejenega spustnega menija za jezike
+            const [langDropdownOpen, setLangDropdownOpen] = useState(false);
 
             const [fbReady, setFbReady] = useState(!!window.Firebase);
             const [user, setUser] = useState(null);
@@ -1053,19 +1066,51 @@ const INTRO_INSERTS = {
 
                             <div className="space-y-5">
                                 <div className="flex flex-col md:flex-row gap-4 items-end">
-                                    <div className="flex-1 w-full space-y-2">
+                                    <div className="flex-1 w-full space-y-2 relative z-20">
                                         <label className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider ml-1 flex items-center gap-2">
                                             <Icon name="globe" className="w-3.5 h-3.5 flex-shrink-0" /> {t('prayerLang')}
                                         </label>
                                         <div className="relative">
-                                            <select disabled={!canControl} className="w-full bg-[#0c101d] border border-[#2a3a5c] text-[#f3e8d3] px-4 py-3.5 rounded-xl font-bold text-sm md:text-base outline-none appearance-none disabled:opacity-50 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm cursor-pointer" value={safeLang} onChange={(e) => { setLang(e.target.value); pushUpdate({ lang: e.target.value }); }}>
-                                                <option value="sl">🇸🇮 SLO</option><option value="de">🇩🇪 DEU</option><option value="en">🇬🇧 ENG</option><option value="it">🇮🇹 ITA</option><option value="la">🇻🇦 LAT</option>
-                                                <option value="pl">🇵🇱 POL</option><option value="hr">🇭🇷 HRV</option><option value="sq">🇦🇱 ALB</option><option value="es">🇪🇸 ESP</option><option value="fr">🇫🇷 FRA</option>
-                                            </select>
-                                            <Icon name="arrowRight" className="w-3.5 h-3.5 absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-[#d4af37] pointer-events-none" />
+                                            <button 
+                                                disabled={!canControl} 
+                                                onClick={() => setLangDropdownOpen(!langDropdownOpen)} 
+                                                className="w-full bg-[#0c101d] border border-[#2a3a5c] text-[#f3e8d3] px-4 py-3.5 rounded-xl font-bold text-sm md:text-base outline-none flex items-center justify-between disabled:opacity-50 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <img src={`https://flagcdn.com/w20/${FLAG_MAP[safeLang]}.png`} alt={safeLang} className="w-5 h-3.5 rounded-[2px] shadow-sm" />
+                                                    <span>{LANG_OPTIONS.find(l => l.code === safeLang)?.name || safeLang.toUpperCase()}</span>
+                                                </div>
+                                                <Icon name="arrowRight" className={`w-3.5 h-3.5 text-[#d4af37] transition-transform duration-300 ${langDropdownOpen ? '-rotate-90' : 'rotate-90'}`} />
+                                            </button>
+                                            
+                                            {langDropdownOpen && canControl && (
+                                                <>
+                                                    {/* Nevidno ozadje, ki zapre meni, če kliknemo kamorkoli drugam */}
+                                                    <div className="fixed inset-0 z-40" onClick={() => setLangDropdownOpen(false)}></div>
+                                                    
+                                                    {/* Custom spustni meni */}
+                                                    <div className="absolute top-full left-0 w-full mt-2 bg-[#0c101d] border border-[#2a3a5c] rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.8)] z-50 overflow-hidden animate-fade-in max-h-48 overflow-y-auto hide-scrollbar">
+                                                        {LANG_OPTIONS.map(opt => (
+                                                            <button
+                                                                key={opt.code}
+                                                                onClick={() => {
+                                                                    triggerVibration(10);
+                                                                    setLang(opt.code);
+                                                                    pushUpdate({ lang: opt.code });
+                                                                    setLangDropdownOpen(false);
+                                                                }}
+                                                                className={`w-full text-left px-4 py-3.5 flex items-center gap-3 transition-colors ${safeLang === opt.code ? 'bg-[#1e293b] text-[#d4af37] border-l-2 border-[#d4af37]' : 'text-[#f3e8d3] hover:bg-[#131b2f] border-l-2 border-transparent'}`}
+                                                            >
+                                                                <img src={`https://flagcdn.com/w20/${FLAG_MAP[opt.code]}.png`} alt={opt.code} className="w-5 h-3.5 rounded-[2px] shadow-sm" />
+                                                                <span className="font-bold text-sm md:text-base tracking-wide">{opt.name}</span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
-                                    <div className="flex-[1.5] w-full space-y-2">
+                                    <div className="flex-[1.5] w-full space-y-2 relative z-10">
                                         <label className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider ml-1 flex items-center gap-2">
                                             <Icon name="book" className="w-3.5 h-3.5 flex-shrink-0" /> {t('mysteryPart')}
                                         </label>
@@ -1119,29 +1164,25 @@ const INTRO_INSERTS = {
                                         <div className="pt-3 border-t border-[#2a3a5c]/40 animate-fade-in">
                                             <label className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider ml-1 mb-2 block">{t('rouletteSelect')}</label>
                                             <div className="flex flex-wrap gap-2">
-                                                {[
-                                                    {code: 'sl', flag: '🇸🇮'}, {code: 'de', flag: '🇩🇪'}, 
-                                                    {code: 'en', flag: '🇬🇧'}, {code: 'it', flag: '🇮🇹'}, {code: 'la', flag: '🇻🇦'},
-                                                    {code: 'pl', flag: '🇵🇱'}, {code: 'hr', flag: '🇭🇷'}, {code: 'sq', flag: '🇦🇱'},
-                                                    {code: 'es', flag: '🇪🇸'}, {code: 'fr', flag: '🇫🇷'}
-                                                ].map(langItem => (
+                                                {Object.keys(FLAG_MAP).map(code => (
                                                     <button
-                                                        key={langItem.code}
+                                                        key={code}
                                                         onClick={() => {
                                                             triggerVibration(10);
                                                             let newLangs;
-                                                            if (rouletteLangs.includes(langItem.code)) {
+                                                            if (rouletteLangs.includes(code)) {
                                                                 if (rouletteLangs.length <= 1) return; // Prepreči odstranitev zadnjega jezika
-                                                                newLangs = rouletteLangs.filter(x => x !== langItem.code);
+                                                                newLangs = rouletteLangs.filter(x => x !== code);
                                                             } else {
-                                                                newLangs = [...rouletteLangs, langItem.code];
+                                                                newLangs = [...rouletteLangs, code];
                                                             }
                                                             setRouletteLangs(newLangs);
                                                             pushUpdate({ rouletteLangs: newLangs });
                                                         }}
-                                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all shadow-sm flex items-center gap-1.5 ${rouletteLangs.includes(langItem.code) ? 'bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/50' : 'bg-[#1e293b] text-[#94a3b8] border border-transparent hover:bg-[#2a3a5c]'}`}
+                                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all shadow-sm flex items-center gap-1.5 ${rouletteLangs.includes(code) ? 'bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/50' : 'bg-[#1e293b] text-[#94a3b8] border border-transparent hover:bg-[#2a3a5c]'}`}
                                                     >
-                                                        <span className="text-[10px] grayscale-[50%] opacity-80">{langItem.flag}</span> {langItem.code}
+                                                        <img src={`https://flagcdn.com/w20/${FLAG_MAP[code]}.png`} alt={code} className={`w-4 h-3 rounded-[2px] ${rouletteLangs.includes(code) ? 'opacity-100' : 'opacity-60 grayscale-[50%]'}`} /> 
+                                                        {code}
                                                     </button>
                                                 ))}
                                             </div>
@@ -1310,6 +1351,13 @@ const INTRO_INSERTS = {
                     </div>
                 );
 
+                // Absolutno pozicionirana značka za zastavico (brez kroga)
+                const rouletteFlagBadge = (isRoulettePrayer || isRouletteDecade) && (
+                    <div className="absolute top-6 right-6 md:top-8 md:right-8 z-[70] flex items-center justify-center animate-fade-in">
+                        <img src={`https://flagcdn.com/w40/${FLAG_MAP[safeLang]}.png`} alt={safeLang} className="w-7 md:w-9 rounded-[3px] opacity-95 shadow-[0_4px_10px_rgba(0,0,0,0.8)]" />
+                    </div>
+                );
+
                 return (
                     <div className="flex flex-col h-full animate-fade-in w-full">
                         
@@ -1346,8 +1394,9 @@ const INTRO_INSERTS = {
                                 <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-[#d4af37]/20 rounded-tl-2xl m-2 pointer-events-none"></div>
                                 <div className="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-[#d4af37]/20 rounded-tr-2xl m-2 pointer-events-none"></div>
 
-                                {/* Plavajoči števec */}
+                                {/* Plavajoči števec in zastavica */}
                                 {hailMaryBadge}
+                                {rouletteFlagBadge}
 
                                 {/* Zmanjšani odmiki in pisave, da zagotovimo več prostora za samo molitev */}
                                 <div className="text-center mb-3 md:mb-4 flex flex-col items-center relative z-10 px-[3.8rem] md:px-20 mt-0 w-full mx-auto">
@@ -1386,8 +1435,9 @@ const INTRO_INSERTS = {
                                 <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black/80 to-transparent pointer-events-none"></div>
                                 <div className="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-black/80 to-transparent pointer-events-none"></div>
                                 
-                                {/* Plavajoči števec na sliki */}
+                                {/* Plavajoči števec na sliki in zastavica */}
                                 {hailMaryBadge}
+                                {rouletteFlagBadge}
                             </div>
                         )}
 
