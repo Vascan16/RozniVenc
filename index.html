@@ -94,6 +94,7 @@
         const HOLY_ART_IMAGE = "Slike/sin.png";
         const CUSTOM_BEAD_IMAGE = null; 
         const MIRACULOUS_MEDAL_IMAGE = null;
+        const QR_CODE_IMAGE = "Slike/qr.png"; // Skrita QR koda za deljenje
 
         const SECRET_CODE = "amen";
         // Koda je zdaj šifrirana v Base64 obliki (izvirnik: "admin123")
@@ -471,7 +472,8 @@ const INTRO_INSERTS = {
                 thanks: "Bog bodi zahvaljen!", finished: "Sveti rožni venec je zaključen.", btnMenu: "MENI / PONOVNO",
                 intro: "UVOD", outro: "ZAKLJUČEK", mystery: "SKRIVNOST", waitLeader: "Čakam voditelja...", adminLeads: "Molitev vodi administrator...",
                 m_veseli: "Veseli del", m_svetli: "Svetli del", m_zalostni: "Žalostni del", m_castitljivi: "Častitljivi del", justNow: "pravkar",
-                logout: "Izpis", unlockRoom: "Odkleni sobo"
+                logout: "Izpis", unlockRoom: "Odkleni sobo",
+                addReflections: "Dodaj razmišljanja", refTitle: "Razmišljanja", refIntro: "Pred uvodom", refDecade: "Pred {n}. skrivnostjo", refOutro: "Pred zaključkom"
             },
             en: {
                 appLang: "UI", prep: "Holy Rosary", community: "Community", private: "Private", connected: "Connected", offline: "Offline",
@@ -484,7 +486,8 @@ const INTRO_INSERTS = {
                 thanks: "Thanks be to God!", finished: "The Holy Rosary is finished.", btnMenu: "MENU / RESTART",
                 intro: "INTRODUCTION", outro: "CONCLUSION", mystery: "MYSTERY", waitLeader: "Waiting for leader...", adminLeads: "Administrator is leading...",
                 m_veseli: "Joyful Mysteries", m_svetli: "Luminous Mysteries", m_zalostni: "Sorrowful Mysteries", m_castitljivi: "Glorious Mysteries", justNow: "just now",
-                logout: "Logout", unlockRoom: "Unlock Room"
+                logout: "Logout", unlockRoom: "Unlock Room",
+                addReflections: "Add Reflections", refTitle: "Reflections", refIntro: "Before Intro", refDecade: "Before {n}. Mystery", refOutro: "Before Conclusion"
             },
             de: {
                 appLang: "UI", prep: "Rosenkranz", community: "Gemeinschaft", private: "Privat", connected: "Verbunden", offline: "Offline",
@@ -497,7 +500,8 @@ const INTRO_INSERTS = {
                 thanks: "Gott sei Dank!", finished: "Der Heilige Rosenkranz ist beendet.", btnMenu: "MENÜ / NEUSTART",
                 intro: "EINLEITUNG", outro: "ABSCHLUSS", mystery: "GEHEIMNIS", waitLeader: "Warte auf Leiter...", adminLeads: "Administrator leitet...",
                 m_veseli: "Freudenreiche", m_svetli: "Lichtreiche", m_zalostni: "Schmerzhafte", m_castitljivi: "Glorreiche", justNow: "gerade",
-                logout: "Abmelden", unlockRoom: "Raum entsperren"
+                logout: "Abmelden", unlockRoom: "Raum entsperren",
+                addReflections: "Reflexionen hinzufügen", refTitle: "Reflexionen", refIntro: "Vor Einleitung", refDecade: "Vor {n}. Geheimnis", refOutro: "Vor Abschluss"
             }
         };
 
@@ -632,6 +636,36 @@ const INTRO_INSERTS = {
                 return ['sl', 'en', 'de', 'it', 'la', 'pl', 'hr', 'sq', 'es', 'fr'];
             });
 
+            // Ustvarimo "ključ" za trenutni kontekst (Zasebno ali določena soba)
+            const contextKey = isPrivateMode ? 'private_mode' : roomName;
+
+            const [reflections, setReflections] = useState(() => {
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    const savedDict = localStorage.getItem('rosary_reflections_dict');
+                    if (savedDict) {
+                        try {
+                            const dict = JSON.parse(savedDict);
+                            let currentRefs = dict[contextKey];
+                            if (currentRefs && Array.isArray(currentRefs)) {
+                                while (currentRefs.length < 7) currentRefs.push('');
+                                return currentRefs;
+                            }
+                        } catch (e) {}
+                    } else {
+                        // Migracija starih podatkov, da se ne izgubijo vaša prejšnja razmišljanja
+                        const oldSaved = localStorage.getItem('rosary_reflections');
+                        if (oldSaved) {
+                            try {
+                                const oldArr = JSON.parse(oldSaved);
+                                while (oldArr.length < 7) oldArr.push('');
+                                return oldArr;
+                            } catch (e) {}
+                        }
+                    }
+                }
+                return ['', '', '', '', '', '', ''];
+            });
+
             useEffect(() => {
                 if (typeof window !== 'undefined' && window.localStorage) {
                     localStorage.setItem('rosary_room_name', roomName);
@@ -639,6 +673,34 @@ const INTRO_INSERTS = {
                     localStorage.setItem('rosary_roulette_langs', JSON.stringify(rouletteLangs));
                 }
             }, [roomName, intention, rouletteLangs]);
+
+            // Naloži razmišljanja ob menjavi sobe ali preklopu med zasebno/skupnost
+            useEffect(() => {
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    const savedDict = localStorage.getItem('rosary_reflections_dict');
+                    let dict = {};
+                    if (savedDict) {
+                        try { dict = JSON.parse(savedDict); } catch (e) {}
+                    }
+                    let currentRefs = dict[contextKey];
+                    if (currentRefs && Array.isArray(currentRefs)) {
+                        while (currentRefs.length < 7) currentRefs.push('');
+                        setReflections(currentRefs);
+                    } else {
+                        setReflections(['', '', '', '', '', '', '']);
+                    }
+                }
+            }, [contextKey]);
+
+            // Shrani razmišljanja točno v tisto sobo/kontekst, kjer trenutno smo
+            useEffect(() => {
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    const savedDict = localStorage.getItem('rosary_reflections_dict');
+                    let dict = savedDict ? JSON.parse(savedDict) : {};
+                    dict[contextKey] = reflections;
+                    localStorage.setItem('rosary_reflections_dict', JSON.stringify(dict));
+                }
+            }, [reflections, contextKey]);
 
             const [dbAdminCode, setDbAdminCode] = useState(null);
             const lastSharedState = useRef(null);
@@ -656,6 +718,7 @@ const INTRO_INSERTS = {
                 if (data.showMiraculous !== undefined) setShowMiraculous(data.showMiraculous);
                 if (data.intention !== undefined) setIntention(data.intention); 
                 if (data.rouletteLangs !== undefined) setRouletteLangs(data.rouletteLangs);
+                if (data.reflections !== undefined) setReflections(data.reflections);
             }, []);
 
             const resetToStart = useCallback(() => {
@@ -689,6 +752,7 @@ const INTRO_INSERTS = {
             const [step, setStep] = useState(0); 
             const [showMiraculous, setShowMiraculous] = useState(false);
             const [miraculousTriggers, setMiraculousTriggers] = useState([]);
+            const [showQr, setShowQr] = useState(false);
             
             // Novo stanje za nadzor našega po meri narejenega spustnega menija za jezike
             const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -708,10 +772,10 @@ const INTRO_INSERTS = {
                 if (isPrivateMode && typeof window !== 'undefined' && window.localStorage) {
                     localStorage.setItem('rosary_private_state', JSON.stringify({
                         phase, step, decadeIndex, lang, mysteryType, 
-                        miraculousTriggers, isRoulettePrayer, isRouletteDecade, showMiraculous, intention, rouletteLangs
+                        miraculousTriggers, isRoulettePrayer, isRouletteDecade, showMiraculous, intention, rouletteLangs, reflections
                     }));
                 }
-            }, [phase, step, decadeIndex, lang, mysteryType, miraculousTriggers, isRoulettePrayer, isRouletteDecade, showMiraculous, intention, rouletteLangs, isPrivateMode]);
+            }, [phase, step, decadeIndex, lang, mysteryType, miraculousTriggers, isRoulettePrayer, isRouletteDecade, showMiraculous, intention, rouletteLangs, reflections, isPrivateMode]);
 
             useEffect(() => {
                 if (isPrivateMode) {
@@ -897,28 +961,34 @@ const INTRO_INSERTS = {
                 let newDecadeIndex = decadeIndex;
 
                 if (phase === 'intro') {
-                    if (step < 6) newStep++;
-                    else { newPhase = 'decades'; newStep = 0; }
+                    if (step === -1) { newStep = 0; }
+                    else if (step < 6) { newStep++; }
+                    else { 
+                        newPhase = 'decades'; 
+                        newStep = (reflections[1] && reflections[1].trim() !== '') ? -1 : 0; 
+                    }
                 } else if (phase === 'decades') {
-                    if (step < 12) newStep++;
+                    if (step === -1) { newStep = 0; }
+                    else if (step < 12) { newStep++; }
                     else {
                         if (decadeIndex < 4) {
                             if (isRouletteDecade && !isRoulettePrayer) newLang = pickRandomLang(lang);
                             newDecadeIndex++;
-                            newStep = 0;
+                            newStep = (reflections[newDecadeIndex + 1] && reflections[newDecadeIndex + 1].trim() !== '') ? -1 : 0;
                         } else {
                             newPhase = 'outro';
-                            newStep = 0;
+                            newStep = (reflections[6] && reflections[6].trim() !== '') ? -1 : 0;
                         }
                     }
                 } else if (phase === 'outro') {
-                    if (step < 11) newStep++;
+                    if (step === -1) { newStep = 0; }
+                    else if (step < 11) newStep++;
                     else { newPhase = 'finished'; newStep = 0; }
                 }
 
                 setLang(newLang); setPhase(newPhase); setStep(newStep); setDecadeIndex(newDecadeIndex);
                 pushUpdate({ lang: newLang, phase: newPhase, step: newStep, decadeIndex: newDecadeIndex });
-            }, [phase, step, decadeIndex, lang, isRoulettePrayer, isRouletteDecade, pickRandomLang, pushUpdate]);
+            }, [phase, step, decadeIndex, lang, isRoulettePrayer, isRouletteDecade, pickRandomLang, pushUpdate, reflections]);
 
             const handleSkipSection = useCallback(() => {
                 let newLang = lang;
@@ -928,12 +998,15 @@ const INTRO_INSERTS = {
 
                 if (phase === 'intro') {
                     newPhase = 'decades';
+                    newStep = (reflections[1] && reflections[1].trim() !== '') ? -1 : 0;
                 } else if (phase === 'decades') {
                     if (decadeIndex < 4) {
                         if (isRouletteDecade && !isRoulettePrayer) newLang = pickRandomLang(lang);
                         newDecadeIndex++;
+                        newStep = (reflections[newDecadeIndex + 1] && reflections[newDecadeIndex + 1].trim() !== '') ? -1 : 0;
                     } else {
                         newPhase = 'outro';
+                        newStep = (reflections[6] && reflections[6].trim() !== '') ? -1 : 0;
                     }
                 } else if (phase === 'outro') {
                     newPhase = 'finished';
@@ -941,7 +1014,7 @@ const INTRO_INSERTS = {
 
                 setLang(newLang); setPhase(newPhase); setStep(newStep); setDecadeIndex(newDecadeIndex);
                 pushUpdate({ lang: newLang, phase: newPhase, step: newStep, decadeIndex: newDecadeIndex });
-            }, [phase, decadeIndex, lang, isRoulettePrayer, isRouletteDecade, pickRandomLang, pushUpdate]);
+            }, [phase, decadeIndex, lang, isRoulettePrayer, isRouletteDecade, pickRandomLang, pushUpdate, reflections]);
 
             const handlePrevStep = useCallback(() => {
                 let newPhase = phase;
@@ -950,14 +1023,18 @@ const INTRO_INSERTS = {
 
                 if (phase === 'intro') {
                     if (step > 0) newStep--;
+                    else if (step === 0 && reflections[0] && reflections[0].trim() !== '') newStep = -1;
                 } else if (phase === 'decades') {
                     if (step > 0) newStep--;
-                    else {
+                    else if (step === 0 && reflections[decadeIndex + 1] && reflections[decadeIndex + 1].trim() !== '') {
+                        newStep = -1;
+                    } else {
                         if (decadeIndex > 0) { newDecadeIndex--; newStep = 12; }
                         else { newPhase = 'intro'; newStep = 6; }
                     }
                 } else if (phase === 'outro') {
                     if (step > 0) newStep--;
+                    else if (step === 0 && reflections[6] && reflections[6].trim() !== '') newStep = -1;
                     else { newPhase = 'decades'; newStep = 12; }
                 } else if (phase === 'finished') {
                     newPhase = 'outro';
@@ -966,7 +1043,7 @@ const INTRO_INSERTS = {
 
                 setPhase(newPhase); setStep(newStep); setDecadeIndex(newDecadeIndex);
                 pushUpdate({ phase: newPhase, step: newStep, decadeIndex: newDecadeIndex });
-            }, [phase, step, decadeIndex, pushUpdate]);
+            }, [phase, step, decadeIndex, pushUpdate, reflections]);
 
             useEffect(() => {
                 const handleKeyDown = (e) => {
@@ -1157,19 +1234,26 @@ const INTRO_INSERTS = {
                             </div>
 
                             {/* OSEBNI NAMEN MOLITVE */}
-                            {!isPrivateMode && canControl && (
-                                <div className="space-y-2 pt-3 border-t border-[#2a3a5c]/70">
-                                    <label className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider ml-1 flex items-center gap-2">
-                                        <Icon name="star" className="w-3.5 h-3.5 text-[#d4af37]" /> {t('intentTitle')}
-                                    </label>
-                                    <textarea 
-                                        placeholder={t('intentPh')}
-                                        value={intention}
-                                        onChange={(e) => setIntention(e.target.value)}
-                                        onBlur={() => pushUpdate({ intention })}
-                                        rows="2"
-                                        className="w-full bg-[#0c101d] border border-[#2a3a5c] text-[#f3e8d3] px-4 py-3.5 rounded-xl font-medium text-sm md:text-base outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm resize-none placeholder:text-[#94a3b8]/50"
-                                    />
+                            {canControl && (
+                                <div className="space-y-3 pt-3 border-t border-[#2a3a5c]/70">
+                                    {!isPrivateMode && (
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider ml-1 flex items-center gap-2">
+                                                <Icon name="star" className="w-3.5 h-3.5 text-[#d4af37]" /> {t('intentTitle')}
+                                            </label>
+                                            <textarea 
+                                                placeholder={t('intentPh')}
+                                                value={intention}
+                                                onChange={(e) => setIntention(e.target.value)}
+                                                onBlur={() => pushUpdate({ intention })}
+                                                rows="2"
+                                                className="w-full bg-[#0c101d] border border-[#2a3a5c] text-[#f3e8d3] px-4 py-3.5 rounded-xl font-medium text-sm md:text-base outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm resize-none placeholder:text-[#94a3b8]/50"
+                                            />
+                                        </div>
+                                    )}
+                                    <button onClick={() => { triggerVibration(10); setView('reflections'); }} className="w-full bg-[#131b2f] border border-[#2a3a5c] text-[#d4af37] px-4 py-3 rounded-xl font-bold text-[11px] md:text-xs uppercase tracking-wider hover:bg-[#1e293b] hover:border-[#d4af37]/40 transition-all flex items-center justify-center gap-2 shadow-sm">
+                                        <Icon name="book" className="w-4 h-4" /> {t('addReflections')}
+                                    </button>
                                 </div>
                             )}
 
@@ -1226,13 +1310,13 @@ const INTRO_INSERTS = {
                     </div>
 
                     <div className="w-full flex flex-col gap-4 mt-6 animate-slide-up" style={{ animationDelay: '0.3s' }}>
-                        <button onClick={() => { triggerVibration(20); setView('prayer'); if (canControl && phase === 'intro' && step === 0) { let l = safeLang; if (isRoulettePrayer || isRouletteDecade) { l = pickRandomLang(safeLang); setLang(l); } const triggers = getNewTriggers(); setMiraculousTriggers(triggers); pushUpdate({ lang: l, miraculousTriggers: triggers, intention: intention }); } }} className="group relative bg-gradient-to-b from-[#8b1a1a] to-[#4a0e0e] hover:from-[#a01e1e] hover:to-[#5c0e0e] text-[#f4e0aa] w-full py-4 md:py-5 rounded-[1.5rem] font-serif-holy font-bold text-xl md:text-2xl shadow-[0_10px_25px_rgba(139,26,26,0.3)] transition-all active:scale-[0.98] flex items-center justify-center border border-[#3e0808] overflow-hidden pulse-soft">
+                        <button onClick={() => { triggerVibration(20); setView('prayer'); if (canControl && phase === 'intro' && (step === 0 || step === -1)) { let l = safeLang; if (isRoulettePrayer || isRouletteDecade) { l = pickRandomLang(safeLang); setLang(l); } const triggers = getNewTriggers(); setMiraculousTriggers(triggers); const startStep = (reflections[0] && reflections[0].trim() !== '') ? -1 : 0; setStep(startStep); pushUpdate({ lang: l, miraculousTriggers: triggers, intention: intention, step: startStep }); } }} className="group relative bg-gradient-to-b from-[#8b1a1a] to-[#4a0e0e] hover:from-[#a01e1e] hover:to-[#5c0e0e] text-[#f4e0aa] w-full py-4 md:py-5 rounded-[1.5rem] font-serif-holy font-bold text-xl md:text-2xl shadow-[0_10px_25px_rgba(139,26,26,0.3)] transition-all active:scale-[0.98] flex items-center justify-center border border-[#3e0808] overflow-hidden pulse-soft">
                             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:translate-x-[200%] transition-transform duration-1000 ease-in-out"></div>
                             <div className="mr-3 transform group-hover:scale-110 transition-transform duration-300 relative z-10"><Icon name={canControl ? "play" : "users"} className="w-6 h-6 md:w-7 md:h-7" /></div>
-                            <span className="tracking-widest relative z-10 pt-1 drop-shadow-md">{canControl ? ((phase !== 'intro' || step > 0 || decadeIndex > 0) ? t('btnContinue') : t('btnStart')) : t('btnJoin')}</span>
+                            <span className="tracking-widest relative z-10 pt-1 drop-shadow-md">{canControl ? ((phase !== 'intro' || (step > 0 && step !== -1) || decadeIndex > 0) ? t('btnContinue') : t('btnStart')) : t('btnJoin')}</span>
                         </button>
                         
-                        {canControl && (phase !== 'intro' || step > 0 || decadeIndex > 0) && (
+                        {canControl && (phase !== 'intro' || (step > 0 && step !== -1) || decadeIndex > 0) && (
                             <button onClick={() => { triggerVibration(10); const trigs = getNewTriggers(); setPhase('intro'); setStep(0); setDecadeIndex(0); setMiraculousTriggers(trigs); pushUpdate({ phase: 'intro', step: 0, decadeIndex: 0, miraculousTriggers: trigs, showMiraculous: false }); }} className="group bg-transparent hover:bg-[#131b2f] text-[#d4af37] w-full py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center border border-[#2a3a5c] hover:border-[#d4af37]/50 shadow-sm hover:shadow-md">
                                 <div className="mr-2 transform group-hover:-rotate-180 transition-transform duration-500"><Icon name="refresh" className="w-4 h-4" /></div>
                                 {t('btnRestart')}
@@ -1262,6 +1346,40 @@ const INTRO_INSERTS = {
                 </div>
             );
 
+            const renderReflectionsMenu = () => (
+                <div className="flex flex-col pt-6 pb-8 px-2 w-full max-w-md mx-auto relative z-10 animate-fade-in h-full">
+                    <div className="flex items-center justify-between mb-8">
+                        <button onClick={() => { triggerVibration(10); setView('menu'); pushUpdate({ reflections }); }} className="w-10 h-10 bg-[#131b2f] rounded-full shadow-sm flex items-center justify-center text-[#d4af37] hover:bg-[#1e293b] transform transition-all active:scale-90 border border-[#2a3a5c] flex-shrink-0" aria-label="Nazaj"><Icon name="arrowLeft" className="w-5 h-5" /></button>
+                        <h2 className="text-xl md:text-2xl font-serif-holy font-bold text-[#d4af37] uppercase tracking-wider drop-shadow-sm">{t('refTitle')}</h2>
+                        <div className="w-10"></div>
+                    </div>
+                    <div className="space-y-5 overflow-y-auto hide-scrollbar pb-20 flex-grow px-1">
+                        {[0, 1, 2, 3, 4, 5, 6].map((idx) => {
+                            const labelText = idx === 0 ? t('refIntro') : idx === 6 ? t('refOutro') : t('refDecade').replace('{n}', idx);
+                            return (
+                                <div key={idx} className="space-y-2">
+                                    <label className="text-[10px] md:text-xs font-bold text-[#94a3b8] uppercase tracking-wider ml-1 block border-l-2 border-[#d4af37] pl-2">
+                                        {labelText}
+                                    </label>
+                                    <textarea
+                                        value={reflections[idx]}
+                                        onChange={(e) => {
+                                            const newRefs = [...reflections];
+                                            newRefs[idx] = e.target.value;
+                                            setReflections(newRefs);
+                                        }}
+                                        onBlur={() => pushUpdate({ reflections })}
+                                        rows={idx === 0 || idx === 6 ? "3" : "4"}
+                                        className="w-full bg-[#0c101d] border border-[#2a3a5c] text-[#f3e8d3] px-4 py-3 rounded-xl font-medium text-sm md:text-base outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/50 transition-all shadow-sm resize-none placeholder:text-[#94a3b8]/30"
+                                        placeholder="Vaše razmišljanje..."
+                                    />
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+
             const renderPrayerContent = () => {
                 const p = PRAYERS[safeLang];
                 const currentMysteryText = MYSTERIES[safeMysteryType][safeLang]?.[decadeIndex] || "";
@@ -1283,7 +1401,21 @@ const INTRO_INSERTS = {
                 let subtitle = "";
                 let helperSubtitle = null;
 
-                if (phase === 'intro') { subtitle = PHASE_WORDS.intro[safeLang] || PHASE_WORDS.intro['sl']; } 
+                if (step === -1) {
+                    // Pustimo prazno, da se majhen okvirček sploh ne prikaže
+                    subtitle = ""; 
+                    title = t('refTitle');
+                    const reflectionText = phase === 'intro' ? reflections[0] : phase === 'outro' ? reflections[6] : reflections[decadeIndex + 1];
+                    content = (
+                        <div className="mt-4 md:mt-6 px-2 md:px-6 relative text-center md:text-left">
+                            <p className="text-[#f3e8d3] text-lg md:text-xl italic font-medium leading-relaxed whitespace-pre-line drop-shadow-sm">
+                                {reflectionText}
+                            </p>
+                        </div>
+                    );
+                } else if (phase === 'intro') { 
+                    subtitle = PHASE_WORDS.intro[safeLang] || PHASE_WORDS.intro['sl']; 
+                } 
                 else if (phase === 'outro') { subtitle = PHASE_WORDS.outro[safeLang] || PHASE_WORDS.outro['sl']; } 
                 else if (phase === 'decades') {
                     const uiMysteryText = MYSTERIES[safeMysteryType][uiLang]?.[decadeIndex] || "";
@@ -1433,9 +1565,11 @@ const INTRO_INSERTS = {
 
                                 {/* Zmanjšani odmiki in pisave, da zagotovimo več prostora za samo molitev */}
                                 <div className="text-center mb-3 md:mb-4 flex flex-col items-center relative z-10 px-[3.8rem] md:px-20 mt-0 w-full mx-auto">
-                                    <div className={`px-2.5 py-1 bg-[#0c101d] text-[#d4af37] border border-[#d4af37]/30 rounded-lg text-[9px] md:text-[11px] font-bold uppercase tracking-wide shadow-sm text-center inline-block max-w-full leading-tight break-words ${helperSubtitle ? 'mb-1' : 'mb-2'}`}>
-                                        {subtitle}
-                                    </div>
+                                    {subtitle && (
+                                        <div className={`px-2.5 py-1 bg-[#0c101d] text-[#d4af37] border border-[#d4af37]/30 rounded-lg text-[9px] md:text-[11px] font-bold uppercase tracking-wide shadow-sm text-center inline-block max-w-full leading-tight break-words ${helperSubtitle ? 'mb-1' : 'mb-2'}`}>
+                                            {subtitle}
+                                        </div>
+                                    )}
                                     {helperSubtitle && (
                                         <span className="text-[#94a3b8] text-[10px] md:text-xs italic font-medium mb-1.5 px-1 text-center leading-tight">
                                             {helperSubtitle}
@@ -1445,7 +1579,9 @@ const INTRO_INSERTS = {
                                 </div>
                                 
                                 <div className="block text-center relative z-10 mt-1">
-                                    <div className="animate-fade-in" key={`${phase}-${decadeIndex}-${step}-${safeLang}`}>{content}</div>
+                                    <div className="animate-fade-in" key={`${phase}-${decadeIndex}-${step}-${safeLang}`}>
+                                        {content}
+                                    </div>
                                 </div>
 
                                 {!isPrivateMode && intention && intention.trim() !== '' && (phase === 'intro' || phase === 'outro') && (
@@ -1480,7 +1616,7 @@ const INTRO_INSERTS = {
                                 
                                 <div className="flex items-center gap-3 md:gap-4 pointer-events-none">
                                     {/* Gumb za preskok celotnega sklopa (Uvod, Desetka, Zaključek) */}
-                                    {((phase === 'intro' && step === 0) || (phase === 'decades' && step === 0) || (phase === 'outro' && step === 0)) && (
+                                    {((phase === 'intro' && (step === 0 || step === -1)) || (phase === 'decades' && (step === 0 || step === -1)) || (phase === 'outro' && (step === 0 || step === -1))) && (
                                         <button onClick={() => { triggerVibration(10); handleSkipSection(); }} className="w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center bg-[#131b2f]/80 text-[#94a3b8]/50 hover:text-[#d4af37]/90 hover:bg-[#1e293b] border border-[#2a3a5c]/50 pointer-events-auto transform transition-all active:scale-90 shadow-sm" title="Preskoči sklop">
                                             <Icon name="skipNext" className="w-4 h-4 md:w-5 md:h-5" />
                                         </button>
@@ -1527,14 +1663,38 @@ const INTRO_INSERTS = {
                     )}
 
                     <div className={`w-full max-w-lg flex flex-col px-4 md:px-6 ${view === 'menu' ? 'mt-0 md:mt-2' : 'mt-2 h-[95vh]'}`}>
-                        {view === 'menu' ? renderMainMenu() : renderPrayerContent()}
+                        {view === 'menu' ? renderMainMenu() : view === 'reflections' ? renderReflectionsMenu() : renderPrayerContent()}
                     </div>
 
                     {view === 'menu' && (
                         <div className="mt-auto pt-8 pb-6 px-4 w-full max-w-md flex flex-col items-center gap-4">
-                            <div className="text-[#d4af37] text-[10px] font-bold text-center uppercase tracking-[0.3em] opacity-40 leading-loose">
+                            {/* DISKRETEN SPOROČILNI GUMB - Skrije in prikaže QR kodo */}
+                            <button onClick={() => { triggerVibration(10); setShowQr(!showQr); }} className="text-[#d4af37] text-[10px] font-bold text-center uppercase tracking-[0.3em] opacity-40 hover:opacity-100 transition-opacity duration-300 leading-loose focus:outline-none">
                                 Ave Maria ✟ Gratia Plena<br/>Dominus Tecum
-                            </div>
+                            </button>
+                            
+                            {/* QR KODA Z REZERVNO (DUMMY) GRAFIKO */}
+                            {showQr && (
+                                <div className="mt-4 flex flex-col items-center justify-center w-full animate-slide-up">
+                                    <div className="w-48 h-48 rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center bg-white border-[3px] border-[#d4af37] relative">
+                                        {QR_CODE_IMAGE && !imgErrors['qr'] ? (
+                                            <img src={QR_CODE_IMAGE} alt="QR" className="w-full h-full object-cover p-3" onError={() => handleImgError('qr')} />
+                                        ) : (
+                                            <div className="w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-[#d4af37]/50 rounded-xl bg-gray-50 m-3 text-center">
+                                                <div className="grid grid-cols-2 gap-1 mb-3 opacity-40">
+                                                    <div className="w-5 h-5 bg-[#0a0e17] rounded-sm"></div>
+                                                    <div className="w-5 h-5 bg-[#0a0e17] rounded-sm"></div>
+                                                    <div className="w-5 h-5 bg-[#0a0e17] rounded-sm"></div>
+                                                    <div className="w-5 h-5 bg-[#d4af37] rounded-sm"></div>
+                                                </div>
+                                                <span className="text-[#0a0e17] font-bold text-[10px] uppercase tracking-widest opacity-50">Tvoja QR<br/>Slika</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* JEZIKI APLIKACIJE (UI) */}
                             <div className="flex gap-4 items-center justify-center opacity-40 hover:opacity-100 transition-opacity duration-300 mt-2 flex-wrap max-w-[250px]">
                                 {['sl', 'en', 'de'].map(l => (
                                     <button key={l} onClick={() => { triggerVibration(10); setUiLang(l); }} className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${uiLang === l ? 'text-[#d4af37] scale-110' : 'text-[#94a3b8] hover:text-[#f3e8d3]'}`}>{l}</button>
