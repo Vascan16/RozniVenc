@@ -268,7 +268,6 @@
                 signTitle: "Znak križa", 
                 sign: "U ime Oca i Sina i Duha Svetoga. Amen.", 
                 credoTitle: "Apostolsko vjerovanje", 
-        credoTitle: "Apostolsko vjerovanje", 
         credo: "Vjerujem u Boga, Oca svemogućega, Stvoritelja neba i zemlje...", 
         benedictTitle: "Blagoslov", 
         benedict: "Blagoslovi, Gospodine, nas i ove tvoje darove...", 
@@ -473,7 +472,7 @@ const INTRO_INSERTS = {
                 intro: "UVOD", outro: "ZAKLJUČEK", mystery: "SKRIVNOST", waitLeader: "Čakam voditelja...", adminLeads: "Molitev vodi administrator...",
                 m_veseli: "Veseli del", m_svetli: "Svetli del", m_zalostni: "Žalostni del", m_castitljivi: "Častitljivi del", justNow: "pravkar",
                 logout: "Izpis", unlockRoom: "Odkleni sobo",
-                addReflections: "Dodaj razmišljanja", refTitle: "Razmišljanja", refIntro: "Pred uvodom", refDecade: "Pred {n}. skrivnostjo", refOutro: "Pred zaključkom"
+                addReflections: "Dodaj razmišljanja", refTitle: "Razmišljanja", refIntro: "Pred uvodom", refDecade: "Pred {n}. skrivnostjo", refOutro: "Pred zaključkom", reqRoom: "Vnesi ime sobe"
             },
             en: {
                 appLang: "UI", prep: "Holy Rosary", community: "Community", private: "Private", connected: "Connected", offline: "Offline",
@@ -487,7 +486,7 @@ const INTRO_INSERTS = {
                 intro: "INTRODUCTION", outro: "CONCLUSION", mystery: "MYSTERY", waitLeader: "Waiting for leader...", adminLeads: "Administrator is leading...",
                 m_veseli: "Joyful Mysteries", m_svetli: "Luminous Mysteries", m_zalostni: "Sorrowful Mysteries", m_castitljivi: "Glorious Mysteries", justNow: "just now",
                 logout: "Logout", unlockRoom: "Unlock Room",
-                addReflections: "Add Reflections", refTitle: "Reflections", refIntro: "Before Intro", refDecade: "Before {n}. Mystery", refOutro: "Before Conclusion"
+                addReflections: "Add Reflections", refTitle: "Reflections", refIntro: "Before Intro", refDecade: "Before {n}. Mystery", refOutro: "Before Conclusion", reqRoom: "Enter room name"
             },
             de: {
                 appLang: "UI", prep: "Rosenkranz", community: "Gemeinschaft", private: "Privat", connected: "Verbunden", offline: "Offline",
@@ -501,7 +500,7 @@ const INTRO_INSERTS = {
                 intro: "EINLEITUNG", outro: "ABSCHLUSS", mystery: "GEHEIMNIS", waitLeader: "Warte auf Leiter...", adminLeads: "Administrator leitet...",
                 m_veseli: "Freudenreiche", m_svetli: "Lichtreiche", m_zalostni: "Schmerzhafte", m_castitljivi: "Glorreiche", justNow: "gerade",
                 logout: "Abmelden", unlockRoom: "Raum entsperren",
-                addReflections: "Reflexionen hinzufügen", refTitle: "Reflexionen", refIntro: "Vor Einleitung", refDecade: "Vor {n}. Geheimnis", refOutro: "Vor Abschluss"
+                addReflections: "Reflexionen hinzufügen", refTitle: "Reflexionen", refIntro: "Vor Einleitung", refDecade: "Vor {n}. Geheimnis", refOutro: "Vor Abschluss", reqRoom: "Raumname eingeben"
             }
         };
 
@@ -525,7 +524,8 @@ const INTRO_INSERTS = {
                 star: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z",
                 trash: "M3 6h18 M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2 M10 11v6 M14 11v6",
                 fastForward: "M13 19l9-7-9-7v14z M2 19l9-7-9-7v14z",
-                skipNext: "M5 4l10 8-10 8V4z M19 4v16h-2V4h2z"
+                skipNext: "M5 4l10 8-10 8V4z M19 4v16h-2V4h2z",
+                x: "M18 6L6 18 M6 6l12 12"
             };
             return (
                 <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -721,12 +721,19 @@ const INTRO_INSERTS = {
                 if (data.reflections !== undefined) setReflections(data.reflections);
             }, []);
 
-            const resetToStart = useCallback(() => {
+            const resetToStart = useCallback((fullReset = false) => {
                 setPhase('intro');
                 setStep(0);
                 setDecadeIndex(0);
                 setMiraculousTriggers(getNewTriggers());
                 setShowMiraculous(false);
+                
+                // Če gre za popoln reset (npr. ob vstopu v novo sobo), počistimo tudi namen in rulete
+                if (fullReset === true) {
+                    setIntention('');
+                    setIsRoulettePrayer(false);
+                    setIsRouletteDecade(false);
+                }
             }, []);
 
             const [leaderCode, setLeaderCode] = useState(() => {
@@ -769,18 +776,9 @@ const INTRO_INSERTS = {
             const isFirstLoad = useRef(true);
 
             useEffect(() => {
-                if (isPrivateMode && typeof window !== 'undefined' && window.localStorage) {
-                    localStorage.setItem('rosary_private_state', JSON.stringify({
-                        phase, step, decadeIndex, lang, mysteryType, 
-                        miraculousTriggers, isRoulettePrayer, isRouletteDecade, showMiraculous, intention, rouletteLangs, reflections
-                    }));
-                }
-            }, [phase, step, decadeIndex, lang, mysteryType, miraculousTriggers, isRoulettePrayer, isRouletteDecade, showMiraculous, intention, rouletteLangs, reflections, isPrivateMode]);
-
-            useEffect(() => {
                 if (isPrivateMode) {
                     const saved = typeof window !== 'undefined' && window.localStorage ? localStorage.getItem('rosary_private_state') : null;
-                    if (saved) { try { applyState(JSON.parse(saved)); } catch (e) { resetToStart(); } } else { resetToStart(); }
+                    if (saved) { try { applyState(JSON.parse(saved)); } catch (e) { resetToStart(true); } } else { resetToStart(true); }
                 }
             }, []);
 
@@ -876,7 +874,7 @@ const INTRO_INSERTS = {
                 let path = isCanvasEnv ? ['artifacts', appId, 'public', 'data', 'sessions', roomIdToDel] : ['sessions', roomIdToDel];
                 try {
                     await deleteDoc(doc(db, ...path));
-                    if (roomIdToDel === roomName) resetToStart();
+                    if (roomIdToDel === roomName) resetToStart(true);
                 } catch (e) {}
             }, [db, user, appId, isCanvasEnv, isMasterAdmin, isPrivateMode, roomName, resetToStart]);
 
@@ -900,7 +898,7 @@ const INTRO_INSERTS = {
                     } else {
                         setDbAdminCode(null);
                         lastSharedState.current = null;
-                        if (!isPrivateModeRef.current) resetToStart();
+                        if (!isPrivateModeRef.current) resetToStart(true);
                     }
                 }, (error) => {});
 
@@ -1076,16 +1074,20 @@ const INTRO_INSERTS = {
                 
                 if (newMode) { 
                     const saved = typeof window !== 'undefined' && window.localStorage ? localStorage.getItem('rosary_private_state') : null;
-                    if (saved) { try { applyState(JSON.parse(saved)); } catch(e) { resetToStart(); } } else { resetToStart(); }
+                    if (saved) { try { applyState(JSON.parse(saved)); } catch(e) { resetToStart(true); } } else { resetToStart(true); }
                 } else { 
-                    if (lastSharedState.current) applyState(lastSharedState.current); else resetToStart();
+                    if (lastSharedState.current) applyState(lastSharedState.current); else resetToStart(true);
                 }
             };
             
             const safeLang = PRAYERS[lang] ? lang : 'sl';
             const safeMysteryType = MYSTERIES[mysteryType] ? mysteryType : getMysteryForToday();
 
-            const renderMainMenu = () => (
+            const renderMainMenu = () => {
+                // Preverimo, ali je ime sobe prazno in ali smo v skupnostnem načinu
+                const isRoomNameEmpty = !isPrivateMode && roomName.trim() === '';
+
+                return (
                 <div className="flex flex-col items-center pt-8 pb-8 px-4 w-full max-w-md mx-auto relative z-10">
                     
                     {/* Temni lok */}
@@ -1132,7 +1134,27 @@ const INTRO_INSERTS = {
                                 <div className="space-y-5 pb-6 border-b border-[#2a3a5c]/70">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-wider ml-1 flex items-center gap-2"><Icon name="home" className="w-3.5 h-3.5" /> {t('roomName')}</label>
-                                        <input type="text" placeholder={t('roomPh')} value={roomName} onChange={(e) => setRoomName(e.target.value)} className="w-full bg-[#0c101d] border border-[#2a3a5c] text-[#f3e8d3] px-4 py-3.5 rounded-xl font-bold text-base outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm" />
+                                        <div className="relative">
+                                            <input 
+                                                type="text" 
+                                                placeholder={t('roomPh')} 
+                                                value={roomName} 
+                                                onChange={(e) => setRoomName(e.target.value)} 
+                                                disabled={dbAdminCode && isLeader}
+                                                className={`w-full bg-[#0c101d] border border-[#2a3a5c] text-[#f3e8d3] px-4 py-3.5 rounded-xl font-bold text-base outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm pr-10 ${dbAdminCode && isLeader ? 'opacity-60 cursor-not-allowed' : ''}`} 
+                                            />
+                                            {roomName && (
+                                                (dbAdminCode && isLeader) ? (
+                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8]/50" title="Zaklenjeno med vodenjem">
+                                                        <Icon name="lock" className="w-4 h-4" />
+                                                    </div>
+                                                ) : (
+                                                    <button onClick={() => { triggerVibration(10); setRoomName(''); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#d4af37] p-1.5 transition-colors" title="Počisti in ustvari novo">
+                                                        <Icon name="x" className="w-4 h-4" />
+                                                    </button>
+                                                )
+                                            )}
+                                        </div>
                                     </div>
                                     
                                     <div className="space-y-2 bg-[#0c101d] p-4 rounded-2xl border border-[#2a3a5c]/70 shadow-inner">
@@ -1159,7 +1181,7 @@ const INTRO_INSERTS = {
                                                 <div className="flex gap-2 items-center">
                                                     <input type="password" placeholder={dbAdminCode ? t('pwdEnterPh') : t('pwdAdminPh')} value={leaderCode} onChange={(e) => setLeaderCode(e.target.value)} className="flex-1 bg-[#131b2f] border border-[#2a3a5c] text-[#f3e8d3] px-4 py-3 rounded-xl font-bold text-base outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm" />
                                                     {!dbAdminCode && leaderCode.trim() !== '' && (
-                                                        <button onClick={() => { triggerVibration(10); pushUpdate({}); }} className="px-4 py-3 bg-green-900/40 border border-green-800/50 text-green-400 rounded-xl font-bold text-xs uppercase hover:bg-green-800/60 transition-colors shadow-sm active:scale-95" title="Potrdi geslo">
+                                                        <button disabled={isRoomNameEmpty} onClick={() => { triggerVibration(10); pushUpdate({}); }} className={`px-4 py-3 border rounded-xl font-bold text-xs uppercase shadow-sm transition-all ${isRoomNameEmpty ? 'bg-gray-800/40 border-gray-700/50 text-gray-500 cursor-not-allowed opacity-50' : 'bg-green-900/40 border-green-800/50 text-green-400 hover:bg-green-800/60 active:scale-95'}`} title="Potrdi geslo">
                                                             <Icon name="check" className="w-4 h-4" />
                                                         </button>
                                                     )}
@@ -1233,74 +1255,88 @@ const INTRO_INSERTS = {
                                 </div>
                             </div>
 
-                            {/* OSEBNI NAMEN MOLITVE */}
+                            {/* ZLOŽLJIV PREDAL ZA NAPREDNE NASTAVITVE */}
                             {canControl && (
-                                <div className="space-y-3 pt-3 border-t border-[#2a3a5c]/70">
-                                    {!isPrivateMode && (
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider ml-1 flex items-center gap-2">
-                                                <Icon name="star" className="w-3.5 h-3.5 text-[#d4af37]" /> {t('intentTitle')}
-                                            </label>
-                                            <textarea 
-                                                placeholder={t('intentPh')}
-                                                value={intention}
-                                                onChange={(e) => setIntention(e.target.value)}
-                                                onBlur={() => pushUpdate({ intention })}
-                                                rows="2"
-                                                className="w-full bg-[#0c101d] border border-[#2a3a5c] text-[#f3e8d3] px-4 py-3.5 rounded-xl font-medium text-sm md:text-base outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm resize-none placeholder:text-[#94a3b8]/50"
-                                            />
-                                        </div>
-                                    )}
-                                    <button onClick={() => { triggerVibration(10); setView('reflections'); }} className="w-full bg-[#131b2f] border border-[#2a3a5c] text-[#d4af37] px-4 py-3 rounded-xl font-bold text-[11px] md:text-xs uppercase tracking-wider hover:bg-[#1e293b] hover:border-[#d4af37]/40 transition-all flex items-center justify-center gap-2 shadow-sm">
-                                        <Icon name="book" className="w-4 h-4" /> {t('addReflections')}
+                                <div className="pt-4 mt-2 border-t border-[#2a3a5c]/70">
+                                    <button 
+                                        onClick={() => { triggerVibration(10); setShowAdvancedSettings(!showAdvancedSettings); }} 
+                                        className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-wider transition-all shadow-sm border ${showAdvancedSettings ? 'bg-[#1e293b] text-[#d4af37] border-[#d4af37]/40' : 'bg-[#0c101d] text-[#94a3b8] border-[#2a3a5c] hover:border-[#d4af37]/40 hover:text-[#f3e8d3]'}`}
+                                    >
+                                        <span className="flex items-center gap-2.5"><Icon name="settings" className="w-4 h-4" /> {t('advanced')}</span>
+                                        <Icon name="arrowRight" className={`w-3.5 h-3.5 transition-transform duration-300 ${showAdvancedSettings ? '-rotate-90 text-[#d4af37]' : 'rotate-90'}`} />
                                     </button>
-                                </div>
-                            )}
 
-                            {/* RULETE */}
-                            {canControl && (
-                                <div className="space-y-3 pt-3 border-t border-[#2a3a5c]/70">
-                                    <div className="flex items-center justify-between p-4 bg-[#0c101d] border border-[#2a3a5c] rounded-2xl shadow-sm hover:border-[#d4af37]/40 transition-colors">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`p-2 rounded-lg ${isRoulettePrayer ? 'bg-[#d4af37]/20 text-[#d4af37]' : 'bg-[#1e293b] text-[#94a3b8]'}`}><Icon name="dices" className="w-4 h-4" /></div>
-                                            <div><div className="text-[11px] font-bold text-[#f3e8d3] uppercase tracking-wide">{t('rouletteP')}</div><div className="text-[9px] text-[#94a3b8] uppercase tracking-wider">{t('roulettePDesc')}</div></div>
-                                        </div>
-                                        <button onClick={() => { triggerVibration(10); const newVal = !isRoulettePrayer; setIsRoulettePrayer(newVal); if (newVal) setIsRouletteDecade(false); pushUpdate({ isRoulettePrayer: newVal, isRouletteDecade: newVal ? false : isRouletteDecade }); }} className={`w-12 h-7 rounded-full relative transition-colors duration-300 shadow-inner ${isRoulettePrayer ? 'bg-[#d4af37]' : 'bg-[#1e293b]'}`}><div className={`absolute top-1 w-5 h-5 bg-[#0a0e17] rounded-full transition-transform duration-300 shadow-md ${isRoulettePrayer ? 'translate-x-6' : 'translate-x-1'}`} /></button>
-                                    </div>
-                                    <div className="flex items-center justify-between p-4 bg-[#0c101d] border border-[#2a3a5c] rounded-2xl shadow-sm hover:border-[#d4af37]/40 transition-colors">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`p-2 rounded-lg ${isRouletteDecade ? 'bg-[#d4af37]/20 text-[#d4af37]' : 'bg-[#1e293b] text-[#94a3b8]'}`}><Icon name="dices" className="w-4 h-4" /></div>
-                                            <div><div className="text-[11px] font-bold text-[#f3e8d3] uppercase tracking-wide">{t('rouletteD')}</div><div className="text-[9px] text-[#94a3b8] uppercase tracking-wider">{t('rouletteDDesc')}</div></div>
-                                        </div>
-                                        <button onClick={() => { triggerVibration(10); const newVal = !isRouletteDecade; setIsRouletteDecade(newVal); if (newVal) setIsRoulettePrayer(false); pushUpdate({ isRouletteDecade: newVal, isRoulettePrayer: newVal ? false : isRoulettePrayer }); }} className={`w-12 h-7 rounded-full relative transition-colors duration-300 shadow-inner ${isRouletteDecade ? 'bg-[#d4af37]' : 'bg-[#1e293b]'}`}><div className={`absolute top-1 w-5 h-5 bg-[#0a0e17] rounded-full transition-transform duration-300 shadow-md ${isRouletteDecade ? 'translate-x-6' : 'translate-x-1'}`} /></button>
-                                    </div>
-                                    
-                                    {/* Izbira jezikov za ruleto (Prikaže se le, ko je ena od rulet vklopljena) */}
-                                    {(isRoulettePrayer || isRouletteDecade) && (
-                                        <div className="pt-3 border-t border-[#2a3a5c]/40 animate-fade-in">
-                                            <label className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider ml-1 mb-2 block">{t('rouletteSelect')}</label>
-                                            <div className="flex flex-wrap gap-2">
-                                                {Object.keys(FLAG_MAP).map(code => (
-                                                    <button
-                                                        key={code}
-                                                        onClick={() => {
-                                                            triggerVibration(10);
-                                                            let newLangs;
-                                                            if (rouletteLangs.includes(code)) {
-                                                                if (rouletteLangs.length <= 1) return; // Prepreči odstranitev zadnjega jezika
-                                                                newLangs = rouletteLangs.filter(x => x !== code);
-                                                            } else {
-                                                                newLangs = [...rouletteLangs, code];
-                                                            }
-                                                            setRouletteLangs(newLangs);
-                                                            pushUpdate({ rouletteLangs: newLangs });
-                                                        }}
-                                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all shadow-sm flex items-center gap-1.5 ${rouletteLangs.includes(code) ? 'bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/50' : 'bg-[#1e293b] text-[#94a3b8] border border-transparent hover:bg-[#2a3a5c]'}`}
-                                                    >
-                                                        <img src={`https://flagcdn.com/w20/${FLAG_MAP[code]}.png`} alt={code} className={`w-4 h-3 rounded-[2px] ${rouletteLangs.includes(code) ? 'opacity-100' : 'opacity-60 grayscale-[50%]'}`} /> 
-                                                        {code}
-                                                    </button>
-                                                ))}
+                                    {showAdvancedSettings && (
+                                        <div className="mt-5 space-y-5 animate-fade-in border-l-2 border-[#d4af37]/30 pl-3 md:pl-4 ml-1">
+                                            
+                                            {/* OSEBNI NAMEN & RAZMIŠLJANJA */}
+                                            <div className="space-y-3">
+                                                {!isPrivateMode && (
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider ml-1 flex items-center gap-2">
+                                                            <Icon name="star" className="w-3.5 h-3.5 text-[#d4af37]" /> {t('intentTitle')}
+                                                        </label>
+                                                        <textarea 
+                                                            placeholder={t('intentPh')}
+                                                            value={intention}
+                                                            onChange={(e) => setIntention(e.target.value)}
+                                                            onBlur={() => pushUpdate({ intention })}
+                                                            rows="2"
+                                                            className="w-full bg-[#0c101d] border border-[#2a3a5c] text-[#f3e8d3] px-4 py-3.5 rounded-xl font-medium text-sm md:text-base outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/50 transition-all shadow-sm resize-none placeholder:text-[#94a3b8]/40"
+                                                        />
+                                                    </div>
+                                                )}
+                                                <button onClick={() => { triggerVibration(10); setView('reflections'); }} className="w-full bg-[#131b2f] border border-[#2a3a5c] text-[#d4af37] px-4 py-3 rounded-xl font-bold text-[11px] md:text-xs uppercase tracking-wider hover:bg-[#1e293b] hover:border-[#d4af37]/40 transition-all flex items-center justify-center gap-2 shadow-sm">
+                                                    <Icon name="book" className="w-4 h-4" /> {t('addReflections')}
+                                                </button>
+                                            </div>
+
+                                            {/* RULETE */}
+                                            <div className="space-y-3 pt-3 border-t border-[#2a3a5c]/40">
+                                                <div className="flex items-center justify-between p-4 bg-[#0c101d] border border-[#2a3a5c] rounded-xl shadow-sm hover:border-[#d4af37]/40 transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`p-2 rounded-lg ${isRoulettePrayer ? 'bg-[#d4af37]/20 text-[#d4af37]' : 'bg-[#1e293b] text-[#94a3b8]'}`}><Icon name="dices" className="w-4 h-4" /></div>
+                                                        <div><div className="text-[11px] font-bold text-[#f3e8d3] uppercase tracking-wide">{t('rouletteP')}</div><div className="text-[9px] text-[#94a3b8] uppercase tracking-wider">{t('roulettePDesc')}</div></div>
+                                                    </div>
+                                                    <button onClick={() => { triggerVibration(10); const newVal = !isRoulettePrayer; setIsRoulettePrayer(newVal); if (newVal) setIsRouletteDecade(false); pushUpdate({ isRoulettePrayer: newVal, isRouletteDecade: newVal ? false : isRouletteDecade }); }} className={`w-11 h-6 rounded-full relative transition-colors duration-300 shadow-inner ${isRoulettePrayer ? 'bg-[#d4af37]' : 'bg-[#1e293b]'}`}><div className={`absolute top-1 w-4 h-4 bg-[#0a0e17] rounded-full transition-transform duration-300 shadow-md ${isRoulettePrayer ? 'translate-x-6' : 'translate-x-1'}`} /></button>
+                                                </div>
+                                                <div className="flex items-center justify-between p-4 bg-[#0c101d] border border-[#2a3a5c] rounded-xl shadow-sm hover:border-[#d4af37]/40 transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`p-2 rounded-lg ${isRouletteDecade ? 'bg-[#d4af37]/20 text-[#d4af37]' : 'bg-[#1e293b] text-[#94a3b8]'}`}><Icon name="dices" className="w-4 h-4" /></div>
+                                                        <div><div className="text-[11px] font-bold text-[#f3e8d3] uppercase tracking-wide">{t('rouletteD')}</div><div className="text-[9px] text-[#94a3b8] uppercase tracking-wider">{t('rouletteDDesc')}</div></div>
+                                                    </div>
+                                                    <button onClick={() => { triggerVibration(10); const newVal = !isRouletteDecade; setIsRouletteDecade(newVal); if (newVal) setIsRoulettePrayer(false); pushUpdate({ isRouletteDecade: newVal, isRoulettePrayer: newVal ? false : isRoulettePrayer }); }} className={`w-11 h-6 rounded-full relative transition-colors duration-300 shadow-inner ${isRouletteDecade ? 'bg-[#d4af37]' : 'bg-[#1e293b]'}`}><div className={`absolute top-1 w-4 h-4 bg-[#0a0e17] rounded-full transition-transform duration-300 shadow-md ${isRouletteDecade ? 'translate-x-6' : 'translate-x-1'}`} /></button>
+                                                </div>
+                                                
+                                                {/* Izbira jezikov za ruleto */}
+                                                {(isRoulettePrayer || isRouletteDecade) && (
+                                                    <div className="pt-3 animate-fade-in">
+                                                        <label className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider ml-1 mb-2 block">{t('rouletteSelect')}</label>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {Object.keys(FLAG_MAP).map(code => (
+                                                                <button
+                                                                    key={code}
+                                                                    onClick={() => {
+                                                                        triggerVibration(10);
+                                                                        let newLangs;
+                                                                        if (rouletteLangs.includes(code)) {
+                                                                            if (rouletteLangs.length <= 1) return;
+                                                                            newLangs = rouletteLangs.filter(x => x !== code);
+                                                                        } else {
+                                                                            newLangs = [...rouletteLangs, code];
+                                                                        }
+                                                                        setRouletteLangs(newLangs);
+                                                                        pushUpdate({ rouletteLangs: newLangs });
+                                                                    }}
+                                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all shadow-sm flex items-center gap-1.5 ${rouletteLangs.includes(code) ? 'bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/50' : 'bg-[#1e293b] text-[#94a3b8] border border-transparent hover:bg-[#2a3a5c]'}`}
+                                                                >
+                                                                    <img src={`https://flagcdn.com/w20/${FLAG_MAP[code]}.png`} alt={code} className={`w-4 h-3 rounded-[2px] ${rouletteLangs.includes(code) ? 'opacity-100' : 'opacity-60 grayscale-[50%]'}`} /> 
+                                                                    {code}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -1310,13 +1346,13 @@ const INTRO_INSERTS = {
                     </div>
 
                     <div className="w-full flex flex-col gap-4 mt-6 animate-slide-up" style={{ animationDelay: '0.3s' }}>
-                        <button onClick={() => { triggerVibration(20); setView('prayer'); if (canControl && phase === 'intro' && (step === 0 || step === -1)) { let l = safeLang; if (isRoulettePrayer || isRouletteDecade) { l = pickRandomLang(safeLang); setLang(l); } const triggers = getNewTriggers(); setMiraculousTriggers(triggers); const startStep = (reflections[0] && reflections[0].trim() !== '') ? -1 : 0; setStep(startStep); pushUpdate({ lang: l, miraculousTriggers: triggers, intention: intention, step: startStep }); } }} className="group relative bg-gradient-to-b from-[#8b1a1a] to-[#4a0e0e] hover:from-[#a01e1e] hover:to-[#5c0e0e] text-[#f4e0aa] w-full py-4 md:py-5 rounded-[1.5rem] font-serif-holy font-bold text-xl md:text-2xl shadow-[0_10px_25px_rgba(139,26,26,0.3)] transition-all active:scale-[0.98] flex items-center justify-center border border-[#3e0808] overflow-hidden pulse-soft">
-                            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:translate-x-[200%] transition-transform duration-1000 ease-in-out"></div>
-                            <div className="mr-3 transform group-hover:scale-110 transition-transform duration-300 relative z-10"><Icon name={canControl ? "play" : "users"} className="w-6 h-6 md:w-7 md:h-7" /></div>
-                            <span className="tracking-widest relative z-10 pt-1 drop-shadow-md">{canControl ? ((phase !== 'intro' || (step > 0 && step !== -1) || decadeIndex > 0) ? t('btnContinue') : t('btnStart')) : t('btnJoin')}</span>
+                        <button disabled={isRoomNameEmpty} onClick={() => { triggerVibration(20); setView('prayer'); if (canControl && phase === 'intro' && (step === 0 || step === -1)) { let l = safeLang; if (isRoulettePrayer || isRouletteDecade) { l = pickRandomLang(safeLang); setLang(l); } const triggers = getNewTriggers(); setMiraculousTriggers(triggers); const startStep = (reflections[0] && reflections[0].trim() !== '') ? -1 : 0; setStep(startStep); pushUpdate({ lang: l, miraculousTriggers: triggers, intention: intention, step: startStep }); } }} className={`group relative w-full py-4 md:py-5 rounded-[1.5rem] font-serif-holy font-bold text-xl md:text-2xl shadow-[0_10px_25px_rgba(139,26,26,0.3)] transition-all flex items-center justify-center border overflow-hidden ${isRoomNameEmpty ? 'bg-gradient-to-b from-[#3a1a1a] to-[#1a0e0e] text-[#94a3b8]/70 border-[#2a0808] opacity-80 cursor-not-allowed' : 'bg-gradient-to-b from-[#8b1a1a] to-[#4a0e0e] hover:from-[#a01e1e] hover:to-[#5c0e0e] text-[#f4e0aa] border-[#3e0808] active:scale-[0.98] pulse-soft'}`}>
+                            {!isRoomNameEmpty && <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:translate-x-[200%] transition-transform duration-1000 ease-in-out"></div>}
+                            <div className={`mr-3 transform transition-transform duration-300 relative z-10 ${!isRoomNameEmpty ? 'group-hover:scale-110' : ''}`}><Icon name={isRoomNameEmpty ? "lock" : (canControl ? "play" : "users")} className="w-6 h-6 md:w-7 md:h-7" /></div>
+                            <span className="tracking-widest relative z-10 pt-1 drop-shadow-md">{isRoomNameEmpty ? t('reqRoom') : (canControl ? ((phase !== 'intro' || (step > 0 && step !== -1) || decadeIndex > 0) ? t('btnContinue') : t('btnStart')) : t('btnJoin'))}</span>
                         </button>
                         
-                        {canControl && (phase !== 'intro' || (step > 0 && step !== -1) || decadeIndex > 0) && (
+                        {canControl && (phase !== 'intro' || (step > 0 && step !== -1) || decadeIndex > 0) && !isRoomNameEmpty && (
                             <button onClick={() => { triggerVibration(10); const trigs = getNewTriggers(); setPhase('intro'); setStep(0); setDecadeIndex(0); setMiraculousTriggers(trigs); pushUpdate({ phase: 'intro', step: 0, decadeIndex: 0, miraculousTriggers: trigs, showMiraculous: false }); }} className="group bg-transparent hover:bg-[#131b2f] text-[#d4af37] w-full py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center border border-[#2a3a5c] hover:border-[#d4af37]/50 shadow-sm hover:shadow-md">
                                 <div className="mr-2 transform group-hover:-rotate-180 transition-transform duration-500"><Icon name="refresh" className="w-4 h-4" /></div>
                                 {t('btnRestart')}
@@ -1345,6 +1381,7 @@ const INTRO_INSERTS = {
                     )}
                 </div>
             );
+            };
 
             const renderReflectionsMenu = () => (
                 <div className="flex flex-col pt-6 pb-8 px-2 w-full max-w-md mx-auto relative z-10 animate-fade-in h-full">
@@ -1691,6 +1728,37 @@ const INTRO_INSERTS = {
                                             </div>
                                         )}
                                     </div>
+                                    
+                                    {!isPrivateMode && roomName.trim() !== '' && (
+                                        <button 
+                                            onClick={(e) => {
+                                                triggerVibration(10);
+                                                try {
+                                                    const url = window.location.href;
+                                                    const el = document.createElement('textarea');
+                                                    el.value = url;
+                                                    document.body.appendChild(el);
+                                                    el.select();
+                                                    document.execCommand('copy');
+                                                    document.body.removeChild(el);
+
+                                                    const btn = e.currentTarget;
+                                                    const originalText = btn.innerHTML;
+                                                    btn.innerHTML = `<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg> Kopirano!`;
+                                                    btn.classList.add('text-green-400', 'border-green-400/50');
+                                                    btn.classList.remove('text-[#d4af37]', 'border-[#d4af37]/30');
+                                                    setTimeout(() => {
+                                                        btn.innerHTML = originalText;
+                                                        btn.classList.remove('text-green-400', 'border-green-400/50');
+                                                        btn.classList.add('text-[#d4af37]', 'border-[#d4af37]/30');
+                                                    }, 2000);
+                                                } catch(err) {}
+                                            }}
+                                            className="mt-4 text-[10px] text-[#d4af37] border border-[#d4af37]/30 px-4 py-2 rounded-full hover:bg-[#d4af37]/10 transition-colors flex items-center gap-2 tracking-wider uppercase font-bold"
+                                        >
+                                            <Icon name="link" className="w-3 h-3" /> Kopiraj povezavo sobe
+                                        </button>
+                                    )}
                                 </div>
                             )}
 
