@@ -473,7 +473,8 @@ const INTRO_INSERTS = {
                 intro: "UVOD", outro: "ZAKLJUČEK", mystery: "SKRIVNOST", waitLeader: "Čakam voditelja...", adminLeads: "Molitev vodi administrator...",
                 m_veseli: "Veseli del", m_svetli: "Svetli del", m_zalostni: "Žalostni del", m_castitljivi: "Častitljivi del", justNow: "pravkar",
                 logout: "Izpis", unlockRoom: "Odkleni sobo",
-                addReflections: "Dodaj razmišljanja", refTitle: "Razmišljanja", refIntro: "Pred uvodom", refDecade: "Pred {n}. skrivnostjo", refOutro: "Pred zaključkom"
+                addReflections: "Dodaj razmišljanja", refTitle: "Razmišljanja", refIntro: "Pred uvodom", refDecade: "Pred {n}. skrivnostjo", refOutro: "Pred zaključkom",
+                copyLink: "Kopiraj povezavo sobe", linkCopied: "Povezava kopirana!"
             },
             en: {
                 appLang: "UI", prep: "Holy Rosary", community: "Community", private: "Private", connected: "Connected", offline: "Offline",
@@ -487,7 +488,8 @@ const INTRO_INSERTS = {
                 intro: "INTRODUCTION", outro: "CONCLUSION", mystery: "MYSTERY", waitLeader: "Waiting for leader...", adminLeads: "Administrator is leading...",
                 m_veseli: "Joyful Mysteries", m_svetli: "Luminous Mysteries", m_zalostni: "Sorrowful Mysteries", m_castitljivi: "Glorious Mysteries", justNow: "just now",
                 logout: "Logout", unlockRoom: "Unlock Room",
-                addReflections: "Add Reflections", refTitle: "Reflections", refIntro: "Before Intro", refDecade: "Before {n}. Mystery", refOutro: "Before Conclusion"
+                addReflections: "Add Reflections", refTitle: "Reflections", refIntro: "Before Intro", refDecade: "Before {n}. Mystery", refOutro: "Before Conclusion",
+                copyLink: "Copy Room Link", linkCopied: "Link Copied!"
             },
             de: {
                 appLang: "UI", prep: "Rosenkranz", community: "Gemeinschaft", private: "Privat", connected: "Verbunden", offline: "Offline",
@@ -501,7 +503,8 @@ const INTRO_INSERTS = {
                 intro: "EINLEITUNG", outro: "ABSCHLUSS", mystery: "GEHEIMNIS", waitLeader: "Warte auf Leiter...", adminLeads: "Administrator leitet...",
                 m_veseli: "Freudenreiche", m_svetli: "Lichtreiche", m_zalostni: "Schmerzhafte", m_castitljivi: "Glorreiche", justNow: "gerade",
                 logout: "Abmelden", unlockRoom: "Raum entsperren",
-                addReflections: "Reflexionen hinzufügen", refTitle: "Reflexionen", refIntro: "Vor Einleitung", refDecade: "Vor {n}. Geheimnis", refOutro: "Vor Abschluss"
+                addReflections: "Reflexionen hinzufügen", refTitle: "Reflexionen", refIntro: "Vor Einleitung", refDecade: "Vor {n}. Geheimnis", refOutro: "Vor Abschluss",
+                copyLink: "Raum-Link kopieren", linkCopied: "Link kopiert!"
             }
         };
 
@@ -619,9 +622,16 @@ const INTRO_INSERTS = {
             useEffect(() => { isPrivateModeRef.current = isPrivateMode; }, [isPrivateMode]);
 
             const [roomName, setRoomName] = useState(() => {
-                if (typeof window !== 'undefined' && window.localStorage) return localStorage.getItem('rosary_room_name') || 'SkupnaMolitev';
+                if (typeof window !== 'undefined') {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const roomFromUrl = urlParams.get('r');
+                    if (roomFromUrl) return roomFromUrl;
+                    if (window.localStorage) return localStorage.getItem('rosary_room_name') || 'SkupnaMolitev';
+                }
                 return 'SkupnaMolitev';
             });
+            
+            const [linkCopied, setLinkCopied] = useState(false);
 
             const [intention, setIntention] = useState(() => {
                 if (typeof window !== 'undefined' && window.localStorage) return localStorage.getItem('rosary_intention') || '';
@@ -721,12 +731,17 @@ const INTRO_INSERTS = {
                 if (data.reflections !== undefined) setReflections(data.reflections);
             }, []);
 
-            const resetToStart = useCallback(() => {
+            const resetToStart = useCallback((fullReset = false) => {
                 setPhase('intro');
                 setStep(0);
                 setDecadeIndex(0);
                 setMiraculousTriggers(getNewTriggers());
                 setShowMiraculous(false);
+                if (fullReset) {
+                    setIntention('');
+                    setIsRoulettePrayer(false);
+                    setIsRouletteDecade(false);
+                }
             }, []);
 
             const [leaderCode, setLeaderCode] = useState(() => {
@@ -900,7 +915,7 @@ const INTRO_INSERTS = {
                     } else {
                         setDbAdminCode(null);
                         lastSharedState.current = null;
-                        if (!isPrivateModeRef.current) resetToStart();
+                        if (!isPrivateModeRef.current) resetToStart(true);
                     }
                 }, (error) => {});
 
@@ -1082,6 +1097,33 @@ const INTRO_INSERTS = {
                 }
             };
             
+            const copyShareLink = useCallback(() => {
+                triggerVibration(10);
+                const url = new URL(window.location.href);
+                url.searchParams.set('r', roomName);
+                
+                const copyText = url.toString();
+                
+                // Zanesljiva metoda za kopiranje (posebej pomembno za iFrame okolja)
+                const textArea = document.createElement("textarea");
+                textArea.value = copyText;
+                textArea.style.top = "0";
+                textArea.style.left = "0";
+                textArea.style.position = "fixed";
+                textArea.style.opacity = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    setLinkCopied(true);
+                    setTimeout(() => setLinkCopied(false), 2000);
+                } catch (err) {
+                    console.error('Kopiranje ni uspelo', err);
+                }
+                document.body.removeChild(textArea);
+            }, [roomName, triggerVibration]);
+
             const safeLang = PRAYERS[lang] ? lang : 'sl';
             const safeMysteryType = MYSTERIES[mysteryType] ? mysteryType : getMysteryForToday();
 
@@ -1132,7 +1174,7 @@ const INTRO_INSERTS = {
                                 <div className="space-y-5 pb-6 border-b border-[#2a3a5c]/70">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-wider ml-1 flex items-center gap-2"><Icon name="home" className="w-3.5 h-3.5" /> {t('roomName')}</label>
-                                        <input type="text" placeholder={t('roomPh')} value={roomName} onChange={(e) => setRoomName(e.target.value)} className="w-full bg-[#0c101d] border border-[#2a3a5c] text-[#f3e8d3] px-4 py-3.5 rounded-xl font-bold text-base outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm" />
+                                        <input type="text" placeholder={t('roomPh')} value={roomName} onChange={(e) => setRoomName(e.target.value)} disabled={!!dbAdminCode && isLeader} className={`w-full bg-[#0c101d] border border-[#2a3a5c] text-[#f3e8d3] px-4 py-3.5 rounded-xl font-bold text-base outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm ${!!dbAdminCode && isLeader ? 'opacity-50 cursor-not-allowed' : ''}`} />
                                     </div>
                                     
                                     <div className="space-y-2 bg-[#0c101d] p-4 rounded-2xl border border-[#2a3a5c]/70 shadow-inner">
@@ -1148,7 +1190,7 @@ const INTRO_INSERTS = {
                                                             <Icon name="refresh" className="w-3.5 h-3.5" />
                                                         </button>
                                                     )}
-                                                    <button onClick={() => setLeaderCode('')} className="px-3 py-2 bg-[#131b2f] border border-red-900/50 text-red-400 rounded-lg text-[10px] font-bold uppercase hover:bg-[#1a233a] transition-colors shadow-sm tracking-wide">
+                                                    <button onClick={() => { setLeaderCode(''); resetToStart(true); }} className="px-3 py-2 bg-[#131b2f] border border-red-900/50 text-red-400 rounded-lg text-[10px] font-bold uppercase hover:bg-[#1a233a] transition-colors shadow-sm tracking-wide">
                                                         {t('logout')}
                                                     </button>
                                                 </div>
@@ -1158,7 +1200,7 @@ const INTRO_INSERTS = {
                                                 <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-wider flex items-center gap-2"><Icon name={dbAdminCode ? "lock" : "star"} className="w-3.5 h-3.5" /> {dbAdminCode ? t('leadPrayer') : t('createRoom')}</label>
                                                 <div className="flex gap-2 items-center">
                                                     <input type="password" placeholder={dbAdminCode ? t('pwdEnterPh') : t('pwdAdminPh')} value={leaderCode} onChange={(e) => setLeaderCode(e.target.value)} className="flex-1 bg-[#131b2f] border border-[#2a3a5c] text-[#f3e8d3] px-4 py-3 rounded-xl font-bold text-base outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all shadow-sm" />
-                                                    {!dbAdminCode && leaderCode.trim() !== '' && (
+                                                    {!dbAdminCode && leaderCode.trim() !== '' && roomName.trim() !== '' && (
                                                         <button onClick={() => { triggerVibration(10); pushUpdate({}); }} className="px-4 py-3 bg-green-900/40 border border-green-800/50 text-green-400 rounded-xl font-bold text-xs uppercase hover:bg-green-800/60 transition-colors shadow-sm active:scale-95" title="Potrdi geslo">
                                                             <Icon name="check" className="w-4 h-4" />
                                                         </button>
@@ -1334,8 +1376,8 @@ const INTRO_INSERTS = {
                                     if (mins >= 60) timeStr = `${Math.floor(mins/60)}h`;
                                     const isSelected = room.id === roomName;
                                     return (
-                                        <div key={room.id} className={`flex items-stretch rounded-full shadow-sm transition-all border ${isSelected ? 'bg-[#1e293b] text-[#d4af37] border-[#d4af37]/50 scale-105 shadow-md' : 'bg-[#0c101d] text-[#94a3b8] border-[#2a3a5c] hover:border-[#d4af37]/40'}`}>
-                                            <button onClick={() => { triggerVibration(10); setRoomName(room.id); }} className="text-[10px] md:text-xs px-3.5 py-2 font-bold flex items-center gap-2 active:scale-95">{room.id} <span className="opacity-50 text-[9px] font-normal">{timeStr}</span></button>
+                                        <div key={room.id} className={`flex items-stretch rounded-full shadow-sm transition-all border ${isSelected ? 'bg-[#1e293b] text-[#d4af37] border-[#d4af37]/50 scale-105 shadow-md' : 'bg-[#0c101d] text-[#94a3b8] border-[#2a3a5c] ' + (!!dbAdminCode && isLeader ? 'opacity-50' : 'hover:border-[#d4af37]/40')}`}>
+                                            <button onClick={() => { if(!!dbAdminCode && isLeader) return; triggerVibration(10); setRoomName(room.id); }} className={`text-[10px] md:text-xs px-3.5 py-2 font-bold flex items-center gap-2 ${!!dbAdminCode && isLeader ? 'cursor-not-allowed' : 'active:scale-95'}`}>{room.id} <span className="opacity-50 text-[9px] font-normal">{timeStr}</span></button>
                                             {isMasterAdmin && (<button onClick={(e) => { e.stopPropagation(); triggerVibration(15); deleteRoom(room.id); }} className={`pr-3 pl-1.5 py-1 flex items-center justify-center transition-colors active:scale-90 ${isSelected ? 'text-[#d4af37] hover:text-red-400' : 'text-red-400 hover:text-red-500'}`} title="Trajno izbriši sobo"><Icon name="trash" className="w-4 h-4" /></button>)}
                                         </div>
                                     );
@@ -1675,7 +1717,7 @@ const INTRO_INSERTS = {
                             
                             {/* QR KODA Z REZERVNO (DUMMY) GRAFIKO */}
                             {showQr && (
-                                <div className="mt-4 flex flex-col items-center justify-center w-full animate-slide-up">
+                                <div className="mt-4 flex flex-col items-center justify-center w-full animate-slide-up space-y-4">
                                     <div className="w-48 h-48 rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center bg-white border-[3px] border-[#d4af37] relative">
                                         {QR_CODE_IMAGE && !imgErrors['qr'] ? (
                                             <img src={QR_CODE_IMAGE} alt="QR" className="w-full h-full object-cover p-3" onError={() => handleImgError('qr')} />
@@ -1691,6 +1733,14 @@ const INTRO_INSERTS = {
                                             </div>
                                         )}
                                     </div>
+                                    
+                                    <button 
+                                        onClick={copyShareLink}
+                                        className="flex items-center justify-center gap-2.5 px-6 py-3 bg-[#131b2f] border border-[#d4af37]/50 text-[#d4af37] rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-[#1e293b] hover:border-[#d4af37] transition-all shadow-md active:scale-95"
+                                    >
+                                        <Icon name={linkCopied ? "check" : "globe"} className="w-4 h-4 md:w-5 md:h-5" />
+                                        {linkCopied ? t('linkCopied') : t('copyLink')}
+                                    </button>
                                 </div>
                             )}
 
