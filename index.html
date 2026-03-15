@@ -766,7 +766,7 @@ const INTRO_INSERTS = {
             const [decadeIndex, setDecadeIndex] = useState(0); 
             const [step, setStep] = useState(0); 
             const [showMiraculous, setShowMiraculous] = useState(false);
-            const [miraculousTriggers, setMiraculousTriggers] = useState([]);
+            const [miraculousTriggers, setMiraculousTriggers] = useState(() => getNewTriggers());
             const [showQr, setShowQr] = useState(false);
             
             // Novo stanje za nadzor našega po meri narejenega spustnega menija za jezike
@@ -932,7 +932,8 @@ const INTRO_INSERTS = {
                     const now = Date.now();
                     snapshot.forEach(doc => {
                         const data = doc.data();
-                        if (data.updatedAt && (now - data.updatedAt < 86400000)) rooms.push({ id: doc.id, updatedAt: data.updatedAt });
+                        // Odstranjena omejitev 24 ur - prikažemo vse sobe
+                        if (data.updatedAt) rooms.push({ id: doc.id, updatedAt: data.updatedAt });
                     });
                     rooms.sort((a, b) => b.updatedAt - a.updatedAt);
                     setActiveRooms(rooms);
@@ -947,10 +948,6 @@ const INTRO_INSERTS = {
                 if (available.length === 0) available = activeLangs;
                 return available[Math.floor(Math.random() * available.length)];
             }, [rouletteLangs]);
-
-            useEffect(() => {
-                if (miraculousTriggers.length === 0) setMiraculousTriggers(getNewTriggers());
-            }, [miraculousTriggers.length]);
 
             useEffect(() => {
                 if (phase === 'decades' && !showMiraculous) {
